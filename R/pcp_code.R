@@ -13,11 +13,6 @@
 #   Check Package:             'Cmd + Shift + E'
 #   Test Package:              'Cmd + Shift + T'
 
-# matconv is for reading matlab files to R
-# dont need it for package
-# library(matconv)
-library(tidyverse)
-
 ############################################################
 ## Original PCP function
 ############################################################

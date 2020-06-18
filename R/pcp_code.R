@@ -13,7 +13,9 @@
 #   Check Package:             'Cmd + Shift + E'
 #   Test Package:              'Cmd + Shift + T'
 
-library(matconv)
+# matconv is for reading matlab files to R
+# dont need it for package
+# library(matconv)
 library(tidyverse)
 
 ############################################################
@@ -83,7 +85,7 @@ original_pcp <- function(D, lambda, mu) {
     obj <- v + lambda * sum(abs(S)) + (mu/2) * norm((D - L - S), type = "F")^2
     loss[iter] <- obj
 
-    print(str_c(iter, " Obj: ", obj))
+    print(pate0(iter, " Obj: ", obj))
 
     if (iter >= MAX_ITER |
         (iter != 1) && (abs(loss[iter-1] - loss[iter]) < LOSS_THRESH)) {done <- TRUE}
@@ -383,7 +385,7 @@ pcp_lod_nnS <- function(D, lambda, mu, LOD) {
       (rho/2 * (sum((L1-L2)^2) + sum((L1 - L3)^2) + sum((S1 - S2)^2)) + sum((S1 - S3)^2)) # ADDED
     # % The code block above takes LOD into account.
 
-    print(str_c(i, " Obj: ", loss[i]))
+    print(paste0(i, " Obj: ", loss[i]))
 
     if ((i != 1) &&
         (abs(loss[i-1] - loss[i]) < LOSS_THRESH) &&

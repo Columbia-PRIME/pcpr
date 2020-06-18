@@ -280,6 +280,8 @@ pcp_lod <- function(D, lambda, mu, LOD) {
       (rho/2 * (sum((L1-L2)^2) + sum((L1 - L3)^2) + sum((S1 - S2)^2)))
     # % The code block above takes LOD into account.
 
+    print(paste0(i, " Obj: ", loss[i]))
+
     if ((i != 1) &&
         (abs(loss[i-1] - loss[i]) < LOSS_THRESH) &&
         is_same(SAME_THRESH, L1, L2, L3) &&

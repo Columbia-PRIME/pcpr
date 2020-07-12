@@ -75,7 +75,7 @@ original_pcp <- function(D, lambda, mu) {
     obj <- v + lambda * sum(abs(S)) + (mu/2) * norm((D - L - S), type = "F")^2
     loss[iter] <- obj
 
-    print(pate0(iter, " Obj: ", obj))
+    print(paste0(iter, " Obj: ", obj))
 
     if (iter >= MAX_ITER |
         (iter != 1) && (abs(loss[iter-1] - loss[iter]) < LOSS_THRESH)) {done <- TRUE}

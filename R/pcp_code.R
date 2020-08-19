@@ -9,82 +9,6 @@
 #   Test Package:              'Cmd + Shift + T'
 
 ############################################################
-## Original PCP function
-############################################################
-
-soft_thresholding <- function(v, lambda) {
-  myzero <- matrix(data = 0, ncol = ncol(v), nrow = nrow(v))
-  w <- sign(v) * pmax(abs(v) - lambda, myzero)
-  w
-}
-
-############################################################
-
-soft_thresholding_diag <- function(v, lambda) {
-  myzero <- vector("numeric", length = length(v))
-  w <- sign(v) * pmax(abs(v) - lambda, myzero)
-  w
-}
-
-############################################################
-
-singular_value_threshold <- function(M, lambda) {
-
-  USV <- svd(M)
-  U <- USV$u
-  S <- USV$d
-  V <- USV$v
-
-  N <- U %*% diag(soft_thresholding_diag(S, lambda)) %*% t(V)
-
-  v  <- sum(soft_thresholding_diag(S, lambda))
-
-  svt <- list(N = N, v = v)
-  svt
-}
-
-############################################################
-
-original_pcp <- function(D, lambda, mu) {
-
-  D <- as.matrix(D)
-  m <- nrow(D)
-  n <- ncol(D)
-
-  S <- matrix(0, nrow = m, ncol = n)
-  L <- matrix(0, nrow = m, ncol = n)
-
-  iter <- 0
-  MAX_ITER <- 5000
-  done <- FALSE
-
-  # Convergence Thresholds
-  LOSS_THRESH <- 1e-4
-  loss <- vector("numeric", MAX_ITER)
-
-  while (!done) {
-
-    iter <- iter + 1
-
-    svt <- singular_value_threshold((D - S), 1/mu)
-    L <- svt[[1]] #svt$N
-    v <- svt[[2]]
-
-    S <- soft_thresholding((D - L), lambda/mu)
-
-    obj <- v + lambda * sum(abs(S)) + (mu/2) * norm((D - L - S), type = "F")^2
-    loss[iter] <- obj
-
-    print(paste0(iter, " Obj: ", obj))
-
-    if (iter >= MAX_ITER |
-        (iter != 1) && (abs(loss[iter-1] - loss[iter]) < LOSS_THRESH)) {done <- TRUE}
-
-  }
-  list(L = L, S = S)
-}
-
-############################################################
 ## PCP-LOD, new function with penalty for values <LOD
 ############################################################
 
@@ -288,6 +212,14 @@ pcp_lod <- function(D, lambda, mu, LOD) {
   S <- S1 #(S1 + S2) / 2
   list(L = L, S = S)
 }
+
+############################################################
+## PCP with nothing <LOD
+############################################################
+
+pcp_original <- function(D, lambda, mu) {
+  pcp_lod(D, lambda, mu, LOD = 0)
+  }
 
 ############################################################
 ## PCP-LOD version where sparse matrix is non-negative, too

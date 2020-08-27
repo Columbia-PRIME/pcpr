@@ -19,7 +19,7 @@ prox_l1 <- function(Y, c) {
   myzero <- matrix(data = 0, ncol = ncol(Y), nrow = nrow(Y))
   X <- sign(Y) * pmax(abs(Y) - c, myzero, na.rm = TRUE)
   X
-}
+  }
 
 ############################################################
 
@@ -27,7 +27,7 @@ prox_l1 <- function(Y, c) {
 # This encourages matrix to be low rank by pushing SV to zero (sparse)
 prox_nuclear <- function(Y,c) {
 
-  USV <- svd(Y)
+  USV <- fast.svd(Y)
   U <- USV$u
   S <- USV$d
   V <- USV$v
@@ -46,7 +46,7 @@ prox_nuclear <- function(Y,c) {
   # Goes into the loss function
 
   list(X = X, nuclearX = nuclearX)
-}
+  }
 
 ############################################################
 
@@ -62,6 +62,7 @@ prox_nuclear <- function(Y,c) {
 is_same <- function(SAME_THRESH, ...) {
   flag <- TRUE
   varargin <- list(...)
+
   if (length(varargin) == 2) {
     if (max(abs(varargin[[1]] - varargin[[2]])) > SAME_THRESH) {
       flag <- FALSE
@@ -84,20 +85,23 @@ loss_lod <- function(X, D, LOD) {
   # % D is the original data
   # % X is the new thing (L + S)
   # # LOD is the LOD
-  X_lod <- (X - D)   * (D >= 0) +
-    (X - LOD)  * ((D < 0) & (X > LOD)) +
-    X        * ((D < 0) & (X < 0)) #+
-  #(X - D)    * (D < LOD & (X > 0 && X <= LOD )) # or should it be zero
+
+  dGeq0 <- D >= 0
+  dLT0 <- !dGeq0
+
+  X_lod <- (X - D)    * dGeq0 +
+           (X - LOD)  * (dLT0 & (X > LOD)) +
+            X         * (dLT0 & (X < 0))
 
   l <- sum(X_lod^2) / 2
   # % L2 norm
 
   # % Any D_ij < 0 AND X_ij < LOD AND > 0 are treated as equal
-
   # % Minimize discrepancy for valid data
   # % Want to shrink negative things
+
   l
-}
+  }
 
 ############################################################
 
@@ -117,7 +121,6 @@ pcp_lod <- function(D, lambda, mu, LOD) {
   m <- nrow(D)
   n <- ncol(D)
   rho <- 1 # Augmented Lagrangian coefficient (rate)
-
 
   L1 <- matrix(0, m, n)
   L2 <- matrix(0, m, n)
@@ -142,11 +145,16 @@ pcp_lod <- function(D, lambda, mu, LOD) {
     LOD = t(t(empty) * LOD)
   } # This converts a vector LOD to a matrix, so that it multiplies correctly
 
-  loss <- vector("numeric", MAX_ITER)
+  # loss <- vector("numeric", MAX_ITER)
+
+  dGeq0 <- D >= 0
+  dLT0 <- !dGeq0
+  old_loss <- Inf
+  new_loss <- 0
 
   for (i in 1:MAX_ITER) {
-
-    nuc <- prox_nuclear( ((L2 + L3 - (Z1 + Z2)/rho)/2), 1/2/rho)
+    proxNucArg <- ((L2 + L3 - (Z1 + Z2)/rho)/2)
+    nuc <- prox_nuclear( proxNucArg, 1/2/rho)
     L1 <- nuc[[1]]
     nuclearL1 <- nuc[[2]] #nuclearX
     # % L, Z, S all start at zero, and change each iteration
@@ -156,27 +164,29 @@ pcp_lod <- function(D, lambda, mu, LOD) {
     S1 <- prox_l1((S2 - Z3/rho), lambda/rho)
     # % S is sparse matrix
 
-    L2_opt1 <- (mu*rho*D     + (mu + rho)*Z1 - mu*Z3 + (mu + rho)*rho*L1 - mu*rho*S1) / (2*mu*rho + rho^2)
+    L2_opt1 <- (mu*rho*D     +   (mu + rho)*Z1  -  mu*Z3  +  (mu + rho)*rho*L1  -  mu*rho*S1)    /  (2*mu*rho  + rho^2)
     L2_opt2 <- L1 + Z1/rho
-    L2_opt3 <- ((mu*rho*LOD + (((mu + rho)*Z1) - (mu*Z3) + ((mu + rho)*rho*L1) - (mu*rho*S1)))) / ((2*mu*rho) + (rho^2))
-    L2_opt4 <- (               (mu + rho)*Z1 - mu*Z3 + (mu + rho)*rho*L1 - mu*rho*S1) / (2*mu*rho + rho^2)
+    L2_opt3 <- ((mu*rho*LOD  + (((mu + rho)*Z1) - (mu*Z3) + ((mu + rho)*rho*L1) - (mu*rho*S1)))) / ((2*mu*rho) + (rho^2))
+    L2_opt4 <- (                 (mu + rho)*Z1  -  mu*Z3  +  (mu + rho)*rho*L1  -  mu*rho*S1)    /  (2*mu*rho  + rho^2)
 
-    L2 <- (L2_opt1 * (D >= 0)) +
-      (L2_opt2 * (((D < 0) & ((L2 + S2) >= 0) & ((L2 + S2) <= LOD)))) +
-      (L2_opt3 * (((D < 0) & ((L2 + S2) > LOD)))) +
-      (L2_opt4 * (((D < 0) & ((L2 + S2) < 0))))
+    L2PlusS2 <- L2 + S2
 
-    S2_opt1 <- (mu*rho*D     + (mu + rho)*Z3 - (mu*Z1) + (mu + rho)*rho*S1 - mu*rho*L1) / (2*mu*rho + rho^2)
+    L2_new <-  (L2_opt1 * (dGeq0)) +
+               (L2_opt2 * ((dLT0  & (L2PlusS2 >= 0) & (L2PlusS2 <= LOD)))) +
+               (L2_opt3 * ((dLT0  & (L2PlusS2 > LOD)))) +
+               (L2_opt4 * ((dLT0  & (L2PlusS2 < 0))))
+
+    S2_opt1 <- (mu*rho*D      +   (mu + rho)*Z3  - (mu*Z1) +  (mu + rho)*rho*S1  -  mu*rho*L1)    /  (2*mu*rho  + rho^2)
     S2_opt2 <- S1 + (Z3/rho)
     S2_opt3 <- (((mu*rho*LOD) + (((mu + rho)*Z3) - (mu*Z1) + ((mu + rho)*rho*S1) - (mu*rho*L1)))) / ((2*mu*rho) + (rho^2))
-    S2_opt4 <- (               (mu + rho)*Z3 - (mu*Z1) + (mu + rho)*rho*S1 - mu*rho*L1) / (2*mu*rho + rho^2)
+    S2_opt4 <- (                  (mu + rho)*Z3  - (mu*Z1) +  (mu + rho)*rho*S1  -  mu*rho*L1)    /  (2*mu*rho  + rho^2)
 
-    S2 <- (S2_opt1 * (D >= 0)) +
-      (S2_opt2 * ((D < 0) & (((L2 + S2) >= 0) & ((L2 + S2) <= LOD)))) +
-      (S2_opt3 * ((D < 0) & (((L2 + S2) > LOD)))) +
-      (S2_opt4 * ((D < 0) & (((L2 + S2) < 0))))
+    S2 <- (S2_opt1 * dGeq0) +
+          (S2_opt2 * ((dLT0 & ((L2PlusS2 >= 0) & (L2PlusS2 <= LOD))))) +
+          (S2_opt3 * ((dLT0 & ((L2PlusS2 > LOD))))) +
+          (S2_opt4 * ((dLT0 & ((L2PlusS2 < 0)))))
 
-    #L2 <- L2_new
+    L2 <- L2_new
 
     L3 <- pmax(L1 + Z2/rho, 0, na.rm = TRUE)
     # % Non-Negativity constraint!
@@ -186,7 +196,8 @@ pcp_lod <- function(D, lambda, mu, LOD) {
     Z3 <- Z3 + rho*(S1 - S2)
     # % Z accumulate differnces between L and L and between S and S
 
-    loss[i] <- nuclearL1 +
+    #loss[i] <- nuclearL1 +
+    new_loss <- nuclearL1 +
       (lambda*sum(abs(S1))) +
       (mu*loss_lod((L2 + S2), D, LOD)) +
       sum(Z1*(L1 - L2)) +
@@ -196,13 +207,17 @@ pcp_lod <- function(D, lambda, mu, LOD) {
     # % The code block above takes LOD into account.
 
     if ((i != 1) &&
-        (abs(loss[i-1] - loss[i]) < LOSS_THRESH) &&
+        # (abs(loss[i-1] - loss[i]) < LOSS_THRESH) &&
+        (abs(old_loss - new_loss) < LOSS_THRESH) &&
         is_same(SAME_THRESH, L1, L2, L3) &&
         is_same(SAME_THRESH, S1, S2)) {
       break} # % Convergence criteria!
+
+    old_loss <- new_loss
   }
 
-  print(paste0("Iteration: ", i, " Obj: ", round(loss[i], 5)))
+  # print(paste0("Iteration: ", i, " Obj: ", round(loss[i], 5)))
+  print(paste0("Iteration: ", i, " Obj: ", round(new_loss, 5)))
 
   L <- L3 # (L1 + L2 + L3) / 3
   S <- S1 #(S1 + S2) / 2

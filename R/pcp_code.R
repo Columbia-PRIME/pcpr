@@ -15,8 +15,6 @@
 # Prox L1 norm function, soft thresholding
 # if Y < c (threshold), push to zero
 prox_l1 <- function(Y, c) {
-
-  #myzero <- matrix(data = 0, ncol = ncol(Y), nrow = nrow(Y))
   X <- sign(Y) * pmax(abs(Y) - c, 0)
   X
   }
@@ -32,12 +30,10 @@ prox_nuclear <- function(Y,c) {
   S <- USV$d
   V <- USV$v
 
-  #myzero <- vector("numeric", length = length(S))
   S_new <- sign(S) * pmax(abs(S) - c, 0)
   # Threshold the singular values, if SV < c, push it to zero
 
   X <- U %*% diag(S_new) %*% t(V)
-  # this t(.) is for all scalar, vector, matrices
   # % X is the truncation of the original
   # % Multiply the thresholded SVD components back together
 
@@ -55,10 +51,8 @@ prox_nuclear <- function(Y,c) {
 ## if TRUE, keep iterating, if FALSE, end
 
 # Compares L1, L2, L3 OR S1, S2
-# Need ... for function to handle different number of inputs
+# Use ... for function to handle different number of inputs
 # length(varargin) gives the number of function input arguments given in the call
-# for L1, L2, L3, THREE comparisons, L1/L2, L1/L3, and L2/L3
-# for S1, S2, one comparison
 is_same <- function(SAME_THRESH, ...) {
   flag <- TRUE
   varargin <- list(...)
@@ -84,7 +78,6 @@ is_same <- function(SAME_THRESH, ...) {
 loss_lod <- function(X, D, LOD) {
   # % D is the original data
   # % X is the new thing (L + S)
-  # # LOD is the LOD
 
   dGeq0 <- D >= 0
   dLT0 <- !dGeq0
@@ -159,13 +152,12 @@ pcp_lod <- function(D, lambda, mu, LOD) {
     nuclearL1 <- nuc[[2]] #nuclearX
     # % L, Z, S all start at zero, and change each iteration
     # % Prox_nuc is singular value thresholding
-    # % L is low rank matrix
 
     S1 <- prox_l1((S2 - Z3/rho), lambda/rho)
     # % S is sparse matrix
 
-    muplusrho <- mu + rho
-    mutimesrho <- mu*rho
+    muplusrho  <- mu + rho
+    mutimesrho <- mu * rho
 
     L2_numor <- muplusrho*Z1  -  mu*Z3  +  muplusrho*rho*L1  -  mutimesrho*S1
     denom <- 2*mutimesrho + rho^2

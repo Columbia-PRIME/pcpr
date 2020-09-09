@@ -108,23 +108,30 @@ loss_lod <- function(X, D, LOD) {
 
 pcp_lod <- function(D, lambda, mu, LOD) {
 
-  m <- nrow(D)
-  n <- ncol(D)
-  rho <- 1 # Augmented Lagrangian coefficient (rate)
+  n <- nrow(D)
+  p <- ncol(D)
+  rho <- 0.1 # Augmented Lagrangian coefficient (rate)
 
-  L1 <- matrix(0, m, n)
-  L2 <- matrix(0, m, n)
-  L3 <- matrix(0, m, n)
+  L1 <- matrix(0, n, p)
+  L2 <- matrix(0, n, p)
+  L3 <- matrix(0, n, p)
 
-  S1 <- matrix(0, m, n)
-  S2 <- matrix(0, m, n)
+  S1 <- matrix(0, n, p)
+  S2 <- matrix(0, n, p)
 
-  Z1 <- matrix(0, m, n)
-  Z2 <- matrix(0, m, n)
-  Z3 <- matrix(0, m, n)
+  Z1 <- matrix(0, n, p)
+  Z2 <- matrix(0, n, p)
+  Z3 <- matrix(0, n, p)
 
   # Max iteration
   MAX_ITER <- 10000
+
+  #%%%%% BEGIN NEW %%%%%
+  EPS_ABS = 1e-4
+  EPS_REL = 1e-3
+
+  flag_converge = 0
+  #%%%%% END NEW %%%%%
 
   # Convergence Thresholds
   LOSS_THRESH <- 1e-5
@@ -135,10 +142,12 @@ pcp_lod <- function(D, lambda, mu, LOD) {
     LOD = t(t(empty) * LOD)
   } # This converts a vector LOD to a matrix, so that it multiplies correctly
 
-  # loss <- vector("numeric", MAX_ITER)
+  loss <- vector("numeric", MAX_ITER)
 
+  #% ADMM-splitting iterations
   for (i in 1:MAX_ITER) {
 
+    #% Update 1st primal variable (L1,S1)
     nuc <- prox_nuclear( ((L2 + L3 - (Z1 + Z2)/rho)/2), 1/2/rho)
     L1 <- nuc[[1]]
     nuclearL1 <- nuc[[2]] #nuclearX
@@ -148,12 +157,19 @@ pcp_lod <- function(D, lambda, mu, LOD) {
     S1 <- prox_l1((S2 - Z3/rho), lambda/rho)
     # % S is sparse matrix
 
+    #% Update 2nd primal variable (L2,L3,S2)
+    #%%%%% BEGIN NEW %%%%%
+    L2_old = L2
+    L3_old = L3
+    S2_old = S2
+    #%%%%% END NEW %%%%%
+
     L2_opt1 <- (mu*rho*D     + (mu + rho)*Z1 - mu*Z3 + (mu + rho)*rho*L1 - mu*rho*S1) / (2*mu*rho + rho^2)
     L2_opt2 <- L1 + Z1/rho
     L2_opt3 <- ((mu*rho*LOD + (((mu + rho)*Z1) - (mu*Z3) + ((mu + rho)*rho*L1) - (mu*rho*S1)))) / ((2*mu*rho) + (rho^2))
     L2_opt4 <- (               (mu + rho)*Z1 - mu*Z3 + (mu + rho)*rho*L1 - mu*rho*S1) / (2*mu*rho + rho^2)
 
-    L2 <- (L2_opt1 * (D >= 0)) +
+    L2_new <- (L2_opt1 * (D >= 0)) +
       (L2_opt2 * (((D < 0) & ((L2 + S2) >= 0) & ((L2 + S2) <= LOD)))) +
       (L2_opt3 * (((D < 0) & ((L2 + S2) > LOD)))) +
       (L2_opt4 * (((D < 0) & ((L2 + S2) < 0))))
@@ -169,10 +185,21 @@ pcp_lod <- function(D, lambda, mu, LOD) {
       (S2_opt4 * ((D < 0) & (((L2 + S2) < 0))))
 
     L2 <- L2_new
-
     L3 <- pmax(L1 + Z2/rho, 0, na.rm = TRUE)
     # % Non-Negativity constraint!
 
+    #%%%%% BEGIN NEW %%%%%
+    #% Calculate primal & dual residuals; Update rho
+    res_primal = sqrt( norm(L1-L2, "F")^2 + norm(L1-L3, "F")^2 + norm(S1-S2, "F") ^2)
+    res_dual = rho * sqrt( norm(L2+L3-L2_old-L3_old,'F')^2 + norm(S2-S2_old,'F')^2 )
+
+    if (res_primal > 10 * res_dual) {
+      rho = rho * 2
+    } else if (res_dual > 10 * res_primal) {
+        rho = rho / 2}
+    #%%%%% END NEW %%%%%
+
+    #% Update dual variable (Z1,Z2,Z3)
     Z1 <- Z1 + rho*(L1 - L2)
     Z2 <- Z2 + rho*(L1 - L3)
     Z3 <- Z3 + rho*(S1 - S2)
@@ -187,15 +214,27 @@ pcp_lod <- function(D, lambda, mu, LOD) {
       (rho/2 * (sum((L1-L2)^2) + sum((L1 - L3)^2) + sum((S1 - S2)^2)))
     # % The code block above takes LOD into account.
 
-    if ((i != 1) &&
-        (abs(loss[i-1] - loss[i]) < LOSS_THRESH) &&
-        is_same(SAME_THRESH, L1, L2, L3) &&
-        is_same(SAME_THRESH, S1, S2)) {
-      break} # % Convergence criteria!
+    #%%%%% BEGIN NEW %%%%%
+    #% Check stopping criteria
+    thresh_primal = EPS_ABS * sqrt(3*n*p) + EPS_REL * pmax(sqrt( norm(L1,'F')^2 * 2 + norm(S1,'F')^2 ),
+                                                           sqrt( norm(L2,'F')^2 + norm(L3,'F')^2 + norm(S2,'F')^2 ))
+    thresh_dual = EPS_ABS * sqrt(2*n*p) + EPS_REL * sqrt( norm(Z1+Z2,'F')^2 + norm(Z3,'F')^2 )
+
+    if (res_primal < thresh_primal && res_dual < thresh_dual) {
+      flag_converge = 1;
+      print(paste0('Converged in ', i,' iterations.'))
+      break}
+    #%%%%% END NEW %%%%%
+
+    # if ((i != 1) &&
+    #     (abs(loss[i-1] - loss[i]) < LOSS_THRESH) &&
+    #     is_same(SAME_THRESH, L1, L2, L3) &&
+    #     is_same(SAME_THRESH, S1, S2)) {
+    #   break} # % Convergence criteria!
 
   }
 
-  print(paste0("Iteration: ", i, " Obj: ", round(loss[i], 5)))
+#  print(paste0("Iteration: ", i, " Obj: ", round(loss[i], 5)))
 
   L <- L3 # (L1 + L2 + L3) / 3
   S <- S1 #(S1 + S2) / 2
@@ -211,8 +250,6 @@ pcp_lod <- function(D, lambda, mu, LOD) {
 pcp_original <- function(D, lambda, mu) {
   pcp_lod(D, lambda, mu, LOD = 0)
   }
-
-
 
 
 

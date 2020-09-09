@@ -225,13 +225,6 @@ pcp_lod <- function(D, lambda, mu, LOD) {
       print(paste0('Converged in ', i,' iterations.'))
       break}
     #%%%%% END NEW %%%%%
-
-    # if ((i != 1) &&
-    #     (abs(loss[i-1] - loss[i]) < LOSS_THRESH) &&
-    #     is_same(SAME_THRESH, L1, L2, L3) &&
-    #     is_same(SAME_THRESH, S1, S2)) {
-    #   break} # % Convergence criteria!
-
   }
 
 #  print(paste0("Iteration: ", i, " Obj: ", round(loss[i], 5)))

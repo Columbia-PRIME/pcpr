@@ -25,7 +25,7 @@ prox_l1 <- function(Y, c) {
 # This encourages matrix to be low rank by pushing SV to zero (sparse)
 prox_nuclear <- function(Y,c) {
 
-  USV <- fast.svd(Y) # fast.svd is in corpcor package
+  USV <- svd(Y) # fast.svd is in corpcor package
   U <- USV$u
   S <- USV$d
   V <- USV$v
@@ -227,13 +227,12 @@ pcp_lod <- function(D, lambda, mu, LOD) {
     #%%%%% END NEW %%%%%
   }
 
+  if( i == MAX_ITER) warning('Maximum iterations reached. PCP did not converge.')
 #  print(paste0("Iteration: ", i, " Obj: ", round(loss[i], 5)))
 
   L <- L3 # (L1 + L2 + L3) / 3
   S <- S1 #(S1 + S2) / 2
   list(L = L, S = S)
-
-  if( i == MAX_ITER) warning('Maximum iterations reached. PCP did not converge.')
 }
 
 ############################################################

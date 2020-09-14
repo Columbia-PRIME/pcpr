@@ -25,7 +25,7 @@ prox_l1 <- function(Y, c) {
 # This encourages matrix to be low rank by pushing SV to zero (sparse)
 prox_nuclear <- function(Y,c) {
 
-  USV <- svd(Y) # fast.svd is in corpcor package
+  USV <- fast.svd(Y) # fast.svd is in corpcor package
   U <- USV$u
   S <- USV$d
   V <- USV$v

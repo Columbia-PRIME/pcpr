@@ -7,5 +7,5 @@ Maintainer: Lizzy <e.a.gibson@columbia.edu>
 Description: PCP with distinct penalty for values <LOD.
     Use four spaces when indenting paragraphs within the Description.
 License: What license is it under?
-Encoding: UTF-8
+Encoding: BSD3
 LazyData: true

@@ -1,5 +1,6 @@
+#' Non-negative squareroot PCP function
+#'
 #' @export
-# add @export tag to indicate this function to be “exposed” to users to use
 
 #####
 # Root PCP w/ non-negativity constraint

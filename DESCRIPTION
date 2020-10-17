@@ -6,4 +6,6 @@ Author: Lizzy Gibson, Jingkai Yan, Robert Colgan, John Wright, Jeff Goldsmith, M
 Maintainer: Lizzy <e.a.gibson@columbia.edu>
 Description: This package includes several algorithms for PCP as they are adapted to environmental data.
 License: BSD3
+Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.1.1

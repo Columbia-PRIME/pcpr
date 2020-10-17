@@ -4,8 +4,6 @@ Title: Principal Component Pursuit for environmental epidemiology
 Version: 0.1.0
 Author: Lizzy Gibson, Jingkai Yan, Robert Colgan, John Wright, Jeff Goldsmith, Marianthi-Anna Kioumourtzoglou
 Maintainer: Lizzy <e.a.gibson@columbia.edu>
-Description: PCP with distinct penalty for values <LOD.
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
-Encoding: BSD3
+Description: This package includes several algorithms for PCP as they are adapted to environmental data.
+License: BSD3
 LazyData: true

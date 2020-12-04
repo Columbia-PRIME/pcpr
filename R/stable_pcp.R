@@ -14,7 +14,6 @@
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-#'
 stable_pcp <- function(D, lambda, mu) {
   pcp_lod(D, lambda, mu, LOD = 0)
 }

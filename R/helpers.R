@@ -13,7 +13,6 @@
 #' \code{X} is the thresholded \code{L} matrix.
 #' \code{nuclearX} is the sum of the absolute values of the thresholded singular values.
 #' This goes into the objective function.
-#'
 prox_nuclear <- function(Y,c) {
 
   USV <- svd(Y)

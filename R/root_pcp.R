@@ -17,7 +17,6 @@
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-#'
 root_pcp <- function(D, lambda, mu) {
 
 n = nrow(D)

@@ -27,7 +27,7 @@ PCP functions in R including adaptations for environmental data.
         * `lambda` parameter
         * `mu` parameter
         
-4. [root_pcp_nonnegL`](R/root_pcp.R)
+4. [root_pcp_nonnegL](R/root_pcp.R)
     * This includes a non-negativity constraint on the `L` matrix with the squareroot version of the objective function. It does not include a LOD penalty.
     * It takes 3 inputs:
         * `D` the original dataset

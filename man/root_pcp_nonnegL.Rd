@@ -25,5 +25,4 @@ This is first transformed to the problem: \cr \cr
 min_{L1,L2,L3,S1,S2,Z} \cr
 ||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F \cr \cr
 s.t. L1 = L2; L1 = L3; S1 = S2; L2 + S2 + Z = D. \cr \cr
-The algorithm conducts ADMM splitting as (L1,S1,Z),(L2,S2).
 }

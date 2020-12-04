@@ -2,10 +2,29 @@
 % Please edit documentation in R/pcp_lod.R
 \name{pcp_lod}
 \alias{pcp_lod}
-\title{PCP-LOD function}
+\title{PCP-LOD}
 \usage{
 pcp_lod(D, lambda, mu, LOD)
 }
+\arguments{
+\item{D}{The original dataset.}
+
+\item{lambda}{The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.}
+
+\item{mu}{The \code{mu} parameter penalizes the error term.}
+
+\item{LOD}{The LOD (limit of detection) may be a scalar, vector (\code{length(LOD) = ncol(D)}), or matrix (\code{dim(LOD) == dim(D)}).}
+}
+\value{
+Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
+}
 \description{
-PCP-LOD function
+\code{pcp_lod} implements \code{stablePCP} with LOD-specific penalties.
+This includes a non-negativity constraint on the \code{L} solution matrix. \cr \cr
+If the LOD threshold LOD = 0, solve the following ADMM splitting problem: \cr \cr
+min(L1,L2,L3,S1,S2) \cr
+||L1||_* + lambda * ||S1||_1 + mu/2 * ||L2+S2-D||_F^2 + I(L3>=0) \cr \cr
+s.t. L1 = L2; L1 = L3; S1 = S2. \cr \cr
+If LOD is not 0, replace ||L2+S2-D||_F^2 with LOD penalty.
+Below LOD data input in D should be denoted as negative values, e.g. -1.
 }

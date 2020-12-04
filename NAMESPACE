@@ -3,3 +3,4 @@
 export(pcp_lod)
 export(root_pcp)
 export(root_pcp_nonnegL)
+export(stable_pcp)

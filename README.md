@@ -4,9 +4,9 @@ PCP functions in R including adaptations for environmental data.
 
 ## to run:
 
-To use this package, clone the repo or download the .zip file. Locate the folder, unzip if applicable, and use the following code. Replace `path_to_file` with your local path.
+To use this package, clone the repo or download the .zip file. Locate the folder, unzip if applicable, and use the following code. Replace `path_to_folder` with your local path.
 
-`install.packages("path_to_file", repos = NULL, type="source")`   
+`install.packages("path_to_folder", repos = NULL, type="source")`   
 `library(pcpr)`
 
 ## includes:

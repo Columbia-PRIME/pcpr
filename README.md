@@ -22,7 +22,7 @@ To use this package, clone the repo or download the .zip file. Locate the folder
 2. [pcp_lod](R/pcp_lod.R)
     * This includes a non-negativity constraint on the `L` solution matrix and a separate penalty function for values <LOD.
     * Values <LOD should be pre-processed as `-1`.
-    * It takes 3 inputs:
+    * It takes 4 inputs:
         * `D` the original dataset
         * `lambda` parameter
         * `mu` parameter

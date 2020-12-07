@@ -44,3 +44,12 @@ To use this package, clone the repo or download the .zip file. Locate the folder
         * `lambda` parameter
         * `mu` parameter
     * For more info: `?root_pcp_nonnegL`
+    
+5. [root_pcp_na](R/root_pcp_na.R)
+    * This allows for missing values with the squareroot version of the objective function. It does not include a LOD penalty or a non-negativity constraint on the `L` matrix.
+    * Missing values should be pre-processed as `NA`.
+    * It takes 3 inputs:
+        * `D` the original dataset
+        * `lambda` parameter
+        * `mu` parameter
+    * For more info: `?root_pcp_na`

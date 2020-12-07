@@ -1,4 +1,4 @@
-#' Squareroot PCP function with missing values (NAN)
+#' Squareroot PCP function with missing values (NA)
 #'
 #' \code{root_pcp} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
 #' It solved the following ADMM splitting problem: \cr \cr
@@ -8,7 +8,7 @@
 #' min_{L1,L2,S1,S2,Z} \cr
 #' ||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F \cr \cr
 #' s.t. L1 = L2; S1 = S2; Z = P_obs[ D - L2 - S2]. \cr \cr
-#' The algorithm conducts ADMM splitting as (L1,S1,Z),(L2,S2).
+#' The algorithm conducts ADMM splitting as (L1,S1,Z),(L2,S2). \cr \cr
 #' This version allows for missing values.
 #' Use NA for missing entries in D.
 #'
@@ -19,7 +19,7 @@
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-root_pcp_with_na <- function(D, lambda, mu) {
+root_pcp_na <- function(D, lambda, mu) {
 
 n = nrow(D)
 p = ncol(D)

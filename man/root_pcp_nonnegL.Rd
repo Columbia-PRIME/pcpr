@@ -19,10 +19,11 @@ Returns two solution matrices, the low rank \code{L} matrix and the sparse \code
 \description{
 \code{root_pcp_nonnegL} implements \code{rootPCP} with a non-negativity constraint on the \code{L} solution matrix. \cr \cr
 It solved the following ADMM splitting problem: \cr \cr
-min_{L,S} \cr
-||L||_* + lambda * ||S||_1 + mu * ||L+S-D||_F + I(L3>=0) \cr \cr
+min(L,S) \cr
+||L||_* + lambda * ||S||_1 + mu * ||L+S-D||_F \cr
+s.t. L >= 0. \cr \cr
 This is first transformed to the problem: \cr \cr
-min_{L1,L2,L3,S1,S2,Z} \cr
-||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F \cr \cr
+min(L1,L2,L3,S1,S2,Z) \cr
+||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F + + I[L3>=0] \cr \cr
 s.t. L1 = L2; L1 = L3; S1 = S2; L2 + S2 + Z = D. \cr \cr
 }

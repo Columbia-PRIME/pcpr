@@ -1,35 +1,37 @@
-#' Squareroot PCP function with missing values (NA)
+#' Nonnegative squareroot PCP function with missing values (NA) & LOD penalty
 #'
-#' \code{root_pcp} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
+#' \code{root_pcp_na_nonnegL_lod} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
 #' It solved the following ADMM splitting problem: \cr \cr
 
-#' min_{L,S} \cr
-#' ||L||_* + lambda * ||S||_1 + mu * (\sum_{ij observed} f((L+S)_ij, D_ij))^0.5 + I{L>=0} \cr \cr
+#' min(L,S) \cr
+#' ||L||_* + lambda * ||S||_1 + mu * ( sum_(ij observed) f((L+S)_ij, D_ij) )^0.5 + I[L>=0] \cr \cr
 #' This is first transformed to the problem: \cr \cr
-#'
-#' min_{L1,L2,S,Z} \cr
-#' ||L1||_* + lambda * ||S||_1 + mu * (\sum_{ij observed} f(Z_ij,D_ij))^0.5 + I{L2>=0} \cr \cr
+
+#' min(L1,L2,S,Z) \cr
+#' ||L1||_* + lambda * ||S||_1 + mu * ( sum_(ij observed) f(Z_ij,D_ij) )^0.5 + I[L2>=0] \cr \cr
 #' s.t. L1 = L2; L1 + S = Z. \cr \cr
 #' The algorithm conducts ADMM splitting as L1, S, Z, L2. \cr \cr
 #' This version allows for missing values. \cr \cr
 #' Use NA for missing entries in D. \cr \cr
 #' Assume that the true L >= 0 & observations in D >= 0 \cr \cr
 #' Use -1 for <LOD \cr \cr
-#'
+
 #' LOD penalty: \cr \cr
 #' f(x,y) = (x-y)^2 if y>0 \cr
-#'        = (x-Delta)^2 if y=-1, x>Delta \cr
+#'        = (x-LOD)^2 if y=-1, x>LOD \cr
 #'        = x^2 if y=-1, x<0 \cr
 #'        = 0 otherwise
+#'
 #' @param D The original dataset.
 #' @param lambda The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.
 #' @param mu The \code{mu} parameter penalizes the error term.
+#' @param LOD The LOD (limit of detection) may be a scalar, vector (\code{length(LOD) = ncol(D)}), or matrix (\code{dim(LOD) == dim(D)}).
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
 #'
-root_pcp_na_nonnegL_LOD <- function(D, lambda, mu, Delta) {
+root_pcp_na_nonnegL_lod <- function(D, lambda, mu, LOD) {
 
 n = nrow(D)
 p = ncol(D)
@@ -78,13 +80,13 @@ S = prox_l1( Z-L1-Y2/rho, lambda/rho )
 temp = L1+S+Y2/rho
 
 Z_unobs = (1-mask_obs) * temp
-Z_obs_below_LOD1 = (mask_below_lod & (temp>=0) & (temp<=Delta)) * temp
+Z_obs_below_LOD1 = (mask_below_lod & (temp>=0) & (temp<=LOD)) * temp
 
-temp2 = mask_obs * (1-(mask_below_lod & (temp>=0) & (temp<=Delta))) * temp -
-         (mask_above_lod * D) - (Delta * mask_below_lod * (temp>=Delta))
+temp2 = mask_obs * (1-(mask_below_lod & (temp>=0) & (temp<=LOD))) * temp -
+         (mask_above_lod * D) - (LOD * mask_below_lod * (temp>=LOD))
 
 Z = prox_fro( temp2, mu/rho ) + (mask_above_lod * D) +
-    (Delta * mask_below_lod * (temp>=Delta)) +
+    (LOD * mask_below_lod * (temp>=LOD)) +
     Z_unobs + Z_obs_below_LOD1
 
 L2 = pmax(L1+Y1/rho,0)

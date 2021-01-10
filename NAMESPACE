@@ -3,5 +3,7 @@
 export(pcp_lod)
 export(root_pcp)
 export(root_pcp_na)
+export(root_pcp_na_nonnegL)
+export(root_pcp_na_nonnegL_lod)
 export(root_pcp_nonnegL)
 export(stable_pcp)

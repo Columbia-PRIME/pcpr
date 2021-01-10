@@ -17,15 +17,15 @@ root_pcp_na(D, lambda, mu)
 Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 }
 \description{
-\code{root_pcp} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
+\code{root_pcp_na} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
 It solved the following ADMM splitting problem: \cr \cr
-min_{L,S} \cr
+min(L,S) \cr
 ||L||_* + lambda * ||S||_1 + mu * || P_(obs)[L+S-D] ||_F \cr \cr
 This is first transformed to the problem: \cr \cr
-min_{L1,L2,S1,S2,Z} \cr
+min(L1,L2,S1,S2,Z) \cr
 ||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F \cr \cr
 s.t. L1 = L2; S1 = S2; Z = P_obs[ D - L2 - S2]. \cr \cr
 The algorithm conducts ADMM splitting as (L1,S1,Z),(L2,S2). \cr \cr
-This version allows for missing values.
+This version allows for missing values. \cr
 Use NA for missing entries in D.
 }

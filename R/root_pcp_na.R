@@ -1,15 +1,15 @@
 #' Squareroot PCP function with missing values (NA)
 #'
-#' \code{root_pcp} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
+#' \code{root_pcp_na} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
 #' It solved the following ADMM splitting problem: \cr \cr
-#' min_{L,S} \cr
+#' min(L,S) \cr
 #' ||L||_* + lambda * ||S||_1 + mu * || P_(obs)[L+S-D] ||_F \cr \cr
 #' This is first transformed to the problem: \cr \cr
-#' min_{L1,L2,S1,S2,Z} \cr
+#' min(L1,L2,S1,S2,Z) \cr
 #' ||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F \cr \cr
 #' s.t. L1 = L2; S1 = S2; Z = P_obs[ D - L2 - S2]. \cr \cr
 #' The algorithm conducts ADMM splitting as (L1,S1,Z),(L2,S2). \cr \cr
-#' This version allows for missing values.
+#' This version allows for missing values. \cr
 #' Use NA for missing entries in D.
 #'
 #' @param D The original dataset.
@@ -59,7 +59,6 @@ nuc = prox_nuclear( L2-Y1/rho, 1/rho )
 L1 = nuc[[1]]
 
 S1 = prox_l1( S2-Y2/rho, lambda/rho )
-# Z = prox_fro( D-L2-S2-Y3/rho, mu/rho )
 Z = prox_fro( mask*(D-L2-S2)-Y3/rho, mu/rho )
 
 #% Update 2nd primal variable (L2,S2)
@@ -71,25 +70,18 @@ S2_obs = mask * (1/3 * ( D - Z + 2*S1 - L1 + (2*Y2 - Y1 - Y3) / rho ))
 S2_unobs = (1-mask) * (S1+Y2/rho)
 S2 = S2_obs + S2_unobs
 
-#% Update 2nd primal variable (L2,S2)
-#L2 = 1/3*( D-Z+ 2*L1 -S1 + (2*Y1 -Y2-Y3)/rho )
-#S2 = 1/3*( D-Z+ 2*S1 -L1 + (2*Y2 -Y1-Y3)/rho )
-
 #% Update dual variable (Y1,Y2,Y3)
 Y1 = Y1 + rho*(L1-L2)
 Y2 = Y2 + rho*(S1-S2)
-# Y3 = Y3 + rho*(L2+S2+Z-D)
 Y3 = Y3 + rho * (Z - mask*(D-L2-S2))
 
 #%  Calculate primal & dual residuals; Update rho
 res_primal = sqrt( norm(L1-L2,'F')^2 +
                      norm(S1-S2,'F')^2 +
-#                      norm(Z+L2+S2-D,'F')^2 )
                        norm(Z-mask*(D-L2-S2),'F')^2 )
 
 res_dual = rho * sqrt( norm(L2-L2_old,'F')^2 +
                          norm(S2-S2_old,'F')^2 +
-#                          norm(L2-L2_old+S2-S2_old,'F')^2 )
                            norm(mask * (L2-L2_old+S2-S2_old),'F')^2 )
 
 if (res_primal > 10 * res_dual) {
@@ -97,15 +89,9 @@ if (res_primal > 10 * res_dual) {
   } else if (res_dual > 10 * res_primal) {
     rho = rho / 2}
 
-# %     % Calculate loss
-# %     loss(i) = nuclearL1 + lambda*sum(sum(abs(S1))) + mu*norm(L2+S2-D,'F') ...
-# %         + sum(sum(Z1.*(L1-L2))) + sum(sum(Z2.*(S1-S2))) ...
-# %         + rho/2 * ( sum(sum((L1-L2).^2)) + sum(sum((S1-S2).^2)) );
-
 #% Check stopping criteria
 thresh_primal = EPS_ABS * sqrt(3*n*p) + EPS_REL * max(
                                                   sqrt( norm(L1,'F')^2 + norm(S1,'F')^2 + norm(Z,'F')^2 ),
-                                                 # sqrt( norm(L2,'F')^2 + norm(S2,'F')^2 + norm(L2+S2,'F')^2 ),
                                               sqrt( norm(L2,'F')^2 + norm(S2,'F')^2 + norm(mask*(L2+S2),'F')^2 ),
                                                   norm(D,'F'))
 

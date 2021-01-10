@@ -1,16 +1,16 @@
-#' Squareroot PCP function with missing values (NA)
+#' Nonnegative squareroot PCP function with missing values (NA)
 #'
-#' \code{root_pcp} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
+#' \code{root_pcp_na_nonnegL} implements \code{rootPCP} with a non-negativity constraint on the \code{L} solution matrix. \cr \cr
 #' It solved the following ADMM splitting problem: \cr \cr
-#' min_{L,S} \cr
-#' ||L||_* + lambda * ||S||_1 + mu * || P_(obs)[L+S-D] ||_F + I{L>=0} \cr \cr
+#' min(L,S) \cr
+#' ||L||_* + lambda * ||S||_1 + mu * || P_(obs)[L+S-D] ||_F + I[L>=0] \cr \cr
 #' This is first transformed to the problem: \cr \cr
-#' min_{L1,L2,L3,S1,S2,Z} \cr
-#' ||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F + I{L3>=0} \cr \cr
+#' min(L1,L2,L3,S1,S2,Z) \cr
+#' ||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F + I[L3>=0] \cr \cr
 #' s.t. L1 = L2; S1 = S2; Z = P_obs[D - L2 - S2]; L1 = L3. \cr \cr
 #' The algorithm conducts ADMM splitting as (L1,S1,Z),L3,(L2,S2). \cr \cr
-#' This version allows for missing values.
-#' Use NA for missing entries in D.
+#' This version allows for missing values. \cr \cr
+#' Use NA for missing entries in D. \cr \cr
 #' Assume that the true L>=0
 #'
 #' @param D The original dataset.

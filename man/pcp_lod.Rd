@@ -25,6 +25,6 @@ If the LOD threshold LOD = 0, solve the following ADMM splitting problem: \cr \c
 min(L1,L2,L3,S1,S2) \cr
 ||L1||_* + lambda * ||S1||_1 + mu/2 * ||L2+S2-D||_F^2 + I(L3>=0) \cr \cr
 s.t. L1 = L2; L1 = L3; S1 = S2. \cr \cr
-If LOD is not 0, replace ||L2+S2-D||_F^2 with LOD penalty.
+If LOD is not 0, replace ||L2+S2-D||_F^2 with LOD penalty. \cr \cr
 Below LOD data input in D should be denoted as negative values, e.g. -1.
 }

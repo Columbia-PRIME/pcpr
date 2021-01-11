@@ -37,7 +37,7 @@ To use this package, clone the repo or download the .zip file. Locate the folder
         * `mu` parameter
     * For more info: `?root_pcp`
         
-4. [root_pcp_nonnegL](R/root_pcp.R)
+4. [root_pcp_nonnegL](R/root_pcp_nonnegL.R)
     * This includes a non-negativity constraint on the `L` matrix with the squareroot version of the objective function. It does not include a LOD penalty.
     * It takes 3 inputs:
         * `D` the original dataset
@@ -53,3 +53,23 @@ To use this package, clone the repo or download the .zip file. Locate the folder
         * `lambda` parameter
         * `mu` parameter
     * For more info: `?root_pcp_na`
+    
+6. [root_pcp_na_nonnegL](R/root_pcp_na_nonnegL.R)
+    * This includes a non-negativity constraint on the `L` matrix and allows for missing values with the squareroot version of the objective function. It does not include a LOD penalty.
+    * Missing values should be pre-processed as `NA`.
+    * It takes 3 inputs:
+        * `D` the original dataset
+        * `lambda` parameter
+        * `mu` parameter
+    * For more info: `?root_pcp_na_nonnegL`
+    
+7. [root_pcp_na_nonnegL_lod](R/root_pcp_na_nonnegL_lod.R)
+    * This includes a non-negativity constraint on the `L` matrix, allows for missing values, and includes a separate penalty function for values <LOD with the squareroot version of the objective function.
+    * Missing values should be pre-processed as `NA`.
+    * Values <LOD should be pre-processed as `-1`.
+    * It takes 4 inputs:
+        * `D` the original dataset
+        * `lambda` parameter
+        * `mu` parameter
+        * `LOD` may be a scalar, vector, or matrix
+    * For more info: `?root_pcp_na_nonnegL_lod`

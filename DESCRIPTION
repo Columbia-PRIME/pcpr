@@ -1,7 +1,7 @@
 Package: pcpr
 Type: Package
 Title: Principal Component Pursuit for environmental epidemiology
-Version: 1.0
+Version: 1.0.0
 Author: Lizzy Gibson, Jingkai Yan, Robert Colgan, Lawrence Chillrud, John Wright, Jeff Goldsmith, Marianthi-Anna Kioumourtzoglou
 Maintainer: Lizzy <e.a.gibson@columbia.edu>
 Description: This package includes several algorithms for PCP as they are adapted to environmental data.

@@ -1,6 +1,7 @@
 #' Nonnegative squareroot PCP function with missing values (NA) & LOD penalty
 #'
-#' \code{root_pcp_na_nonnegL_lod} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
+#' \code{root_pcp_na_nonnegL_lod} implements \code{rootPCP} with a non-negativity constraint on
+#' the \code{L} solution matrix and LOD-specific penalties. \cr \cr
 #' It solved the following ADMM splitting problem: \cr \cr
 
 #' min(L,S) \cr

@@ -4,7 +4,7 @@
 \alias{pcp_lod}
 \title{PCP-LOD}
 \usage{
-pcp_lod(D, lambda, mu, LOD)
+pcp_lod(D, lambda, mu, LOD, verbose = FALSE)
 }
 \arguments{
 \item{D}{The original dataset.}
@@ -14,6 +14,8 @@ pcp_lod(D, lambda, mu, LOD)
 \item{mu}{The \code{mu} parameter penalizes the error term.}
 
 \item{LOD}{The LOD (limit of detection) may be a scalar, vector (\code{length(LOD) = ncol(D)}), or matrix (\code{dim(LOD) == dim(D)}).}
+
+\item{verbose}{A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}.}
 }
 \value{
 Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.

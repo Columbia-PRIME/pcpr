@@ -10,10 +10,11 @@
 #' @param D The original dataset.
 #' @param lambda The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.
 #' @param mu The \code{mu} parameter penalizes the error term.
+#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence. Optional, and by default, \code{verbose = FALSE}. 
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-stable_pcp <- function(D, lambda, mu) {
-  pcp_lod(D, lambda, mu, LOD = 0)
+stable_pcp <- function(D, lambda, mu, verbose = FALSE) {
+  pcp_lod(D, lambda, mu, LOD = 0, verbose)
 }

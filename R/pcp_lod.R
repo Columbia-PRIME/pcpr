@@ -13,11 +13,12 @@
 #' @param lambda The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.
 #' @param mu The \code{mu} parameter penalizes the error term.
 #' @param LOD The LOD (limit of detection) may be a scalar, vector (\code{length(LOD) = ncol(D)}), or matrix (\code{dim(LOD) == dim(D)}).
+#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}. 
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-pcp_lod <- function(D, lambda, mu, LOD) {
+pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
 
   n <- nrow(D)
   p <- ncol(D)
@@ -133,13 +134,14 @@ pcp_lod <- function(D, lambda, mu, LOD) {
 
     if (res_primal < thresh_primal && res_dual < thresh_dual) {
       flag_converge = 1;
-      print(paste0('Converged in ', i,' iterations.'))
-      break}
+      if (verbose) print(paste0('Converged in ', i,' iterations.')) 
+      break
+    }
     #%%%%% END NEW %%%%%
   }
 
-  if( i == MAX_ITER) warning('Maximum iterations reached. PCP did not converge.')
-#  print(paste0("Iteration: ", i, " Obj: ", round(loss[i], 5)))
+  if (i == MAX_ITER) warning('Maximum iterations reached. PCP did not converge.')
+  if (verbose) print(paste0("Iteration: ", i, " Obj: ", round(loss[i], 5)))
 
   L <- L3 # (L1 + L2 + L3) / 3
   S <- S1 #(S1 + S2) / 2

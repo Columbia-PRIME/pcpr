@@ -4,7 +4,7 @@
 \alias{stable_pcp}
 \title{stablePCP}
 \usage{
-stable_pcp(D, lambda, mu)
+stable_pcp(D, lambda, mu, verbose = FALSE)
 }
 \arguments{
 \item{D}{The original dataset.}
@@ -12,6 +12,8 @@ stable_pcp(D, lambda, mu)
 \item{lambda}{The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.}
 
 \item{mu}{The \code{mu} parameter penalizes the error term.}
+
+\item{verbose}{A logical indicating if you would like information on the number of iterations required to reach convergence. Optional, and by default, \code{verbose = FALSE}.}
 }
 \value{
 Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.

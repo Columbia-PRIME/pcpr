@@ -13,11 +13,12 @@
 #' @param D The original dataset.
 #' @param lambda The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.
 #' @param mu The \code{mu} parameter penalizes the error term.
+#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}. 
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-root_pcp <- function(D, lambda, mu) {
+root_pcp <- function(D, lambda, mu, verbose=FALSE) {
 
 n = nrow(D)
 p = ncol(D)
@@ -92,7 +93,7 @@ thresh_dual = EPS_ABS * sqrt(3*n*p) + EPS_REL * sqrt( norm(Y1,'F')^2 + norm(Y2,'
 
 if (res_primal < thresh_primal && res_dual < thresh_dual) {
   flag_converge = 1
-  print(paste0('Converged in ', i,' iterations.'))
+  if (verbose) print(paste0('Converged in ', i,' iterations.'))
   break}
 
 }
@@ -100,7 +101,7 @@ if (res_primal < thresh_primal && res_dual < thresh_dual) {
 L = (L1+L2) / 2
 S = (S1+S2) / 2
 
-if (flag_converge == 0) {print('Did not converge.')}
+if (flag_converge == 0 & verbose) print('Did not converge.')
 
 return(list(L,S))
 }

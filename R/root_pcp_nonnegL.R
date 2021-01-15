@@ -115,5 +115,5 @@ root_pcp_nonnegL <- function(D, lambda, mu, verbose = FALSE) {
 
   if (flag_converge == 0 & verbose) print('Did not converge.')
 
-  return(list(L,S))
+  return(list(L=L,S=S))
 }

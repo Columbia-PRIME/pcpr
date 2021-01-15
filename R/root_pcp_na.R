@@ -110,6 +110,6 @@ S = (S1+S2) / 2
 
 if (flag_converge == 0 & verbose) print('Did not converge.')
 
-return(list(L,S))
+return(list(L=L,S=S))
 }
 

@@ -84,3 +84,20 @@ loss_lod <- function(X, D, LOD) {
   sum(X_lod^2) / 2
 }
 
+#' Project rank
+#' Non-convex replacement for nuclear norm
+#'
+proj_rank_r = function(Y, r) {
+
+  USV <- svd(Y)
+  U <- USV$u
+  S <- USV$d
+  V <- USV$v
+
+  s                = S
+  s[(r+1):length(s)] = 0
+  S_new            = diag(s)
+
+  X = U %*% S_new %*% t(V)
+  return(X)
+}

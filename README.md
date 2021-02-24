@@ -80,3 +80,23 @@ To use this package, clone the repo or download the .zip file. Locate the folder
         * `LOD` may be a scalar, vector, or matrix
         * `verbose` parameter (optional)
     * For more info: `?root_pcp_na_nonnegL_lod`
+
+8. [root_pcp_noncvx](R/root_pcp_noncvx.R)
+    * This replaces the nuclear norm in the objective function with a projection to a lower rank. It does not include a LOD penalty or a non-negativity constraint on the `L` matrix.
+    * It takes 5 inputs:
+        * `D` the original dataset
+        * `lambda` parameter
+        * `mu` parameter
+        * `r` the desired rank
+        * `verbose` parameter (optional)
+    * For more info: `?root_pcp_noncvx`
+    
+9. [root_pcp_noncvx_nonneg](R/root_pcp_noncvx_nonneg.R)
+    * This replaces the nuclear norm in the objective function with a projection to a lower rank. It includes a non-negativity constraint on the `L` matrix. It does not include a LOD penalty.
+    * It takes 5 inputs:
+        * `D` the original dataset
+        * `lambda` parameter
+        * `mu` parameter
+        * `r` the desired rank
+        * `verbose` parameter (optional)
+    * For more info: `?root_pcp_noncvx_nonneg`

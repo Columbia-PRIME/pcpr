@@ -1,6 +1,6 @@
-#' Squareroot PCP function with missing values (NA)
+#' Nonconvex squareroot PCP function with missing values (NA)
 #'
-#' \code{root_pcp_na} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
+#' \code{root_pcp_noncvx_na} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix and replaces the nuclear norm with a projection onto a smaller rank. \cr \cr
 #' It solved the following ADMM splitting problem: \cr \cr
 #' min(L,S) \cr
 #' ||L||_* + lambda * ||S||_1 + mu * || P_(obs)[L+S-D] ||_F \cr \cr
@@ -15,12 +15,13 @@
 #' @param D The original dataset.
 #' @param lambda The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.
 #' @param mu The \code{mu} parameter penalizes the error term.
+#' @param r The \code{r} parameter specifies the desired rank.
 #' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}.
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-root_pcp_na <- function(D, lambda, mu, verbose = FALSE) {
+root_pcp_noncvx_na <- function(D, lambda, mu, r, verbose = FALSE) {
 
 n = nrow(D)
 p = ncol(D)
@@ -41,7 +42,7 @@ Y3 <- matrix(0, n, p)
 mask = !is.na(D)
 D[!mask] = 0
 
-MAX_ITER = 10000
+MAX_ITER = 20000
 EPS_ABS = 1e-6
 EPS_REL = 1e-6
 
@@ -56,8 +57,7 @@ L2_old = L2
 S2_old = S2
 
 #% Update 1st primal variable (L1,S1,Z)
-nuc = prox_nuclear( L2-Y1/rho, 1/rho )
-L1 = nuc[[1]]
+L1 = proj_rank_r( L2-Y1/rho, r )
 
 S1 = prox_l1( S2-Y2/rho, lambda/rho )
 Z = prox_fro( mask*(D-L2-S2)-Y3/rho, mu/rho )

@@ -57,6 +57,7 @@ for (i in 1:MAX_ITER) {
 
 #% Store previous values of L2,S2
 L2_old = L2
+L3_old = L3
 S2_old = S2
 
 #% Update 1st primal variable (L1,S1,Z)
@@ -91,7 +92,7 @@ res_primal = sqrt( norm(L1-L2,'F')^2 +
                      norm(S1-S2,'F')^2 +
                        norm(Z-mask*(D-L2-S2),'F')^2 + norm(L1-L3,'F')^2)
 
-res_dual = rho * sqrt( norm(L2-L2_old,'F')^2 +
+res_dual = rho * sqrt( norm(L2 + L3 - L2_old - L3_old,'F')^2 +
                          norm(S2-S2_old,'F')^2 +
                            norm(mask * (L2-L2_old+S2-S2_old),'F')^2 )
 
@@ -106,8 +107,8 @@ thresh_primal = EPS_ABS * sqrt(4*n*p) + EPS_REL *
                     sqrt( norm(L2,'F')^2 + norm(S2,'F')^2 + norm(mask*(L2+S2),'F')^2 + norm(L3,'F')^2),
                     norm(D,'F'))
 
-thresh_dual = EPS_ABS * sqrt(4*n*p) + EPS_REL *
-              sqrt( norm(Y1,'F')^2 + norm(Y2,'F')^2 + norm(Y3,'F')^2 + norm(Y4,'F')^2)
+thresh_dual = EPS_ABS * sqrt(3*n*p) + EPS_REL *
+              sqrt( norm(Y1+Y4,'F')^2 + norm(Y2,'F')^2 + norm(Y3,'F')^2)
 
 if (res_primal < thresh_primal && res_dual < thresh_dual) {
   flag_converge = 1

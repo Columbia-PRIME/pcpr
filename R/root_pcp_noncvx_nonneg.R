@@ -57,19 +57,21 @@ root_pcp_noncvx_nonneg <- function(D, lambda, mu, r, verbose=FALSE) {
     #% Update 1st primal variable (L1,S1,Z,L3)
     ## This makes it non-convex
     L1 = proj_rank_r( L2-Y1/rho, r)
-
     S1 = prox_l1( S2-Y2/rho, lambda/rho )
     Z = prox_fro( D-L2-S2-Y3/rho, mu/rho )
     L3 = pmax(L2-Y4/rho, 0)
 
     #% Update 2nd primal variable (L2,S2)
-    L2 = 1/3*( D-Z+ 2*L1 -S1 + (2*Y1 -Y2-Y3)/rho )
-    S2 = 1/3*( D-Z+ 2*S1 -L1 + (2*Y2 -Y1-Y3)/rho )
+    term1 = L1+L3+D-Z + (Y1+Y4-Y3)/rho
+    term2 = S1+D-Z + (Y2-Y3)/rho
+    L2 = (2*term1 - term2) / 5
+    S2 = (-term1 + 3*term2) / 5
 
     #% Update dual variable (Y1,Y2,Y3)
     Y1 = Y1 + rho*(L1-L2)
     Y2 = Y2 + rho*(S1-S2)
     Y3 = Y3 + rho*(L2+S2+Z-D)
+    Y4 = Y4 + rho*(L3-L2)
 
     #%  Calculate primal & dual residuals; Update rho
     res_primal = sqrt( norm(L1-L2,'F')^2 +
@@ -84,12 +86,6 @@ root_pcp_noncvx_nonneg <- function(D, lambda, mu, r, verbose=FALSE) {
       rho = rho * 2
     } else if (res_dual > 10 * res_primal) {
       rho = rho / 2}
-
-    # %     % Calculate loss
-    # %     loss(i) = nuclearL1 + lambda*sum(sum(abs(S1))) + mu*norm(L2+S2-D,'fro') ...
-    # %         + sum(sum(Y1.*(L1-L2))) + sum(sum(Y2.*(S1-S2))) + sum(sum(Y3.*(L2+S2+Z-D))) + ...
-    # %          sum(sum(Y4.*(L3-L2))) + rho/2 * ( sum(sum((L1-L2).^2)) + sum(sum((S1-S2).^2)) + ...
-    # %          sum(sum(L2+S2+Z-D)) + sum(sum(L3-L2)) );
 
     #% Check stopping criteria
     thresh_primal = EPS_ABS * sqrt(4*n*p) + EPS_REL * max(

@@ -9,9 +9,9 @@
 #' This is first transformed to the problem: \cr \cr
 
 #' min(L1,L2,S,Z) \cr
-#' ||L1||_* + lambda * ||S||_1 + mu * ( sum_(ij observed) f(Z_ij,D_ij) )^0.5 + I[L2>=0] \cr \cr
-#' s.t. L1 = L2; L1 + S = Z. \cr \cr
-#' The algorithm conducts ADMM splitting as L1, S, Z, L2. \cr \cr
+#' ||L1||_* + lambda * ||S1||_1 + mu * ( sum_(ij observed) f(Z_ij,D_ij) )^0.5 + I[L3>=0] \cr \cr
+#' s.t. L1 = L2; Z = P_obs[ L2 + S2]; L1 = L3 \cr \cr
+#' The algorithm conducts ADMM splitting as (L1, S1, Z), (L2, S2, L3). \cr \cr
 #' This version allows for missing values. \cr \cr
 #' Use NA for missing entries in D. \cr \cr
 #' Assume that the true L >= 0 & observations in D >= 0 \cr \cr
@@ -27,7 +27,7 @@
 #' @param lambda The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.
 #' @param mu The \code{mu} parameter penalizes the error term.
 #' @param LOD The LOD (limit of detection) may be a scalar, vector (\code{length(LOD) = ncol(D)}), or matrix (\code{dim(LOD) == dim(D)}).
-#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}. 
+#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}.
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
@@ -41,12 +41,16 @@ rho = 0.1; # Augmented Lagrangian parameter
 
 L1 <- matrix(0, n, p)
 L2 <- matrix(0, n, p)
+L3 <- matrix(0, n, p)
 
-S <- matrix(0, n, p)
+S1 <- matrix(0, n, p)
+S2 <- matrix(0, n, p)
 
 Z  <- matrix(0, n, p)
 Y1 <- matrix(0, n, p)
 Y2 <- matrix(0, n, p)
+Y3 <- matrix(0, n, p)
+Y4 <- matrix(0, n, p)
 
 # mask: support of observation of D
 
@@ -70,16 +74,16 @@ for (i in 1:MAX_ITER) {
 
 #% Store previous values of L2,S<Z
 L2_old = L2
-S_old = S
-Z_old = Z
+S2_old = S2
+L3_old = L3
 
 #% Update 1st primal variable (L1,S1,Z)
-nuc = prox_nuclear( (L2+Z-S-Y1/rho-Y2/rho)/2, 1/rho/2 )
+nuc = prox_nuclear( (L2+L3-Y1/rho-Y4/rho)/2, 1/rho/2 )
 L1 = nuc[[1]]
 
-S = prox_l1( Z-L1-Y2/rho, lambda/rho )
+S = prox_l1( S2-Y2/rho, lambda/rho )
 
-temp = L1+S+Y2/rho
+temp = L2+S2+Y3/rho
 
 Z_unobs = (1-mask_obs) * temp
 Z_obs_below_LOD1 = (mask_below_lod & (temp>=0) & (temp<=LOD)) * temp
@@ -91,15 +95,27 @@ Z = prox_fro( temp2, mu/rho ) + (mask_above_lod * D) +
     (LOD * mask_below_lod * (temp>=LOD)) +
     Z_unobs + Z_obs_below_LOD1
 
-L2 = pmax(L1+Y1/rho,0)
+L3 = pmax(L1+Y4/rho,0)
+
+#% Update 2nd primal variable (L2,S2)
+L2_obs = mask_obs * (1/3*( 2*L1-S1+Z + (2*Y1-Y2+Y3)/rho ))
+L2_unobs = (1-mask_obs)*(L1+Y1/rho)
+L2 = L2_obs+L2_unobs
+
+S2_obs = mask_obs * (1/3*( 2*S1-L1+Z + (2*Y2-Y1+Y3)/rho ))
+S2_unobs = (1-mask_obs) * (S1+Y2/rho)
+S2 = S2_obs+S2_unobs
 
 #% Update dual variable (Y1,Y2)
 Y1 = Y1 + rho*(L1-L2)
-Y2 = Y2 + rho*(L1+S-Z)
+Y2 = Y2 + rho*(S1-S2)
+Y3 = Y3 + rho*(Z-mask_obs*(L2 + S2))
+Y4 = Y4 + rho*(L1-L3)
 
 #%  Calculate primal & dual residuals; Update rho
-res_primal = sqrt(norm(L1-L2,'F')^2 + norm(L1+S-Z,'F')^2)
-res_dual   = rho * sqrt( norm(L2-L2_old+Z-Z_old-S+S_old,'F')^2 + norm(Z-Z_old,'F')^2)
+res_primal = sqrt(norm(L1-L2,'F')^2 + norm(S1-S2,'F')^2 + norm(mask_obs*(Z-L2-S2),'F')^2 + norm(L1-L3,'F')^2)
+res_dual = rho * sqrt( norm(L2+L3-L2_old-L3_old,'F')^2 + norm(S2-S2_old,'F')^2 +
+                       norm(mask*(L2-L2_old+S2-S2_old),'F')^2 )
 
 if (res_primal > 10 * res_dual) {
   rho = rho * 2
@@ -107,12 +123,11 @@ if (res_primal > 10 * res_dual) {
     rho = rho / 2}
 
 #% Check stopping criteria
-thresh_primal = EPS_ABS * sqrt(3*n*p) + EPS_REL *
-                max( sqrt( norm(L1,'F')^2 + norm(L1+S,'F')^2),
-                     sqrt( norm(L2,'F')^2 + norm(Z,'F')^2) )
-
+thresh_primal = EPS_ABS * sqrt(4*n*p) + EPS_REL *
+                max(sqrt( 2*norm(L1,'F')^2 + norm(S1,'F')^2 + norm(Z,'F')^2 ),
+                    sqrt( norm(L2,'F')^2 + norm(S2,'F')^2 + norm(mask*(L2+S2),'F')^2 + norm(L3,'F')^2))
 thresh_dual = EPS_ABS * sqrt(3*n*p) + EPS_REL *
-               sqrt( norm(Y1+Y2,'F')^2 + norm(Y2,'F')^2 )
+              sqrt( norm(Y1+Y4,'F')^2 + norm(Y2,'F')^2 + norm(Y3,'F')^2  )
 
 if (res_primal < thresh_primal && res_dual < thresh_dual) {
   flag_converge = 1
@@ -121,8 +136,8 @@ if (res_primal < thresh_primal && res_dual < thresh_dual) {
 
 }
 
-L_final = (L1+L2) / 2
-S_final = S
+L_final = (L1+L2+L3)/3
+S_final = (S1+S2)/2
 
 if (flag_converge == 0 & verbose) print('Did not converge.')
 

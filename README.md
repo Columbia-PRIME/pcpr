@@ -122,3 +122,15 @@ To use this package, clone the repo or download the .zip file. Locate the folder
         * `r` the desired rank
         * `verbose` parameter (optional)
     * For more info: `?root_pcp_noncvx_nonneg_w_na`
+    
+12. [root_pcp_na_nonneg_noncvx_LOD](R/root_pcp_na_nonneg_noncvx_LOD.R)
+    * This replaces the nuclear norm in the objective function with a projection to a lower rank. It includes a non-negativity constraint on the `L` matrix and a LOD penalty. It does allow missing values.
+    * Missing values should be pre-processed as `NA`.
+    * It takes 5 inputs:
+        * `D` the original dataset
+        * `lambda` parameter
+        * `mu` parameter
+        * `r` the desired rank
+        * `LOD` may be a scalar, vector, or matrix
+        * `verbose` parameter (optional)
+    * For more info: `?root_pcp_na_nonneg_noncvx_LOD`

@@ -89,15 +89,22 @@ loss_lod <- function(X, D, LOD) {
 #'
 proj_rank_r = function(Y, r) {
 
+  if (ncol(Y) < r) stop("r > matrix rank")
+  if (ncol(Y) == r) {return(Y)}
+
   USV <- svd(Y)
   U <- USV$u
   S <- USV$d
   V <- USV$v
 
-  s                = S
-  s[(r+1):length(s)] = 0
-  S_new            = diag(s)
+  s = S
 
+  if (length(S)-1 == r) {
+    s[r]  = 0} else {
+    s[(r+1):length(s)] = 0}
+
+  S_new  = diag(s)
   X = U %*% S_new %*% t(V)
   return(X)
 }
+

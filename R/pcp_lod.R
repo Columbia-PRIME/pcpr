@@ -20,6 +20,10 @@
 #' @export
 pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
 
+  if (class(LOD) == "list") {
+      LOD <- unlist(LOD)
+  }
+
   n <- nrow(D)
   p <- ncol(D)
   rho <- 0.1 # Augmented Lagrangian coefficient (rate)

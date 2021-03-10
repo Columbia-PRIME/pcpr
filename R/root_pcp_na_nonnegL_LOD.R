@@ -3,11 +3,9 @@
 #' \code{root_pcp_na_nonnegL_lod} implements \code{rootPCP} with a non-negativity constraint on
 #' the \code{L} solution matrix and LOD-specific penalties. \cr \cr
 #' It solved the following ADMM splitting problem: \cr \cr
-
 #' min(L,S) \cr
 #' ||L||_* + lambda * ||S||_1 + mu * ( sum_(ij observed) f((L+S)_ij, D_ij) )^0.5 + I[L>=0] \cr \cr
 #' This is first transformed to the problem: \cr \cr
-
 #' min(L1,L2,S,Z) \cr
 #' ||L1||_* + lambda * ||S1||_1 + mu * ( sum_(ij observed) f(Z_ij,D_ij) )^0.5 + I[L3>=0] \cr \cr
 #' s.t. L1 = L2; Z = P_obs[ L2 + S2]; L1 = L3 \cr \cr
@@ -16,7 +14,6 @@
 #' Use NA for missing entries in D. \cr \cr
 #' Assume that the true L >= 0 & observations in D >= 0 \cr \cr
 #' Use -1 for <LOD \cr \cr
-
 #' LOD penalty: \cr \cr
 #' f(x,y) = (x-y)^2 if y>0 \cr
 #'        = (x-LOD)^2 if y=-1, x>LOD \cr
@@ -32,8 +29,11 @@
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-#'
 root_pcp_na_nonnegL_lod <- function(D, lambda, mu, LOD, verbose = FALSE) {
+
+if (class(LOD) == "list") {
+    LOD <- unlist(LOD)
+}
 
 n = nrow(D)
 p = ncol(D)

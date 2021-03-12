@@ -29,7 +29,7 @@ This is first transformed to the problem: \cr \cr
 min(L1,L2,L3,S1,S2,Z) \cr
 1_{rank(L1) <= r} + lambda * ||S1||_1 + mu * ||Z||_F + I[L3>=0] \cr \cr
 s.t. L1 = L2; S1 = S2; Z = P_obs[D - L2 - S2]; L1 = L3. \cr \cr
-The algorithm conducts ADMM splitting as (L1,S1,Z),L3,(L2,S2). \cr \cr
+The algorithm conducts ADMM splitting as (L1,S1,Z),(L2,S2,L3). \cr \cr
 This version allows for missing values. \cr \cr
 Use NA for missing entries in D. \cr \cr
 Assume that the true L>=0

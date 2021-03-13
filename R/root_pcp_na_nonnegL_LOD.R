@@ -70,7 +70,7 @@ EPS_REL = 1e-6
 flag_converge = 0
 
 if (is.vector(LOD)) {
-  LOD = kronecker(matrix(1,length(LOD)),t(LOD))
+  LOD = kronecker(matrix(1,n),t(LOD))
 } # This converts a vector LOD to a matrix, so that it multiplies correctly
 
 #% ADMM-splitting iterations

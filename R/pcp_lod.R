@@ -54,7 +54,7 @@ pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
   SAME_THRESH <- 1e-4
 
   if (is.vector(LOD)) {
-    LOD = kronecker(matrix(1,length(LOD)),t(LOD))
+    LOD = kronecker(matrix(1,n),t(LOD))
   } # This converts a vector LOD to a matrix, so that it multiplies correctly
 
   loss <- vector("numeric", MAX_ITER)

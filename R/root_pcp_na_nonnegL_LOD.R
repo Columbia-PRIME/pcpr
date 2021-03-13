@@ -31,7 +31,7 @@
 #' @export
 root_pcp_na_nonnegL_lod <- function(D, lambda, mu, LOD, verbose = FALSE) {
 
-if (class(LOD) == "list") {
+if (any(class(LOD) == "list")) {
     LOD <- unlist(LOD)
 }
 
@@ -68,6 +68,10 @@ EPS_ABS = 1e-6
 EPS_REL = 1e-6
 
 flag_converge = 0
+
+if (is.vector(LOD)) {
+  LOD = kronecker(matrix(1,length(LOD)),t(LOD))
+} # This converts a vector LOD to a matrix, so that it multiplies correctly
 
 #% ADMM-splitting iterations
 for (i in 1:MAX_ITER) {

@@ -13,14 +13,14 @@
 #' @param lambda The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.
 #' @param mu The \code{mu} parameter penalizes the error term.
 #' @param LOD The LOD (limit of detection) may be a scalar, vector (\code{length(LOD) = ncol(D)}), or matrix (\code{dim(LOD) == dim(D)}).
-#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}. 
+#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}.
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
 pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
 
-  if (class(LOD) == "list") {
+  if (any(class(LOD) == "list")) {
       LOD <- unlist(LOD)
   }
 
@@ -54,8 +54,7 @@ pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
   SAME_THRESH <- 1e-4
 
   if (is.vector(LOD)) {
-    empty = matrix(1, nrow = nrow(D), ncol = ncol(D))
-    LOD = t(t(empty) * LOD)
+    LOD = kronecker(matrix(1,length(LOD)),t(LOD))
   } # This converts a vector LOD to a matrix, so that it multiplies correctly
 
   loss <- vector("numeric", MAX_ITER)
@@ -138,7 +137,7 @@ pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
 
     if (res_primal < thresh_primal && res_dual < thresh_dual) {
       flag_converge = 1;
-      if (verbose) print(paste0('Converged in ', i,' iterations.')) 
+      if (verbose) print(paste0('Converged in ', i,' iterations.'))
       break
     }
     #%%%%% END NEW %%%%%

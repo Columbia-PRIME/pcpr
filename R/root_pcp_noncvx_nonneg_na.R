@@ -26,7 +26,7 @@ root_pcp_noncvx_nonnegL_na <- function(D, lambda, mu, r, verbose = FALSE) {
 
 n = nrow(D)
 p = ncol(D)
-rho = 0.1; # Augmented Lagrangian parameter
+rho = 0.3; # Augmented Lagrangian parameter
 
 L1 <- matrix(0, n, p)
 L2 <- matrix(0, n, p)

@@ -63,13 +63,13 @@ mask_below_lod[is.na(mask_below_lod)] = 0
 mask_obs = !is.na(D)
 D[!mask_obs] = -2
 
-MAX_ITER = 10000
+MAX_ITER = 1000
 EPS_ABS = 1e-6
 EPS_REL = 1e-6
 
 flag_converge = 0
 
-if (is.vector(LOD)) {
+if (is.vector(LOD) & length(LOD) != 1) {
   LOD = kronecker(matrix(1,n),t(LOD))
 } # This converts a vector LOD to a matrix, so that it multiplies correctly
 
@@ -87,17 +87,19 @@ L1 = nuc[[1]]
 
 S1 = prox_l1( S2-Y2/rho, lambda/rho )
 
-temp = L2+S2+Y3/rho
+temp = L2+S2-Y3/rho
+# Z_unobs = (1-mask_obs) * temp
+# Z_obs_below_LOD1 = (mask_below_lod & (temp>=0) & (temp<=LOD)) * temp
+# temp2 = mask_obs * (1-(mask_below_lod & (temp>=0) & (temp<=LOD))) * temp -
+#         (mask_above_lod * D) - (LOD * mask_below_lod * (temp>=LOD))
+# Z = prox_fro( temp2, mu/rho ) + (mask_above_lod * D) +
+#    (LOD * mask_below_lod * (temp>=LOD)) +
+#    Z_unobs + Z_obs_below_LOD1
 
-Z_unobs = (1-mask_obs) * temp
-Z_obs_below_LOD1 = (mask_below_lod & (temp>=0) & (temp<=LOD)) * temp
-
-temp2 = mask_obs * (1-(mask_below_lod & (temp>=0) & (temp<=LOD))) * temp -
-         (mask_above_lod * D) - (LOD * mask_below_lod * (temp>=LOD))
-
-Z = prox_fro( temp2, mu/rho ) + (mask_above_lod * D) +
-    (LOD * mask_below_lod * (temp>=LOD)) +
-    Z_unobs + Z_obs_below_LOD1
+temp_D = D*mask_above_lod +
+         temp*(mask_below_lod & (temp>=0) & (temp<=LOD)) +
+         LOD*(mask_below_lod & (temp>LOD))
+Z = prox_fro( temp - temp_D, mu/rho ) + temp_D
 
 L3 = pmax(L1+Y4/rho,0)
 
@@ -113,7 +115,7 @@ S2 = S2_obs+S2_unobs
 #% Update dual variable (Y1,Y2)
 Y1 = Y1 + rho*(L1-L2)
 Y2 = Y2 + rho*(S1-S2)
-Y3 = Y3 + rho*(Z-mask_obs*(L2 + S2))
+Y3 = Y3 + rho*mask_obs*(Z-(L2 + S2))
 Y4 = Y4 + rho*(L1-L3)
 
 #%  Calculate primal & dual residuals; Update rho

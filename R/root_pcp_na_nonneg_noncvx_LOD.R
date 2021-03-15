@@ -70,7 +70,7 @@ EPS_REL = 1e-6
 
 flag_converge = 0
 
-if (is.vector(LOD)) {
+if (is.vector(LOD) & length(LOD) != 1) {
   LOD = kronecker(matrix(1,n),t(LOD))
   } # This converts a vector LOD to a matrix, so that it multiplies correctly
 
@@ -87,17 +87,19 @@ L1 = proj_rank_r( (L2+L3-Y1/rho-Y4/rho)/2, r)
 
 S1 = prox_l1( S2-Y2/rho, lambda/rho )
 
-temp = L2+S2+Y3/rho
+temp = L2+S2-Y3/rho
+# Z_unobs = (1-mask_obs) * temp
+# Z_obs_below_LOD1 = (mask_below_lod & (temp>=0) & (temp<=LOD)) * temp
+# temp2 = mask_obs * (1-(mask_below_lod & (temp>=0) & (temp<=LOD))) * temp -
+#         (mask_above_lod * D) - (LOD * mask_below_lod * (temp>=LOD))
+# Z = prox_fro( temp2, mu/rho ) + (mask_above_lod * D) +
+#    (LOD * mask_below_lod * (temp>=LOD)) +
+#    Z_unobs + Z_obs_below_LOD1
 
-Z_unobs = (1-mask_obs) * temp
-Z_obs_below_LOD1 = (mask_below_lod & (temp>=0) & (temp<=LOD)) * temp
-
-temp2 = mask_obs * (1-(mask_below_lod & (temp>=0) & (temp<=LOD))) * temp -
-         (mask_above_lod * D) - (LOD * mask_below_lod * (temp>=LOD))
-
-Z = prox_fro( temp2, mu/rho ) + (mask_above_lod * D) +
-    (LOD * mask_below_lod * (temp>=LOD)) +
-    Z_unobs + Z_obs_below_LOD1
+temp_D = D*mask_above_lod +
+         temp*(mask_below_lod & (temp>=0) & (temp<=LOD)) +
+         LOD*(mask_below_lod & (temp>LOD))
+Z = prox_fro( temp - temp_D, mu/rho ) + temp_D
 
 L3 = pmax(L1+Y4/rho,0)
 
@@ -113,38 +115,38 @@ S2 = S2_obs+S2_unobs
 #% Update dual variable (Y1,Y2)
 Y1 = Y1 + rho*(L1-L2)
 Y2 = Y2 + rho*(S1-S2)
-Y3 = Y3 + rho*(Z-mask_obs*(L2 + S2))
+Y3 = Y3 + rho*mask_obs*(Z-(L2 + S2))
 Y4 = Y4 + rho*(L1-L3)
 
 #%  Calculate primal & dual residuals; Update rho
 res_primal = sqrt(norm(L1-L2,'F')^2 + norm(S1-S2,'F')^2 + norm(mask_obs*(Z-L2-S2),'F')^2 + norm(L1-L3,'F')^2)
 res_dual = rho * sqrt( norm(L2+L3-L2_old-L3_old,'F')^2 + norm(S2-S2_old,'F')^2 +
-                       norm(mask_obs*(L2-L2_old+S2-S2_old),'F')^2 )
+                         norm(mask_obs*(L2-L2_old+S2-S2_old),'F')^2 )
 
 if (res_primal > 10 * res_dual) {
   rho = rho * 2
-  } else if (res_dual > 10 * res_primal) {
-    rho = rho / 2}
+} else if (res_dual > 10 * res_primal) {
+  rho = rho / 2}
 
 #% Check stopping criteria
 thresh_primal = EPS_ABS * sqrt(4*n*p) + EPS_REL *
-                max(sqrt( 2*norm(L1,'F')^2 + norm(S1,'F')^2 + norm(Z,'F')^2 ),
-                    sqrt( norm(L2,'F')^2 + norm(S2,'F')^2 + norm(mask_obs*(L2+S2),'F')^2 + norm(L3,'F')^2))
+  max(sqrt( 2*norm(L1,'F')^2 + norm(S1,'F')^2 + norm(Z,'F')^2 ),
+      sqrt( norm(L2,'F')^2 + norm(S2,'F')^2 + norm(mask_obs*(L2+S2),'F')^2 + norm(L3,'F')^2))
 thresh_dual = EPS_ABS * sqrt(3*n*p) + EPS_REL *
-              sqrt( norm(Y1+Y4,'F')^2 + norm(Y2,'F')^2 + norm(Y3,'F')^2  )
+  sqrt( norm(Y1+Y4,'F')^2 + norm(Y2,'F')^2 + norm(Y3,'F')^2  )
 
 if (res_primal < thresh_primal && res_dual < thresh_dual) {
   flag_converge = 1
   if (verbose) print(paste0('Converged in ', i,' iterations.'))
   break}
 
-}
+  }
 
-L_final = (L1+L2+L3)/3
-S_final = (S1+S2)/2
+  L_final = (L1+L2+L3)/3
+  S_final = (S1+S2)/2
 
-if (flag_converge == 0 & verbose) print('Did not converge.')
+  if (flag_converge == 0 & verbose) print('Did not converge.')
 
-return(list(L = L_final, S = S_final))
+  return(list(L = L_final, S = S_final))
 }
 

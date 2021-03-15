@@ -63,7 +63,7 @@ mask_below_lod[is.na(mask_below_lod)] = 0
 mask_obs = !is.na(D)
 D[!mask_obs] = -2
 
-MAX_ITER = 1000
+MAX_ITER = 10000
 EPS_ABS = 1e-6
 EPS_REL = 1e-6
 

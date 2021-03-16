@@ -26,11 +26,12 @@
 #' @param r The \code{r} parameter specifies the desired rank.
 #' @param LOD The LOD (limit of detection) may be a scalar, vector (\code{length(LOD) = ncol(D)}), or matrix (\code{dim(LOD) == dim(D)}).
 #' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}.
+#' @param MAX_ITER optional parameter to set the maximum number of iterations, default = 20,000
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-root_pcp_noncvx_nonnegL_na_lod <- function(D, lambda, mu, r, LOD, verbose = FALSE) {
+root_pcp_noncvx_nonnegL_na_lod <- function(D, lambda, mu, r, LOD, verbose = FALSE, MAX_ITER = 20000) {
 
 if (any(class(LOD) == "list")) {
     LOD <- unlist(LOD)
@@ -64,7 +65,6 @@ mask_below_lod[is.na(mask_below_lod)] = 0
 mask_obs = !is.na(D)
 D[!mask_obs] = -2
 
-MAX_ITER = 10000
 EPS_ABS = 1e-6
 EPS_REL = 1e-6
 

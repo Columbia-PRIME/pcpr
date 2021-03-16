@@ -4,7 +4,15 @@
 \alias{root_pcp_noncvx_nonnegL_na_lod}
 \title{Nonconvex nonnegative squareroot PCP function with missing values (NA) & LOD penalty}
 \usage{
-root_pcp_noncvx_nonnegL_na_lod(D, lambda, mu, r, LOD, verbose = FALSE)
+root_pcp_noncvx_nonnegL_na_lod(
+  D,
+  lambda,
+  mu,
+  r,
+  LOD,
+  verbose = FALSE,
+  MAX_ITER = 20000
+)
 }
 \arguments{
 \item{D}{The original dataset.}
@@ -18,6 +26,8 @@ root_pcp_noncvx_nonnegL_na_lod(D, lambda, mu, r, LOD, verbose = FALSE)
 \item{LOD}{The LOD (limit of detection) may be a scalar, vector (\code{length(LOD) = ncol(D)}), or matrix (\code{dim(LOD) == dim(D)}).}
 
 \item{verbose}{A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}.}
+
+\item{MAX_ITER}{optional parameter to set the maximum number of iterations, default = 20,000}
 }
 \value{
 Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.

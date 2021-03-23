@@ -137,6 +137,7 @@ pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
 
     if (res_primal < thresh_primal && res_dual < thresh_dual) {
       flag_converge = 1;
+      final_iter = i
       if (verbose) print(paste0('Converged in ', i,' iterations.'))
       break
     }
@@ -148,7 +149,7 @@ pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
 
   L <- L3 # (L1 + L2 + L3) / 3
   S <- S1 #(S1 + S2) / 2
-  list(L = L, S = S)
+  return(list(L = L, S = S, final_iter=final_iter))
 }
 
 

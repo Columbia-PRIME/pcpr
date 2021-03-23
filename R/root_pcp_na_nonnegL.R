@@ -108,6 +108,7 @@ thresh_dual = EPS_ABS * sqrt(3*n*p) + EPS_REL *
 
 if (res_primal < thresh_primal && res_dual < thresh_dual) {
   flag_converge = 1
+  final_iter = i
   if (verbose) print(paste0('Converged in ', i,' iterations.'))
   break}
 
@@ -118,6 +119,6 @@ S = (S1+S2) / 2
 
 if (flag_converge == 0 & verbose) print('Did not converge.')
 
-return(list(L=L,S=S))
+return(list(L=L,S=S, final_iter = final_iter))
 }
 

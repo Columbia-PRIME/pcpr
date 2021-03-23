@@ -13,7 +13,7 @@
 #' @param D The original dataset.
 #' @param lambda The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.
 #' @param mu The \code{mu} parameter penalizes the error term.
-#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}. 
+#' @param verbose A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}.
 #'
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
@@ -105,6 +105,7 @@ root_pcp_nonnegL <- function(D, lambda, mu, verbose = FALSE) {
 
     if (res_primal < thresh_primal && res_dual < thresh_dual) {
       flag_converge = 1
+      final_iter = i
       if (verbose) print(paste0('Converged in ', i,' iterations.'))
       break}
 
@@ -115,5 +116,5 @@ root_pcp_nonnegL <- function(D, lambda, mu, verbose = FALSE) {
 
   if (flag_converge == 0 & verbose) print('Did not converge.')
 
-  return(list(L=L,S=S))
+  return(list(L=L,S=S, final_iter = final_iter))
 }

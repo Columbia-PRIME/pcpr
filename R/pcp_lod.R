@@ -135,9 +135,9 @@ pcp_lod <- function(D, lambda, mu, LOD, verbose=FALSE) {
                                                            sqrt( norm(L2,'F')^2 + norm(L3,'F')^2 + norm(S2,'F')^2 ))
     thresh_dual = EPS_ABS * sqrt(2*n*p) + EPS_REL * sqrt( norm(Z1+Z2,'F')^2 + norm(Z3,'F')^2 )
 
+    final_iter = i
     if (res_primal < thresh_primal && res_dual < thresh_dual) {
       flag_converge = 1;
-      final_iter = i
       if (verbose) print(paste0('Converged in ', i,' iterations.'))
       break
     }

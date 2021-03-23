@@ -96,9 +96,9 @@ root_pcp_noncvx_nonneg <- function(D, lambda, mu, r, verbose=FALSE) {
     thresh_dual = EPS_ABS * sqrt(4*n*p) + EPS_REL *
       sqrt( norm(Y1,'F')^2 + norm(Y2,'F')^2 + norm(Y3,'F')^2  + norm(Y4,'F')^2 )
 
+    final_iter = i
     if (res_primal < thresh_primal && res_dual < thresh_dual) {
       flag_converge = 1
-      final_iter = i
       if (verbose) print(paste0('Converged in ', i,' iterations.'))
       break}
 

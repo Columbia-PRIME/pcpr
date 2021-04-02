@@ -31,7 +31,7 @@
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-root_pcp_noncvx_nonnegL_na_lod <- function(D, lambda, mu, r, LOD, verbose = FALSE, MAX_ITER = 20000) {
+root_pcp_noncvx_nonnegL_na_lod <- function(D, lambda, mu, r, LOD, verbose = FALSE, MAX_ITER = 10000) {
 
 if (any(class(LOD) == "list")) {
     LOD <- unlist(LOD)

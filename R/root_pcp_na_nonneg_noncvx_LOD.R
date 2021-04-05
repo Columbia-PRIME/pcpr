@@ -147,7 +147,7 @@ if (res_primal < thresh_primal && res_dual < thresh_dual) {
   S_final = (S1+S2)/2
 
   if (flag_converge == 0 & verbose) print('Did not converge.')
-
+  L[L < 0] <- 0
   return(list(L = L_final, S = S_final, final_iter = final_iter))
 }
 

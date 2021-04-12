@@ -45,7 +45,7 @@ Y4 <- matrix(0, n, p)
 mask = !is.na(D)
 D[!mask] = 0
 
-MAX_ITER = 20000
+MAX_ITER = 10000
 EPS_ABS = 1e-6
 EPS_REL = 1e-6
 
@@ -122,7 +122,7 @@ L = (L1+L2+L3) / 3
 S = (S1+S2) / 2
 
 if (flag_converge == 0 & verbose) print('Did not converge.')
-
+L[L < 0] <- 0
 return(list(L=L,S=S, final_iter = final_iter))
 }
 

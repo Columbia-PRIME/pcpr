@@ -31,7 +31,7 @@
 #' @return Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
 #'
 #' @export
-root_pcp_noncvx_nonnegL_na_lod <- function(D, lambda, mu, r, LOD, verbose = FALSE, MAX_ITER = 20000) {
+root_pcp_noncvx_nonnegL_na_lod <- function(D, lambda, mu, r, LOD, verbose = FALSE, MAX_ITER = 10000) {
 
 if (any(class(LOD) == "list")) {
     LOD <- unlist(LOD)
@@ -147,7 +147,7 @@ if (res_primal < thresh_primal && res_dual < thresh_dual) {
   S_final = (S1+S2)/2
 
   if (flag_converge == 0 & verbose) print('Did not converge.')
-
+  L[L < 0] <- 0
   return(list(L = L_final, S = S_final, final_iter = final_iter))
 }
 

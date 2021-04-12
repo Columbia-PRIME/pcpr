@@ -40,7 +40,7 @@ root_pcp_noncvx_nonneg <- function(D, lambda, mu, r, verbose=FALSE) {
   Y3 <- matrix(0, n, p)
   Y4 <- matrix(0, n, p)
 
-  MAX_ITER = 20000
+  MAX_ITER = 10000
   EPS_ABS = 1e-6
   EPS_REL = 1e-6
 
@@ -108,7 +108,7 @@ root_pcp_noncvx_nonneg <- function(D, lambda, mu, r, verbose=FALSE) {
   S = (S1+S2) / 2
 
   if (flag_converge == 0 & verbose) print('Did not converge.')
-
+  L[L < 0] <- 0
   return(list(L=L,S=S, final_iter = final_iter))
 }
 

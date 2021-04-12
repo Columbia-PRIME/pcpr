@@ -37,7 +37,7 @@ root_pcp_noncvx <- function(D, lambda, mu, r, verbose=FALSE) {
   Y2 <- matrix(0, n, p)
   Y3 <- matrix(0, n, p)
 
-  MAX_ITER = 20000
+  MAX_ITER = 10000
   EPS_ABS = 1e-6
   EPS_REL = 1e-6
 

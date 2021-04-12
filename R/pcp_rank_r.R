@@ -1,4 +1,4 @@
-pcp_rank_r = function(D,gamma,r) {
+pcp_rank_r = function(D,gamma,r, verbose=FALSE) {
 
     # % solve the problem
     # %
@@ -45,12 +45,13 @@ pcp_rank_r = function(D,gamma,r) {
             obj = obj_new}
 
         iter = iter + 1
+        allObj = c(allObj, obj)
 
-        if (iter %% 100 == 0) {print(paste('Iter:', iter, ', Obj:', obj, ', Step:', delta))}
+        if (verbose & iter %% 100 == 0) {print(paste0('Iter: ', iter, ', Obj: ', round(obj,4), ', Step: ', round(delta,4)))}
 
         if (iter >= max_iter | t < 1e-10) {done = TRUE}
-
-        allObj = rbind(allObj, obj)
+        if (iter >= max_iter & verbose) {print('Did not converge.')}
+        if (verbose & t < 1e-10) {print(paste("Converged in:", iter, "iterations."))}
     }
         return(list(L = L,S = S,iter = iter))
 }

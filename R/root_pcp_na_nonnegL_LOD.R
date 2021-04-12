@@ -143,7 +143,7 @@ if (res_primal < thresh_primal && res_dual < thresh_dual) {
 
 }
 
-L_final = (L1+L2+L3)/3
+L = (L1+L2+L3)/3
 S_final = (S1+S2)/2
 
 if (flag_converge == 0 & verbose) print('Did not converge.')

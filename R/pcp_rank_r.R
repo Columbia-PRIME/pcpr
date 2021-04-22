@@ -15,6 +15,8 @@ pcp_rank_r = function(D,gamma,r, verbose=FALSE) {
     L = matrix(0, nrow=n, ncol=p)
     S = matrix(0, nrow=n, ncol=p)
 
+    L = (n*p / sum(Om)) * proj_rank_r(D,r) # best rank r approximation as initialization point.
+
     obj = Inf
 
     t = .01

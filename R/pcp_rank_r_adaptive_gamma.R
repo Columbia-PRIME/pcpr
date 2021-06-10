@@ -1,5 +1,5 @@
 #' @export
-pcp_rank_r = function(D,gamma,r, L_init = NULL, verbose=FALSE) {
+pcp_rank_r_adaptive_gamma = function(D,gamma,r, L_init = NULL, verbose=FALSE) {
 
     # % solve the problem
     # %
@@ -29,18 +29,22 @@ pcp_rank_r = function(D,gamma,r, L_init = NULL, verbose=FALSE) {
     done = FALSE
     max_iter = 4000
     allObj = c()
+    gamma_vec = apply(Om, 1, function(v) {
+        denom = sum(v) - r
+        if (denom <= 0) denom = 1
+        sqrt((n - r) / denom)
+    })
 
     while (!done) {
 
-        R = Om * ( D - L - S );
-        S_new = prox_l1( S + t * R, t*gamma )
+        R = Om * ( D - L - S )
+        S_new = prox_l1( S + t * R, t*gamma*gamma_vec )
         L_new = proj_rank_r( L + t * R, r )
 
         delta = sqrt(norm(S-S_new,'F')^2 + norm(L-L_new,'F')^2)
 
         # norm 1 is the maximum absolute column sum of the matrix.
         obj_new = gamma * norm(S,"1") + .5 * norm( Om * ( D - L - S ), 'F' )^2
-
 
         if (obj_new > obj) {
             t = t * .95

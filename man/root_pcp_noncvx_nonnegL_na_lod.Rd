@@ -11,7 +11,7 @@ root_pcp_noncvx_nonnegL_na_lod(
   r,
   LOD,
   verbose = FALSE,
-  MAX_ITER = 20000
+  MAX_ITER = 10000
 )
 }
 \arguments{

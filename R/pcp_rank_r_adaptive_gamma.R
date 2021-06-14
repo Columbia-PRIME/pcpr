@@ -32,7 +32,7 @@ pcp_rank_r_adaptive_gamma = function(D,gamma,r, L_init = NULL, verbose=FALSE) {
     gamma_vec = apply(Om, 1, function(v) {
         denom = sum(v) - r
         if (denom <= 0) denom = 1
-        sqrt((n - r) / denom)
+        sqrt((p - r) / denom)
     })
 
     while (!done) {
@@ -43,9 +43,11 @@ pcp_rank_r_adaptive_gamma = function(D,gamma,r, L_init = NULL, verbose=FALSE) {
 
         delta = sqrt(norm(S-S_new,'F')^2 + norm(L-L_new,'F')^2)
 
-        # norm 1 is the maximum absolute column sum of the matrix.
-        obj_new = gamma * norm(S,"1") + .5 * norm( Om * ( D - L - S ), 'F' )^2
-
+        # norm 1 is the maximum absolute column sum of the matrix. In R this is given by norm(S, "1").
+        # sum(abs(S)) is the entry-wise L1 norm.
+        #obj_new = gamma * norm(S,"1") + .5 * norm( Om * ( D - L - S ), 'F' )^2
+        obj_new = gamma * sum(abs(S)) + .5 * norm( Om * ( D - L - S ), 'F' )^2
+        
         if (obj_new > obj) {
             t = t * .95
         } else {

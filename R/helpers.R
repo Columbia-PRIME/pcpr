@@ -99,9 +99,7 @@ proj_rank_r = function(Y, r) {
 
   s = S
 
-  if (length(S)-1 == r) {
-    s[r]  = 0} else {
-    s[(r+1):length(s)] = 0}
+  s[(r+1):length(s)] = 0
 
   S_new  = diag(s)
   X = U %*% S_new %*% t(V)

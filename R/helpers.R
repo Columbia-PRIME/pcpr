@@ -98,13 +98,26 @@ proj_rank_r = function(Y, r) {
   V <- USV$v
 
   s = S
-
-  if (length(S)-1 == r) {
-    s[r]  = 0} else {
-    s[(r+1):length(s)] = 0}
+  
+  # used to read:
+  #if (length(S)-1 == r) {
+  #  s[r]  = 0
+  #} else {
+  #  s[(r+1):length(s)] = 0
+  #}
+  # now reads:
+  s[(r+1):length(s)] = 0
 
   S_new  = diag(s)
   X = U %*% S_new %*% t(V)
   return(X)
 }
 
+#' HT
+#' Hard-thresholding for the sparse matrix
+#'
+HT = function(Y, c) {
+  X = Y
+  X[abs(X) < c] = 0
+  return(X)
+}

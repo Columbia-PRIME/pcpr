@@ -41,7 +41,6 @@ pcp_rank_r = function(D,gamma,r, L_init = NULL, verbose=FALSE) {
         # norm 1 is the maximum absolute column sum of the matrix.
         obj_new = gamma * norm(S,"1") + .5 * norm( Om * ( D - L - S ), 'F' )^2
 
-
         if (obj_new > obj) {
             t = t * .95
         } else {

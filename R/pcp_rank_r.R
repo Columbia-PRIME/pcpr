@@ -32,14 +32,16 @@ pcp_rank_r = function(D,gamma,r, L_init = NULL, verbose=FALSE) {
 
     while (!done) {
 
-        R = Om * ( D - L - S );
+        R = Om * ( D - L - S )
         S_new = prox_l1( S + t * R, t*gamma )
         L_new = proj_rank_r( L + t * R, r )
 
         delta = sqrt(norm(S-S_new,'F')^2 + norm(L-L_new,'F')^2)
 
         # norm 1 is the maximum absolute column sum of the matrix.
-        obj_new = gamma * norm(S,"1") + .5 * norm( Om * ( D - L - S ), 'F' )^2
+        # old bersion below:
+        #obj_new = gamma * norm(S,"1") + .5 * norm( Om * ( D - L - S ), 'F' )^2
+        obj_new = gamma * sum(abs(S_new)) + .5 * norm( Om * ( D - L_new - S_new ), 'F' )^2
 
         if (obj_new > obj) {
             t = t * .95

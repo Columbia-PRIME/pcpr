@@ -46,7 +46,9 @@ pcp_rank_r_adaptive_gamma = function(D,gamma,r, L_init = NULL, verbose=FALSE) {
         # norm 1 is the maximum absolute column sum of the matrix. In R this is given by norm(S, "1").
         # sum(abs(S)) is the entry-wise L1 norm.
         #obj_new = gamma * norm(S,"1") + .5 * norm( Om * ( D - L - S ), 'F' )^2
-        obj_new = gamma * sum(abs(S)) + .5 * norm( Om * ( D - L - S ), 'F' )^2
+        # LGC: now trying Junhui's replacement of S with S_new and L with L_new. old code commented out below
+        #obj_new = gamma * sum(abs(S)) + .5 * norm( Om * ( D - L - S ), 'F' )^2
+        obj_new = gamma * sum(abs(S_new)) + .5 * norm( Om * ( D - L_new - S_new ), 'F' )^2
         
         if (obj_new > obj) {
             t = t * .95

@@ -1,5 +1,5 @@
 #' @export
-RRMC = function(D, r, eta, L_init = NULL) {
+RRMC_bm = function(D, m1, m2, r, eta, numIter = 10, X11_L = NULL, verbose=FALSE) {
 	
 	n = nrow(D)
 	p = ncol(D)
@@ -15,16 +15,12 @@ RRMC = function(D, r, eta, L_init = NULL) {
 	T = 10*log(40*r*n*temp[1]/epsilon)
 	zeta = eta * temp[1]
 
-	if (is.null(L_init)) {
-		L = matrix(0, nrow = n, ncol = p)
-	} else {
-		L = L_init
-	}
+	L = matrix(0, nrow = n, ncol = p)
 	for (k in 1:r) {
 		for (t in 0:T) {
 			S = HT(Omega*(D - L), zeta)
 			Mt = L + (n*p/sum(Omega)) * Omega * (D - S - L)
-			L = proj_rank_r(Mt, k)
+			L = proj_r_partial(Y=Mt, m1=m1, m2=m2, r=k, numIter=numIter, X11_L=X11_L, verbose=verbose)
 			temp = svd(Mt)$d
 			zeta = eta * (temp[k+1] + 0.5^(t-2) * temp[k])
 		}

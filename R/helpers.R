@@ -87,6 +87,7 @@ loss_lod <- function(X, D, LOD) {
 #' Project rank
 #' Non-convex replacement for nuclear norm
 #'
+#' @export
 proj_rank_r = function(Y, r) {
 
   if (ncol(Y) < r) stop("r > matrix rank")
@@ -110,6 +111,74 @@ proj_rank_r = function(Y, r) {
 
   S_new  = diag(s)
   X = U %*% S_new %*% t(V)
+  return(X)
+}
+
+#' @export
+proj_r_partial <- function(Y, m1, m2, r, numIter = 10, X11_L = NULL, verbose = FALSE) {
+  #  % solve the optimization problem 
+  #%
+  #%   min_{rank(X) <= r} .5 || P_Gamma^c [Y - X] ||_F^2
+  #%
+  #% via the iteration 
+  #% 
+  #%   X^+ = P_r  [  X11  Y12  ]
+  #%              [  Y21  Y22  ]
+  #% 
+  #% 
+  #% This method assumes that entries missing are the upper left block 
+  #%    { 1, ..., m1 } x { 1, ..., m2 }
+  #%  
+  #%  
+
+  #% parameters
+  Y[is.na(Y)] <- 0
+
+  M1 <- nrow(Y)
+  M2 <- ncol(Y)
+
+  #% initialize
+  Y12 <- Y[1:m1, (m2+1):M2]
+  Y22 <- Y[(m1+1):M1, (m2+1):M2]
+  Y21 <- Y[(m1+1):M1, 1:m2]
+
+  UsV <- svd(Y22)
+  U <- UsV$u
+  s <- UsV$d
+  V <- UsV$v
+
+  Y22_pinv <- V[, 1:r] %*% solve(diag(s)[1:r, 1:r], tol = 1e-18) %*% t(U[, 1:r])
+
+  X11 <- Y12 %*% Y22_pinv %*% Y21
+
+  X <- Y
+
+  X[1:m1, 1:m2] <- X11
+
+  X <- proj_rank_r(X, r)
+  
+  #X11_init <- X11
+
+  #for (i in 1:numIter) {
+  #  H <- Y
+  #  H[1:m1, 1:m2] <- X11
+
+  #  X <- proj_rank_r(H, r)
+
+  #  X11_new <- X[1:m1, 1:m2]
+
+  #  if (is.null(X11_L)) {
+  #    step <- norm(X11_new - X11, "F")
+  #    if (verbose) cat(paste("Iter:", i, "Step: ", step, "\n"))
+  #  } else {
+  #    step <- norm(X11_new - X11_L)
+  #    if (verbose) cat(paste("Iter:", i, "Loss: ", step, "\n"))
+  #  }
+    
+  #  X11 <- X11_new
+
+  #}
+
   return(X)
 }
 

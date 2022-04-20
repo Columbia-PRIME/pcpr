@@ -1,11 +1,13 @@
 #' @export
-RRMC = function(D, r, eta, L_init = NULL) {
+RRMC_bm_init = function(D, r, eta, m1, m2, L_init = NULL) {
 	
 	n = nrow(D)
 	p = ncol(D)
 
 	Omega = !is.na(D)
 	D[!Omega] = 0
+
+	D = proj_r_partial(Y=D, m1=m1, m2=m2, r=p-m2)
 
 	L_list = list()
 	S_list = list()

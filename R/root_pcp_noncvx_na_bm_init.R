@@ -44,7 +44,7 @@ D[!mask] = 0
 
 D = proj_r_partial(Y=D, m1=m1, m2=m2, r=p-m2)
 
-MAX_ITER = 10000
+MAX_ITER = 4000
 EPS_ABS = 1e-6
 EPS_REL = 1e-6
 

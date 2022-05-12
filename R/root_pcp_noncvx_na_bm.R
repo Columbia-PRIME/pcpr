@@ -42,7 +42,7 @@ Y3 <- matrix(0, n, p)
 mask = !is.na(D)
 D[!mask] = 0
 
-MAX_ITER = 10000
+MAX_ITER = 4000
 EPS_ABS = 1e-6
 EPS_REL = 1e-6
 

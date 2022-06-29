@@ -87,8 +87,8 @@ loss_lod <- function(X, D, LOD) {
 #' Project rank
 #' Non-convex replacement for nuclear norm
 #'
-#' @export
-proj_rank_r = function(Y, r) {
+#' @keywords internal
+old_proj_rank_r = function(Y, r) {
 
   if (ncol(Y) < r) stop("r > matrix rank")
   if (ncol(Y) == r) {return(Y)}
@@ -184,7 +184,7 @@ proj_r_partial <- function(Y, m1, m2, r, numIter = 10, X11_L = NULL, verbose = F
 
 #' HT
 #' Hard-thresholding for the sparse matrix
-#'
+#' @keywords internal
 HT = function(Y, c) {
   X = Y
   X[abs(X) < c] = 0

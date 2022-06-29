@@ -11,3 +11,4 @@ HT(Y, c)
 HT
 Hard-thresholding for the sparse matrix
 }
+\keyword{internal}

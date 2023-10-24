@@ -38,7 +38,8 @@ RRMC <- function(D, r, eta, LOD = -Inf) {
       # calculate the gradient of the LOD penalty:
       grad_LOD_penalty <- mask_above_LOD * (D_hat - D) + # observed and above LOD
                           mask_below_LOD * (D_hat < 0) * D_hat + # observed, below LOD, less than 0
-                          mask_below_LOD * (D_hat > LOD) * (D_hat - LOD) # observed, below LOD, current appx bigger than LOD
+                          ifelse(mask_below_LOD, (D_hat > LOD) * (D_hat - LOD), 0) # observed, below LOD, current appx bigger than LOD
+                          #mask_below_LOD * (D_hat > LOD) * (D_hat - LOD) # observed, below LOD, current appx bigger than LOD
 
       # gradient step:
       M_i <- L - (n*p/sum(Omega))*grad_LOD_penalty
@@ -64,6 +65,7 @@ RRMC <- function(D, r, eta, LOD = -Inf) {
 #' @return The hard-thresholded sparse matrix.
 #'
 #' @seealso \code{\link{prox_l1}}
+#' @examples
 #' @keywords internal
 hard_thresholding <- function(S, c) {
 
@@ -86,6 +88,7 @@ hard_thresholding <- function(S, c) {
 #' @return The best rank r approximation to the input matrix.
 #'
 #' @seealso \code{\link{prox_nuclear}}
+#' @examples
 #' @keywords internal
 proj_rank_r <- function(L, r) {
 

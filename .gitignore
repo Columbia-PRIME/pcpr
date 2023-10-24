@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 *.mat
-*.Rproj
+*.csv
 *.DS_Store
+my-doc/

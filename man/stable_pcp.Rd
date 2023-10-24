@@ -2,27 +2,19 @@
 % Please edit documentation in R/stable_pcp.R
 \name{stable_pcp}
 \alias{stable_pcp}
-\title{stablePCP}
+\title{LGC: Need to add missing value functionality !! Needs a code check!}
 \usage{
-stable_pcp(D, lambda, mu, verbose = FALSE)
-}
-\arguments{
-\item{D}{The original dataset.}
-
-\item{lambda}{The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.}
-
-\item{mu}{The \code{mu} parameter penalizes the error term.}
-
-\item{verbose}{A logical indicating if you would like information on the number of iterations required to reach convergence. Optional, and by default, \code{verbose = FALSE}.}
-}
-\value{
-Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
+stable_pcp(
+  D,
+  lambda,
+  mu,
+  LOD = -Inf,
+  non_negative = T,
+  max_iter = 10000,
+  verbose = F
+)
 }
 \description{
-\code{stablePCP} includes a non-negativity constraint on the \code{L} solution matrix.
-It does not include LOD penalties. \cr \cr
-Solve the following ADMM splitting problem: \cr \cr
-min(L1,L2,L3,S1,S2) \cr
-||L1||_* + lambda * ||S1||_1 + mu/2 * ||L2+S2-D||_F^2 + I(L3>=0) \cr \cr
-s.t. L1 = L2; L1 = L3; S1 = S2. \cr \cr
+LGC: Need to add missing value functionality !! Needs a code check!
 }
+\keyword{internal}

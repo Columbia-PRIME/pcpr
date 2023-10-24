@@ -2,30 +2,19 @@
 % Please edit documentation in R/root_pcp.R
 \name{root_pcp}
 \alias{root_pcp}
-\title{Squareroot PCP function}
+\title{Needs a code check!}
 \usage{
-root_pcp(D, lambda, mu, verbose = FALSE)
-}
-\arguments{
-\item{D}{The original dataset.}
-
-\item{lambda}{The \code{lambda} parameter penalizes the proximal L1 gradient on the \code{S} matrix.}
-
-\item{mu}{The \code{mu} parameter penalizes the error term.}
-
-\item{verbose}{A logical indicating if you would like information on the number of iterations required to reach convergence printed. Optional, and by default \code{verbose = FALSE}.}
-}
-\value{
-Returns two solution matrices, the low rank \code{L} matrix and the sparse \code{S} matrix.
+root_pcp(
+  D,
+  lambda,
+  mu,
+  LOD = -Inf,
+  non_negative = T,
+  max_iter = 10000,
+  verbose = F
+)
 }
 \description{
-\code{root_pcp} implements \code{rootPCP} with NO non-negativity constraint on the \code{L} solution matrix. \cr \cr
-It solved the following ADMM splitting problem: \cr \cr
-min_{L,S} \cr
-||L||_* + lambda * ||S||_1 + mu * ||L+S-D||_F \cr \cr
-This is first transformed to the problem: \cr \cr
-min_{L1,L2,S1,S2,Z} \cr
-||L1||_* + lambda * ||S1||_1 + mu * ||Z||_F \cr \cr
-s.t. L1 = L2; S1 = S2; L2 + S2 + Z = D. \cr \cr
-The algorithm conducts ADMM splitting as (L1,S1,Z),(L2,S2).
+Needs a code check!
 }
+\keyword{internal}

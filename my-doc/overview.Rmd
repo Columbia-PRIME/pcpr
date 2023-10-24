@@ -1,0 +1,515 @@
+---
+title: "Principal component pursuit via `pcpr`"
+subtitle: "Pattern recognition in environmental mixtures analyses"
+author: "Lawrence G. Chillrud"
+date: "`r Sys.Date()`"
+output: 
+  rmdformats::readthedown:
+    use_bookdown: true
+    toc_depth: 6
+---
+```{css, echo = FALSE}
+#content{
+    max-width:1920px;
+}
+```
+
+```{r options, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 8, message = FALSE)
+```
+
+In this document, we illustrate how to employ Principal Component Pursuit (PCP) for pattern recognition in environmental health (EH) analyses with the `pcpr` R package. Additional information regarding `pcpr`'s statistical methodology and computational details are provided in [Chillrud et al. (2022)](). 
+
+# Overview
+
+## The mixtures model
+
+PCP models an observed exposure matrix $D$ as the sum of three underlying ground-truth matrices:
+$$
+\underset{\text{mixture}}{D_{n \times p}} = \underset{\text{low-rank}}{L_0} + \underset{\text{sparse}}{S_0} + \underset{\text{noise}}{Z_0}
+$$
+a low-rank matrix $L_0$ encoding consistent patterns of exposure, a sparse matrix $S_0$ isolating unique or outlying exposure events (that cannot be explained by the consistent exposure patterns), and dense noise $Z_0$. All of these matrices are of dimension $n \times p$, where $n$ is the number of observations (e.g., study participants or measurement dates) and $p$ is the number of exposures (chemical and/or non-chemical stressors). Beyond this mixtures model, the main (EH-relevant) assumption made by PCP is that $Z_0 \sim \mathcal{N}(\mu, \sigma^2)$ consists of i.i.d. Gaussian noise corrupting each entry of the overall exposure matrix $D$. A visual example of PCP's mixtures model is provided below:
+
+![A visual example of the PCP mixtures model.](model_example.png)
+
+
+Under these minimal assumptions, PCP aims to decompose the observed mixture $D$ into the above mixtures model via an optimization program, thereby recovering the ground-truth $L_0$ and $S_0$ with accurate estimates $\hat{L}$ and $\hat{S}$.
+
+## The low-rank matrix
+
+The estimated low-rank matrix $\hat{L}$ provides information on the consistent exposure patterns, satisfying
+$$
+    r = \text{rank}(\hat{L}) \ll \min(n, p).
+$$
+The rank $r$ corresponds to the (relatively few) number of underlying patterns governing the mixture, such as specific sources or behaviors leading to exposure. Notice that $\hat{L} \in \mathbb{R}^{n \times p}$, meaning it is still defined in terms of the original variables. Put differently, $\hat{L}$ can be taken as a robust approximation to the true environmental mixture matrix, unperturbed by outliers (captured in $\hat{S}$) or noise (handled by PCP's noise term). In this way, the latent exposure patterns are *encoded* in $\hat{L}$ rather than directly estimated. To explicitly obtain the exposure patterns from $\hat{L}$, PCP may then be paired with various matrix factorization methods (e.g., PCA, factor analysis, or NMF) that yield chemical loadings and individual scores for use in downstream health models.
+
+## The sparse matrix
+
+The estimated sparse matrix $\hat{S}$ captures unusually high/low outlying exposure events, unexplained by the identified patterns in $\hat{L}$. Most entries in $\hat{S}$ are 0, with non-zero entries identifying such extreme exposure activity. The number, location (i.e., support), and value of non-zero entries in $\hat{S}$ need not be \textit{a priori} defined; PCP isolates these during optimization.
+
+# PCP algorithms
+
+|                                     | `root_pcp()`            | `RRMC()`               |
+|-------------------------------------|-------------------------|------------------------|
+| Convex?                             | _Yes_                   | _No_                   |
+| Convergence?                        | _Slow_                  | _Fast_                 |
+| Expected low-rank structure?        | _Well-defined_          | _Messy_                |
+| Parameters?                         | $D, \lambda, \mu$       | $D, r, \eta$           |
+| Supports LOD penalty?               | _Yes_                   | _Yes_                  |
+| Supports non-negativity constraint? | _Yes_                   | _No_                   |
+| Rank determination?                 | _Autonomous_            | _User-defined_         |
+| Solver?                             | _ADMM_                  | _Iterative rank-based_ |
+
+## Root PCP
+
+The convex model available in `pcpr` is Root PCP, denoted here as $\sqrt{\text{PCP}}$. For a comprehensive technical understanding, we refer readers to [Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/file/f65854da4622c1f1ad4ffeb361d7703c-Paper.pdf) introducing $\sqrt{\text{PCP}}$. Here we briefly introduce the `root_pcp` function in `pcpr`. 
+
+## RRMC
+
+# Environmental health example analysis: PM2.5 source apportionment
+
+Here we will demonstrate how to apply PCP to environmental mixtures data using an example air pollution source apportionment analysis. Environmental health researchers often aim to identify sources that drive potentially harmful environmental exposures. Investigating potential associations between the identified sources, or patterns of exposure, and adverse health outcomes can then help pave the way toward targeted interventions or public health policy recommendations. 
+
+For our analysis, we aim to apportion speciated PM$_{2.5}$ to its sources using the `queens` dataset that comes with the `pcpr` R package. The `queens` dataset consists of real chemical concentrations (in µg/m$^3$) of 26 species of PM$_{2.5}$ measured every three to six days from 04/04/2001 through 12/30/2021 by an EPA AQS air monitor located in Queens, New York City.
+
+We'll begin by exploring the raw `queens` data - corresponding to the $D$ matrix in our formal mixtures model above - before applying PCP to obtain estimates for $\hat{L}$ and $\hat{S}$. We can then compare the PCP-recovered low dimensional structure in $\hat{L}$ with the observed raw patterns of $D$.
+
+## Exploring the raw `queens` data
+
+First, let's load the `pcpr` package (along with a few other packages we will need for data processing) and take a look at the `queens` dataset:
+```{r}
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(pcpr)
+library(stringr)
+library(tidyr)
+
+queens 
+```
+
+Let's spend some time visualizing some of the trends of the raw dataset, to get a sense of what we're dealing with. We can start by plotting each of the measured chemical species as timeseries. Plotted in black are the raw observed PM$_{2.5}$ measurements (in µg/m$^3$) over time (04/04/2001 - 12/30/2021), and plotted in red are some (rough) lines of best fit: 
+```{r}
+queens %>%
+  pivot_longer(
+    colnames(queens)[-1], names_to = "chem", values_to = "concentration"
+  ) %>%
+  filter(!is.na(concentration)) %>% 
+  ggplot(aes(x = Date, y = concentration)) +
+  geom_line() +
+  geom_smooth(color = "red", formula="y ~ x", method = "loess", span = 0.05) +
+  facet_wrap(~chem, scales = "free_y") +
+  labs(x = "Date", y = "Concentration (µg/m^3)") +
+  theme_bw()
+```
+
+Some initial points to make note of, looking at the data:
+
+* The y-axis scale for each chemical's concentration differs widely (e.g., NH4 ranges from 0 to 9 µg/m$^3$, while Ti ranges from 0 to 0.04 µg/m$^3$). We will have to take this into account during preprocessing (which we do in the next section [Preliminary PCA](#prelim-pca)).
+* Some chemical species record negative measurements (e.g., Al, Ba, Cd). As explained in the EPA [AQS data documentation](https://aqs.epa.gov/aqsweb/documents/about_aqs_data.html#acceptable-values), this is due to idiosyncrasies in the instruments used to collect the measurements. 
+* We can see strong seasonal trends in some species (e.g., NO3), as well as a reduction in concentration over time in others (e.g., Ni).
+* Many species have prominent outliers, or extreme exposure events (e.g., Cr, Cu). Further, some species have extreme exposure events following seasonal trends, e.g., K.
+* Elemental carbon (EC) and organic carbon (OC) are both missing measurements for the first 8 years of the dataset, likely because the air monitors for those two species were not operational from 2001 - 2009. Handling such systematic missingness is out of scope for this tutorial, so we make the simple decision to omit all data from 2001 - 2009, rather than dropping EC and OC, since including both will be helpful in our source apportionment study.
+
+Below we remove the early measurement dates from 2001 to 2009 that are missing observations for EC and OC, yielding the `queens_small` dataset that we will use moving forward:
+
+```{r}
+start_date_df <- queens %>% select(Date, EC, OC) %>% na.omit() %>% slice_head(n = 1)
+start_date <- start_date_df$Date[1]
+cat("Start date:", as.character(start_date))
+queens_small <- queens %>% filter(Date >= as.Date(start_date))
+queens_small
+```
+
+Next, let's take a look at the correlation structure of our `queens_small` data:
+```{r}
+queens_small %>% 
+  select(-Date) %>%
+  as_tibble() %>% 
+  GGally::ggcorr(., method = "pairwise.complete.obs", limits = F, label = F, size = 5)
+```
+
+The high dimensionality of our `queens_small` air pollution mixture matrix gives rise to this relatively complex correlation matrix. No strong patterns jump out right away here, although Na's correlation with Cl and Mg calls to mind sea salt from the Atlantic Ocean or perhaps road salt kicked up by traffic. We'd like to employ PCP in order to reduce the complexity of our data for more robust downstream analysis. Keep this correlation matrix in mind, since after applying PCP, we'll examine the correlations matrix of $\hat{L}$ and compare.
+
+## Preliminary PCA{#prelim-pca}
+
+Before applying PCP to our mixture, it's good to first take a look at what Principal Component Analysis (PCA) is able to extract from the `queens_small` data. We do this for a couple of reasons: 
+
+1. First, we'd like to establish a baseline for comparison. To better understand the effect of applying PCP to the `queens_small` data, we'd like to see what low dimensional structures exist in the raw data from the outset. 
+2. Second, understanding the behavior of the singular values governing the raw data will help inform choices we must make pertaining to PCP's optimization scheme. A preliminary PCA will enable us to scrutinize our data's singular values. $\sqrt{\text{PCP}}$ is well-suited for data exhibiting rapidly decaying singular values (e.g., imaging data), while RRMC is best for more messy data with slowly decaying singular values (environmental mixtures data typically falls into this bucket).
+
+Before we are able to call upon PCA (or PCP, for that matter) we need to first preprocess our data for better numerical stability. In practical terms, both PCA and PCP's statistical routines are sensitive to data with variable scales. Before arbitrarily normalizing or standardizing our data, let's examine the distribution of our `queens_small` dataset:
+
+```{r}
+queens_small %>%
+  pivot_longer(
+    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
+  ) %>%
+  filter(!is.na(concentration)) %>% 
+  ggplot(aes(x = concentration)) +
+  geom_histogram(bins = 50) +
+  theme_bw() +
+  facet_wrap(~chem, scales = "free")
+```
+
+Most of the chemical species look as though they are normally distributed. We have many choices for how we'd like to preprocess our data, e.g., standardize the data, min-max normalization, etc. Because most of our data appears (roughly) normally distributed, and because in PCA analyses, standardization is typical, let's go ahead and standardize (scale and center) our data to have $\mu = 0$, $\sigma = 1$:
+
+```{r}
+queens_standardized <- queens_small %>%
+  select(-Date) %>%
+  scale() %>%
+  as_tibble() 
+
+queens_standardized$Date <- queens_small$Date
+
+queens_standardized %>% 
+  pivot_longer(
+    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
+  ) %>%
+  filter(!is.na(concentration)) %>%
+  ggplot(aes(x = concentration)) +
+  geom_histogram(bins = 50) +
+  theme_bw() +
+  facet_wrap(~chem, scales = "free")
+```
+
+```{r, include=FALSE, eval=FALSE}
+# Normalized via min-max scaling
+queens_normalized <- queens_small %>%
+  select(-Date) %>%
+  apply(., 2, function(x) (x - min(x, na.rm = T))/(max(x, na.rm = T) - min(x, na.rm = T))) %>%
+  as_tibble()
+
+queens_normalized$Date <- queens_small$Date
+
+queens_normalized %>% 
+  pivot_longer(
+    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
+  ) %>%
+  filter(!is.na(concentration)) %>%
+  ggplot(aes(x = concentration)) +
+  geom_histogram(bins = 50) +
+  theme_bw() +
+  facet_wrap(~chem, scales = "free")
+```
+
+```{r, include=FALSE, eval=FALSE}
+# Scaled but not centered
+queens_scaled <- queens_small %>%
+  select(-Date) %>%
+  scale(center = F) %>%
+  as_tibble() 
+
+queens_scaled$Date <- queens_small$Date
+
+queens_scaled %>% 
+  pivot_longer(
+    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
+  ) %>%
+  filter(!is.na(concentration)) %>%
+  ggplot(aes(x = concentration)) +
+  geom_histogram(bins = 50) +
+  theme_bw() +
+  facet_wrap(~chem, scales = "free")
+```
+
+Great, now we're ready to run the preliminary PCA analysis! We'll use the `stats::prcomp` function for this, which by default omits missing values in our dataset. Instead, let's handle `NA`s by imputing with the column-wise means. Below, we define two helper functions, `mean_impute` and `pca`:
+
+```{r}
+mean_impute <- function(x) {
+  x[is.na(x)] <- mean(x, na.rm = T)
+  x
+}
+
+pca <- function(mat, pcs = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6"), colgroups = NULL, impute = T) {
+  
+  if ("Date" %in% colnames(mat)) mat <- mat %>% select(-Date)
+  if (impute) mat <- mat %>% apply(., 2, mean_impute)
+  
+  #### PCA ####
+  pca.ln <- prcomp(mat) 
+  
+  #### VARIANCE TABLE ####
+  singvalues_ln <- matrix(pca.ln$sdev^2)
+  perc_variance <- round(100*matrix(pca.ln$sdev^2/sum(pca.ln$sdev^2)),1)
+  
+  pca_summary <- data.frame("Principle component" = 1:min(dim(mat)), "Singular values" = singvalues_ln, "Percent variance" = perc_variance, "Total cumulative variance" = purrr::accumulate(perc_variance, sum))
+  
+  var_tbl <- kableExtra::kbl(pca_summary, col.names = c("Principle component", "Singular value", "% variance", "Total cumulative variance"), align = "c") %>% 
+    kableExtra::kable_classic(full_width = F, html_font = "Cambria", position = "center") %>% 
+    kableExtra::kable_styling(bootstrap_options = c("hover", "condensed"), fixed_thead = T)
+  
+  #### LOADINGS ####
+  pca.ln.ld <- as.data.frame.matrix(pca.ln$rotation)
+  pca.ln.ld$chem <- row.names(pca.ln.ld)
+  
+  if (!is.null(colgroups)) {
+    colgroups <- colgroups %>% dplyr::rename(chem = !!names(colgroups)[1])
+  } else {
+    colgroups <- data.frame(chem = colnames(mat), group = "1")
+  }
+  grouping <- names(colgroups)[2]
+  
+  plot_loadings_pca <- pca.ln.ld %>% 
+    tidyr::gather(key = "PC", value = "Loading", -chem) %>% 
+    tibble::as_tibble() %>% 
+    dplyr::right_join(., colgroups, by = "chem")
+  plot_loadings_pca$chem <- factor(as.character(plot_loadings_pca$chem), levels = unique(as.character(plot_loadings_pca$chem)))
+  
+  loadings <- plot_loadings_pca %>%
+    dplyr::filter(PC %in% pcs) %>% 
+    ggplot(aes(x = chem, y = Loading, color = !!sym(grouping))) + 
+    geom_point() +
+    geom_segment(aes(yend=0, xend = chem)) +
+    facet_wrap(~ PC) + theme_bw() +
+    theme(legend.position = "bottom", 
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          strip.background = element_rect(fill = "white"),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank()) +
+    geom_hline(yintercept = 0, linewidth = 0.2) + 
+    ggtitle("Principle Component Loadings")
+  
+  list(var = var_tbl, var_df = pca_summary, load = loadings)
+}
+
+prelim_pca <- pca(queens_standardized)
+```
+
+Now let's take a look at our preliminary PCA. We'll start by examining the singular values and the proportion of variance explained by each component:
+
+```{r, fig.height=8, fig.width=12}
+prelim_pca$var
+```
+
+```{r}
+prelim_pca$var_df %>% 
+  ggplot(aes(x = Principle.component, y = Singular.values)) +
+  geom_point() +
+  geom_segment(aes(y = Singular.values, yend = 0, xend = Principle.component)) +
+  theme_bw() +
+  labs(x = "Principal component", y = "Singular value") +
+  ggtitle("Singular values of preliminary PCA")
+```
+
+And next let's examine the top few PCA loadings, corresponding to each of the first six principal components (PCs), or first six patterns governing our data: 
+
+```{r, fig.height=8, fig.width=12}
+prelim_pca$load
+```
+
+## PCP parameter gridsearch
+
+Now we're about ready to run our first gridsearch. 
+
+```{r}
+D <- queens_standardized %>% 
+  select(-Date) %>% 
+  as.matrix() %>% 
+  apply(., 2, mean_impute)
+```
+
+We can run a grid search using the `default_eta` and searching through all ranks 1 through 15 with the following code chunk:
+```{r long search, eval=FALSE, echo=TRUE}
+pcp_defaults <- queens_standardized %>% select(-Date) %>% get_pcp_defaults()
+default_eta <- pcp_defaults$eta
+
+grid <- grid_search_cv(
+  mat = D, 
+  pcp_func = RRMC, 
+  grid = data.frame(r = c(15)), 
+  eta = default_eta
+)
+```
+
+This takes quite a while, so we have saved the results to a `.rds` file using `grid_search_cv`'s `save_as` argument, which we load below:
+
+```{r}
+grid <- readRDS(here::here("my-doc", "huge_eta_search.rds"))
+grid$all_stats %>% 
+  group_by(r, eta) %>% 
+  summarize(
+    avg_rel_err = mean(rel_err), 
+    avg_sparsity = mean(S_sparsity), 
+    avg_rank = mean(L_rank)
+  ) %>% 
+  arrange(avg_rel_err)
+```
+
+```{r}
+plot_mat <- function(D) {
+  heatmaply::heatmaply(D, Rowv=F, Colv=F, showticklabels = FALSE, showtickmarks = FALSE)
+}
+```
+
+```{r}
+rrmc_out <- RRMC(D, r = 3, eta = 0.1)
+```
+
+```{r}
+plot_mat(rrmc_out$L)
+plot_mat(rrmc_out$S)
+```
+
+```{r}
+colnames(rrmc_out$L) <- colnames(D)
+rrmc_pca <- pca(rrmc_out$L, pcs = paste("PC", 1:3, sep = ""))
+rrmc_pca$var
+```
+
+```{r}
+rrmc_pca$load
+```
+
+```{r}
+print_patterns <- function(pats, colgroups = NULL, n = 1:6, pat_type = "pat", title = "") {
+  
+  if (!is.null(colgroups)) {
+    colgroups <- colgroups %>% dplyr::rename(chem = !!names(colgroups)[1])
+  } else {
+    colgroups <- data.frame(chem = rownames(pats), group = "1")
+  }
+  
+  grouping <- names(colgroups)[2]
+  
+  colnames(pats) <- paste0(pat_type, stringr::str_pad(1:ncol(pats), width = 2, pad = "0", side = "left"))
+  
+  pats.df <- pats %>% 
+    tibble::as_tibble() %>% 
+    dplyr::mutate(chem = colgroups[[1]]) %>%
+    tidyr::pivot_longer(-chem, names_to = "pattern", values_to = "loading") %>%
+    dplyr::right_join(., colgroups, by = "chem")
+
+  pats.df$chem <- factor(as.character(pats.df$chem), levels = unique(as.character(pats.df$chem)))
+
+  loadings <- pats.df %>%
+    dplyr::filter(pattern %in% paste0(pat_type, stringr::str_pad(n, width = 2, pad = "0", side = "left"))) %>%
+    ggplot(aes(x = chem, y = loading, color = !!sym(grouping))) +
+    geom_point() +
+    geom_segment(aes(yend=0, xend = chem)) +
+    facet_wrap(~ pattern) + theme_bw() +
+    theme(legend.position = "bottom",
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          strip.background = element_rect(fill = "white"),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank()) +
+    geom_hline(yintercept = 0, size = 0.2) + ggtitle(title)
+  
+  loadings
+}
+```
+
+
+```{r}
+# for FA
+library(psych)
+library(GPArotation)
+library(ggrepel)
+
+rrmc_fa <- fa(rrmc_out$L, nfactors = 3, n.obs = nrow(rrmc_out$L), rotate = "varimax", scores = "regression")
+
+print(rrmc_fa, digits = 2)
+
+loadings <- as.data.frame(cbind(rownames(rrmc_fa$loadings[]), rrmc_fa$loadings[])) %>% rename(Variable = V1) 
+
+loadings <- loadings %>% mutate_at(colnames(loadings)[str_starts(colnames(loadings), "MR")], as.numeric)
+
+loadings$Max <- colnames(loadings[, -1])[max.col(loadings[, -1], ties.method = "first")] # should be 2:5
+
+loadings %>% kableExtra::kbl(caption = "Loadings") %>% kableExtra::kable_classic(full_width = F, html_font = "Cambria", position = "center") %>% 
+  kableExtra::kable_styling(bootstrap_options = c("hover", "condensed"), fixed_thead = T) %>% kableExtra::scroll_box(width = "100%", height = "400px")
+
+scores <- as.data.frame(cbind(rownames(rrmc_fa$scores[]), rrmc_fa$scores[])) %>% mutate_all(as.numeric)
+
+scores$Max <- colnames(scores)[max.col(scores, ties.method = "first")]
+
+scores %>% 
+  kableExtra::kbl(caption = "Scores") %>% 
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria", position = "center") %>% 
+  kableExtra::kable_styling(bootstrap_options = c("hover", "condensed"), fixed_thead = T) %>% 
+  kableExtra::scroll_box(width = "100%", height = "400px")
+
+fa_pats <- loadings %>% 
+  select(-Max, -Variable) %>% 
+  mutate_all(as.numeric)
+
+fa_pats <- fa_pats %>% select(sort(colnames(.))) %>% as.matrix()
+print_patterns(fa_pats, pat_type = "factor", n = 1:3, title = "FA factors")
+scores %>% dplyr::select(-Max) %>% corr.test() %>% print(short=FALSE)
+```
+
+```{r, FA Viz}
+loadings %>% 
+  ggplot(aes(x = MR1, y = MR2)) + 
+  geom_point() + geom_label_repel(aes(label = Variable),
+                                  box.padding   = 0.35,
+                                  point.padding = 0.5,
+                                  segment.color = 'grey50') + 
+  theme(legend.position = "bottom") +
+  labs(title = "Variable Loadings on First and Second Factors")
+
+if ("MR3" %in% colnames(loadings)) {
+  loadings %>% 
+  ggplot(aes(x = MR1, y = MR3)) + 
+  geom_point() + geom_label_repel(aes(label = Variable),
+                                  box.padding   = 0.35,
+                                  point.padding = 0.5,
+                                  segment.color = 'grey50') + 
+  theme(legend.position = "none") +
+  labs(title = "Variable Loadings on First and Third Factors")
+}
+```
+
+```{r, FA loadings}
+plot_loadings <- loadings %>% select(-Max) %>% gather(key = "Factor", value = "Loading", -Variable) %>% mutate(Factor = str_replace(Factor, "MR", "Factor "))
+
+plot_loadings %>% 
+  ggplot(aes(x = Factor, y = Loading, fill = Factor)) + geom_col(position = "dodge") +
+  facet_wrap(~ Variable) + 
+  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip() + geom_hline(yintercept = 0, size = 0.2) +
+  labs(title = "Variable Loadings on All Factors")
+```
+
+```{r, FA scores}
+scores %>% ggplot(aes(x = Max, fill = Max)) + geom_bar() +
+  labs(x = "Factors", y = "Number of Individuals", title = "Number with Highest Scores per Factor") +
+  theme(legend.position = "none")
+
+scores %>% group_by(Max) %>% summarise(n())
+
+scores %>% gather(key = "factor", value = "score", -Max) %>% dplyr::select(-Max) %>% 
+  ggplot(aes(x = score)) + geom_density() + facet_grid(factor~.) # should be MR1:MR4
+```
+
+
+```{r NMF, eval=FALSE, echo=TRUE}
+library(NMF)
+
+num_cores <- ceiling(parallel::detectCores() / 2)
+nmf_mat <- rrmc_out$L
+nmf_mat[nmf_mat < 0] <- 0
+res <- nmf(rrmc_out$L, rank = 3, method = "offset", nrun = 30, seed = 0, .opt = paste0('vp', num_cores))
+
+# only compute the scores
+s <- featureScore(res)
+summary(s)
+# compute the scores and characterize each metagene
+s <- extractFeatures(res) 
+str(s)
+
+W <- basis(res) # basis matrix / metagenes / contribution matrix
+H <- coef(res) # mixture coeffecient matrix / metagene expression profiles / profile matrix ie. loadings ?
+
+heatmaply(W, main = "NMF basis / contribution matrix (scores)", Rowv = F, Colv = F, 
+          ylab = params$rowvar_name, labRow = as.character(rowlabs),
+          cexRow = 100, row_side_colors = data.frame("cohort" = cohorts), showticklabels = c(T, F))
+
+heatmaply(H, main = "NMF profile matrix (loadings)", Rowv = F, Colv = F,
+          col_side_colors = data.frame("exposure family" = as.factor(params$colgroupings)))
+
+loadings <- t(H) %>% as.tibble()
+
+print_patterns(loadings, colgroups = cng, title = "NMF loadings")
+```
+

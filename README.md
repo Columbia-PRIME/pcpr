@@ -1,136 +1,36 @@
 # pcpr
 
-PCP functions in R including adaptations for environmental data.
+PCP functions in R including adaptations for environmental data. This is the `dev` branch that [Lawrence](mailto:chili@u.northwestern.edu) is working on for PCP's software paper, and has been updated to run on R version 4.3.1 "Beagle Scouts". 
 
-## to run:
+__Note: the `dev` branch may have bugs, incomplete documentation, etc. If you notice anything, please don't hestitate to submit an issue and tag @lawrence-chillrud, who will get to it as soon as possible. If you would like to make edits yourself, please do not edit dev directly. Instead, create an issue, start a new branch for that issue, and once that new branch is ready to be merged, request a code review. Once the review is approved, you are free to merge!__
 
-To use this package, clone the repo or download the .zip file. Locate the folder, unzip if applicable, and use the following code. Replace `path_to_folder` with your local path.
+## To install:
 
-`install.packages("path_to_folder", repos = NULL, type="source")`   
-`library(pcpr)`
+The simplest way to install `pcpr` is via the `devtools` package with:
 
-## includes:
+```
+install.packages("devtools") # if you don't already have devtools
+devtools::install_github("https://github.com/Columbia-PRIME/pcpr/tree/dev") # you can also replace dev with any other branch you'd like to install
+```
 
-1. [stable_pcp](R/stable_pcp.R)
-    * This includes a non-negativity constraint on the `L` solution matrix. It does not include a LOD (limit of detection) penalty.
-    * It takes 4 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `verbose` parameter (optional)
-    * For more info: `?stable_pcp`
+One installed, you can load `pcpr` as you would any other package with `library(pcpr)`. 
 
-2. [pcp_lod](R/pcp_lod.R)
-    * This includes a non-negativity constraint on the `L` solution matrix and a separate penalty function for values <LOD.
-    * Values <LOD should be pre-processed as `-1`.
-    * It takes 5 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `LOD` may be a scalar, vector, or matrix
-        * `verbose` parameter (optional)
-    * For more info: `?pcp_lod`
+## Main PCP functions:
+
+Longer form documentation is coming soon, but some quick notes on the main functions in `pcpr`:
+
+1. [stable_pcp](R/stable_pcp.R): Includes optional penalties for the limit of detection (LOD) penalty and a non-negativity constraint on the `L` solution matrix. Does not currently support missing values but will soon. It also needs documentation. Can be thought of as vanilla PCP with EHS enhancements (i.e., the optional penalties). See equation (15) in [Zhou et al. (2010)](https://ieeexplore.ieee.org/document/5513535) for the objective function of stable PCP, and look to [Gibson et al. (2022)](https://ehp.niehs.nih.gov/doi/pdf/10.1289/EHP10479) for details on the LOD and non-negativity penalties.
+
+2. [root_pcp](R/root_pcp.R): Includes optional penalties for LOD and a non-negativity constraint on the L matrix. Accommodates missing values. Needs documentation. Can be thought of as the preferred method for data with a strong underlying low-rank structure characterized by rapidly decaying singular values (e.g., video or imaging data). See [Zhang, Yan, and Wright (2021)](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html) for the objective function of root PCP, and again [Gibson et al. (2022)](https://ehp.niehs.nih.gov/doi/pdf/10.1289/EHP10479) for the EHS-specific extensions. 
         
-3. [root_pcp](R/root_pcp.R)
-    * This changes the objective function by removing the squaring of the error term so that the `mu` parameter does not rely on the unknown `sigma` value. It does not include a non-negativity constraint on the `L` matrix or a LOD penalty.
-    * It takes 4 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp`
-        
-4. [root_pcp_nonnegL](R/root_pcp_nonnegL.R)
-    * This includes a non-negativity constraint on the `L` matrix with the squareroot version of the objective function. It does not include a LOD penalty.
-    * It takes 4 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_nonnegL`
-    
-5. [root_pcp_na](R/root_pcp_na.R)
-    * This allows for missing values with the squareroot version of the objective function. It does not include a LOD penalty or a non-negativity constraint on the `L` matrix.
-    * Missing values should be pre-processed as `NA`.
-    * It takes 4 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_na`
-    
-6. [root_pcp_na_nonnegL](R/root_pcp_na_nonnegL.R)
-    * This includes a non-negativity constraint on the `L` matrix and allows for missing values with the squareroot version of the objective function. It does not include a LOD penalty.
-    * Missing values should be pre-processed as `NA`.
-    * It takes 4 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_na_nonnegL`
-    
-7. [root_pcp_na_nonnegL_lod](R/root_pcp_na_nonnegL_lod.R)
-    * This includes a non-negativity constraint on the `L` matrix, allows for missing values, and includes a separate penalty function for values <LOD with the squareroot version of the objective function.
-    * Missing values should be pre-processed as `NA`.
-    * Values <LOD should be pre-processed as `-1`.
-    * It takes 5 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `LOD` may be a scalar, vector, or matrix
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_na_nonnegL_lod`
+3. [RRMC](R/RRMC.R): LOD-penalty implemented, but the non-negativity constraint on the L matrix still needs to be written. Accommodates missingness. Needs documentation. Can be thought of as the preferred method for messy data that lacks a strong latent low-rank structure, characterized by singular values with a heavy tail (e.g., environmental mixtures). See [Cherapanamjeri, Gupta, and Jain (2017)](https://proceedings.mlr.press/v70/cherapanamjeri17a.html) for details and again [Gibson et al. (2022)](https://ehp.niehs.nih.gov/doi/pdf/10.1289/EHP10479) for the EHS-specific extensions.
 
-8. [root_pcp_noncvx](R/root_pcp_noncvx.R)
-    * This replaces the nuclear norm in the objective function with a projection to a lower rank. It does not include a LOD penalty or a non-negativity constraint on the `L` matrix.
-    * It takes 5 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `r` the desired rank
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_noncvx`
-    
-9. [root_pcp_noncvx_nonneg](R/root_pcp_noncvx_nonneg.R)
-    * This replaces the nuclear norm in the objective function with a projection to a lower rank. It includes a non-negativity constraint on the `L` matrix. It does not include a LOD penalty.
-    * It takes 5 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `r` the desired rank
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_noncvx_nonneg`
+I recommend looking at the [overview.Rmd](my-doc/overview.Rmd) file for a rough, unfinished, long-form documentation on how to use PCP. There is an associated [overview.html](my-doc/overview.html) that can be downloaded and should be able to be viewed in your browser for easier reading. You can also find some rough (and possibly outdated) documentation in the master branch for some of these functions. I'll flesh out the documentation in the coming weeks.
 
-10. [root_pcp_noncvx_w_na](R/root_pcp_noncvx_w_na.R)
-    * This replaces the nuclear norm in the objective function with a projection to a lower rank. It does not include a LOD penalty or a non-negativity constraint on the `L` matrix. It does allow missing values.
-    * Missing values should be pre-processed as `NA`.
-    * It takes 5 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `r` the desired rank
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_noncvx_w_na`
-    
-11. [root_pcp_noncvx_nonneg_w_na](R/root_pcp_noncvx_nonneg_w_na.R)
-    * This replaces the nuclear norm in the objective function with a projection to a lower rank. It includes a non-negativity constraint on the `L` matrix. It does not include a LOD penalty. It does allow missing values.
-    * Missing values should be pre-processed as `NA`.
-    * It takes 5 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `r` the desired rank
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_noncvx_nonneg_w_na`
-    
-12. [root_pcp_na_nonneg_noncvx_LOD](R/root_pcp_na_nonneg_noncvx_LOD.R)
-    * This replaces the nuclear norm in the objective function with a projection to a lower rank. It includes a non-negativity constraint on the `L` matrix and a LOD penalty. It does allow missing values.
-    * Missing values should be pre-processed as `NA`.
-    * It takes 5 inputs:
-        * `D` the original dataset
-        * `lambda` parameter
-        * `mu` parameter
-        * `r` the desired rank
-        * `LOD` may be a scalar, vector, or matrix
-        * `verbose` parameter (optional)
-    * For more info: `?root_pcp_na_nonneg_noncvx_LOD`
+## Some utility functions:
+
+1. [get_pcp_defaults](R/utils.R)
+
+2. [grid_search_cv](R/grid_search_cv.R)
+
+These should have some documentation but it is likely the help pages need updating.

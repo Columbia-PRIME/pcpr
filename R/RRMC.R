@@ -1,4 +1,15 @@
-#' LGC: Objective function to report to user?? Non-negativity constraint? Needs code check!
+#' Given the observed mixture data matrix $D$, desired rank $r$,
+#' and regularization hyperparameter $\eta$, RRMC seeks to find the
+#' best estimates $\Lhat$ and $\Shat$ using an incremental rank-based
+#' PCP strategy. That is, RRMC will first estimate a rank 1 model
+#' $(\Lhat^{(1)}, \Shat^{(1)})$, before using that as the initialization
+#' point to construct a rank 2 model $(\Lhat^{(2)}, \Shat^{(2)})$, and so on,
+#' until the desired rank $r$ model $(\Lhat = \Lhat^{(r)}, \Shat = \Shat^{(r)})$
+#' is recovered. All models from ranks 1 through $r$ are returned by RRMC in this way.
+#' This incremental rank-based scheme is achieved via the following objective function:
+#' \begin{equation} \label{eqn:rrmc}
+#' \text{\rrmc}: \min_{\mb L,\mb S} \; \mathcal{I}_{\rank(\mb L) \leq r} + \eta \left\| \mb S \right\|_0 + \left\| \mb L + \mb S - \mb D \right\|_F^2.
+#' \end{equation}
 #' @export
 RRMC <- function(D, r, eta, LOD = -Inf) {
 
@@ -29,6 +40,8 @@ RRMC <- function(D, r, eta, LOD = -Inf) {
   L <- matrix(0, nrow = n, ncol = p)
   L_list <- list()
   S_list <- list()
+  objective <- vector("numeric", r*t)
+  objective_index <- 1
 
   # 2. Iterative optimization procedure:
   for (k in 1:r) {
@@ -46,12 +59,16 @@ RRMC <- function(D, r, eta, LOD = -Inf) {
       L <- proj_rank_r(M_i, k)
       temp <- svd(M_i)$d
       zeta <- eta*(temp[k + 1] + 0.5^(i - 2)*temp[k])
+
+      # calculate objective function value:
+      objective[objective_index] <- norm(D - L - S, "F")^2 + eta*sum(S != 0)
+      objective_index <- objective_index + 1
     }
     L_list[[k]] <- L
     S_list[[k]] <- S
   }
 
-  list(L = L_list[[r]], S = S_list[[r]], L_list = L_list, S_list = S_list)
+  list(L = L_list[[r]], S = S_list[[r]], L_list = L_list, S_list = S_list, objective = objective)
 
 }
 
@@ -77,7 +94,7 @@ hard_thresholding <- function(S, c) {
 
 #' Project rank
 #'
-#' \code{proj_rank_r} implements a best (ie closest) rank-r approximation of an input matrix.
+#' \code{proj_rank_r} implements a best (i.e. closest) rank-r approximation of an input matrix.
 #' This provides the non-convex replacement for nuclear norm on the \code{L} matrix, and is computed
 #' by retaining the first r leading singular values/vectors of \code{L}. This is equivalent to
 #' solving the following optimization problem: min || X - L ||_F s.t. rank(X) <= r.

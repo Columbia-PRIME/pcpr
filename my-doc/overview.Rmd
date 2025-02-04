@@ -84,6 +84,8 @@ library(magrittr)
 library(pcpr)
 library(stringr)
 library(tidyr)
+library(lubridate)
+library(forcats)
 
 queens 
 ```
@@ -113,9 +115,11 @@ Some initial points to make note of, looking at the data:
 
 Below we remove the early measurement dates from 2001 to 2009 that are missing observations for EC and OC, yielding the `queens_small` dataset that we will use moving forward:
 
+LGC 2/4/25 TODO: Justify why we actually begin our analysis in 2015.
+
 ```{r}
 start_date_df <- queens %>% select(Date, EC, OC) %>% na.omit() %>% slice_head(n = 1)
-start_date <- start_date_df$Date[1]
+start_date <- "2015-01-01" # start_date_df$Date[1]
 cat("Start date:", as.character(start_date))
 queens_small <- queens %>% filter(Date >= as.Date(start_date))
 queens_small
@@ -152,51 +156,14 @@ queens_small %>%
   facet_wrap(~chem, scales = "free")
 ```
 
-Most of the chemical species look as though they are normally distributed. We have many choices for how we'd like to preprocess our data, e.g., standardize the data, min-max normalization, etc. Because most of our data appears (roughly) normally distributed, and because in PCA analyses, standardization is typical, let's go ahead and standardize (scale and center) our data to have $\mu = 0$, $\sigma = 1$:
-
+We have many choices for how we'd like to preprocess our data, e.g., standardize the data, min-max normalization, etc. Because most of our data appears (roughly) normally distributed, we will follow a conventional source apportionment preprocessing approach by scaling (but not centering) each PM2.5 species in our dataset:
 ```{r}
-queens_standardized <- queens_small %>%
-  select(-Date) %>%
-  scale() %>%
-  as_tibble() 
-
-queens_standardized$Date <- queens_small$Date
-
-queens_standardized %>% 
-  pivot_longer(
-    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
-  ) %>%
-  filter(!is.na(concentration)) %>%
-  ggplot(aes(x = concentration)) +
-  geom_histogram(bins = 50) +
-  theme_bw() +
-  facet_wrap(~chem, scales = "free")
-```
-
-```{r, include=FALSE, eval=FALSE}
-# Normalized via min-max scaling
-queens_normalized <- queens_small %>%
-  select(-Date) %>%
-  apply(., 2, function(x) (x - min(x, na.rm = T))/(max(x, na.rm = T) - min(x, na.rm = T))) %>%
-  as_tibble()
-
-queens_normalized$Date <- queens_small$Date
-
-queens_normalized %>% 
-  pivot_longer(
-    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
-  ) %>%
-  filter(!is.na(concentration)) %>%
-  ggplot(aes(x = concentration)) +
-  geom_histogram(bins = 50) +
-  theme_bw() +
-  facet_wrap(~chem, scales = "free")
-```
-
-```{r, include=FALSE, eval=FALSE}
-# Scaled but not centered
 queens_scaled <- queens_small %>%
-  select(-Date) %>%
+  select(-Date) 
+
+queens_scaled[queens_scaled < 0] <- 0
+
+queens_scaled <- queens_scaled %>%
   scale(center = F) %>%
   as_tibble() 
 
@@ -212,8 +179,7 @@ queens_scaled %>%
   theme_bw() +
   facet_wrap(~chem, scales = "free")
 ```
-
-Great, now we're ready to run the preliminary PCA analysis! We'll use the `stats::prcomp` function for this, which by default omits missing values in our dataset. Instead, let's handle `NA`s by imputing with the column-wise means. Below, we define two helper functions, `mean_impute` and `pca`:
+Great, now we're ready to run the preliminary PCA analysis! We'll use the `stats::prcomp` function for this, which by default omits missing values in our dataset. Instead, let's handle `NA`s by imputing with the column-wise (i.e. per chemical) means. Below, we define two helper functions, `mean_impute` and `pca`:
 
 ```{r}
 mean_impute <- function(x) {
@@ -273,7 +239,7 @@ pca <- function(mat, pcs = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6"), colgroup
   list(var = var_tbl, var_df = pca_summary, load = loadings)
 }
 
-prelim_pca <- pca(queens_standardized)
+prelim_pca <- pca(queens_scaled)
 ```
 
 Now let's take a look at our preliminary PCA. We'll start by examining the singular values and the proportion of variance explained by each component:
@@ -291,41 +257,52 @@ prelim_pca$var_df %>%
   labs(x = "Principal component", y = "Singular value") +
   ggtitle("Singular values of preliminary PCA")
 ```
+Here is a ncie example of slowly decaying singular values, suggesting we adopt `RRMC` as the PCP function of choice to reduce the dimensionality in our `queens_scaled` dataset.
 
-And next let's examine the top few PCA loadings, corresponding to each of the first six principal components (PCs), or first six patterns governing our data: 
+We can also briefly take a look at the PCA loadings, corresponding to each of the first six principal components (PCs), or first six patterns governing our data, to get an idea of the sources as PCA sees them in the raw data: 
 
 ```{r, fig.height=8, fig.width=12}
 prelim_pca$load
 ```
+These first six patterns cumulatively comprise roughly 56% of the variance present in `queens_scaled`, so were we to restrict downstream studies to using these six sources, we will have thrown away nearly half of the information encoded in the raw data. Moreover, it is difficult to identify meaningful patterns in these PCs that correspond to real world PM2.5 sources. For example, notice how nearly every chemical species in our mixture loads on the most dominant PC1. This makes source apportionment very difficult, and is common to see when dealing with a complex, multicollinear dataset such as ours.
+
+Now that we have gotten acquainted with the raw data, let's move on to our PCP analysis.
 
 ## PCP parameter gridsearch
 
-Now we're about ready to run our first gridsearch. 
+Given the structure of the singular values in our data (plotted above), we've determined that the non-convex `RRMC` function is the best place to start. This will allow us to interrogate the mixture with solutions of many different ranks (i.e., number of sources/patterns). To start, we need to run a gridsearch to determine the best hyperparameter `eta` to use with RRMC, along with the appropriate rank `r` that RRMC gravitates towards in order to explain the `queens_scaled` data well. Recall that `eta` is a dial controlling the interplay between how structured our recovered low-rank solution is and how sparse our recovered sparse solution is.
+
+LGC 2/4/25 TODO: Refine above paragraph as well as all the sections (how this document is broken up)
+
+This time we avoid imputing the data with the chemical means, since we would like `RRMC` to recover missing values using the low-rank structure present in the data.
 
 ```{r}
-D <- queens_standardized %>% 
-  select(-Date) %>% 
-  as.matrix() %>% 
-  apply(., 2, mean_impute)
+D <- queens_scaled %>% 
+   select(-Date) %>% 
+  as.matrix()
 ```
 
-We can run a grid search using the `default_eta` and searching through all ranks 1 through 15 with the following code chunk:
+Due to `RRMC`'s iterative rank-based procedure, we can fix the rank `r` in our gridsearch to be the maximum rank we would like to search up to. Here we've chosen `r=9`, since we do not expect more than 9 distinct sources to govern `queens` PM2.5 data from 2015-2021 (based on prior studies suggesting 5 sources would perhaps be more reasonable). We should now search through `eta`, ensuring we also cover the rough default value obtained via the `get_pcp_defaults` function in `pcpr`.
 ```{r long search, eval=FALSE, echo=TRUE}
-pcp_defaults <- queens_standardized %>% select(-Date) %>% get_pcp_defaults()
+pcp_defaults <- D %>% get_pcp_defaults()
 default_eta <- pcp_defaults$eta
 
 grid <- grid_search_cv(
-  mat = D, 
-  pcp_func = RRMC, 
-  grid = data.frame(r = c(15)), 
-  eta = default_eta
+	mat = D,
+	pcp_func = RRMC,
+	grid = data.frame(eta = c(c(0.005, 0.01), seq(0.05, 0.60, by = 0.05))),
+	r = 9,
+	runs = 150,
+	parallel_approach = "multicore",
+	save_as = here::here("my-doc", "eta_search")
 )
+
 ```
 
 This takes quite a while, so we have saved the results to a `.rds` file using `grid_search_cv`'s `save_as` argument, which we load below:
 
 ```{r}
-grid <- readRDS(here::here("my-doc", "huge_eta_search.rds"))
+grid <- readRDS(here::here("my-doc", "11-11-24_huge_eta_search.rds"))
 grid$all_stats %>% 
   group_by(r, eta) %>% 
   summarize(
@@ -336,6 +313,8 @@ grid$all_stats %>%
   arrange(avg_rel_err)
 ```
 
+The results from the search suggest a rank 4 solution with an `eta` of 0.1 is most faithful to the original data, while also yielding a sparse solution with a sparsity of 99.3%, meaning 0.7% of values in the data were flagged as extreme outlying exposure events. So, we will use these parameters moving forward.
+
 ```{r}
 plot_mat <- function(D) {
   heatmaply::heatmaply(D, Rowv=F, Colv=F, showticklabels = FALSE, showtickmarks = FALSE)
@@ -343,26 +322,39 @@ plot_mat <- function(D) {
 ```
 
 ```{r}
-rrmc_out <- RRMC(D, r = 3, eta = 0.1)
+rrmc_out <- RRMC(D, r = 4, eta = 0.1) # eta = 0.01?
+# rachels_pcp <- root_pcp_noncvx_nonnegL_na(D, lambda = 0.00008, mu = 0.005, r = 7)
+# my_pcp <- new_root_pcp_noncvx_nonnegL_na_lod(D, lambda = 1e-04, mu = 0.005, r = 5)
 ```
 
 ```{r}
-plot_mat(rrmc_out$L)
+# plot_mat(rrmc_out$L)
 plot_mat(rrmc_out$S)
+# plot_mat(rachels_pcp$L)
+# plot_mat(rachels_pcp$S)
+# plot_mat(my_pcp$L)
+# plot_mat(my_pcp$S)
 ```
 
 ```{r}
-colnames(rrmc_out$L) <- colnames(D)
-rrmc_pca <- pca(rrmc_out$L, pcs = paste("PC", 1:3, sep = ""))
-rrmc_pca$var
+# colnames(rrmc_out$L) <- colnames(D)
+# rrmc_pca <- pca(rrmc_out$L, pcs = paste("PC", 1:3, sep = ""))
+# rrmc_pca$var
+
+pcp <- rrmc_out
+rank <- Matrix::rankMatrix(pcp$L, tol=1e-05)[1]
+
+colnames(pcp$L) <- colnames(D)
+pcp_pca <- pca(pcp$L, pcs = paste("PC", 1:rank, sep = ""))
+pcp_pca$var
 ```
 
 ```{r}
-rrmc_pca$load
+pcp_pca$load
 ```
 
 ```{r}
-print_patterns <- function(pats, colgroups = NULL, n = 1:6, pat_type = "pat", title = "") {
+print_patterns <- function(pats, colgroups = NULL, n = 1:rank, pat_type = "pat", title = "") {
   
   if (!is.null(colgroups)) {
     colgroups <- colgroups %>% dplyr::rename(chem = !!names(colgroups)[1])
@@ -399,97 +391,13 @@ print_patterns <- function(pats, colgroups = NULL, n = 1:6, pat_type = "pat", ti
 }
 ```
 
-
-```{r}
-# for FA
-library(psych)
-library(GPArotation)
-library(ggrepel)
-
-rrmc_fa <- fa(rrmc_out$L, nfactors = 3, n.obs = nrow(rrmc_out$L), rotate = "varimax", scores = "regression")
-
-print(rrmc_fa, digits = 2)
-
-loadings <- as.data.frame(cbind(rownames(rrmc_fa$loadings[]), rrmc_fa$loadings[])) %>% rename(Variable = V1) 
-
-loadings <- loadings %>% mutate_at(colnames(loadings)[str_starts(colnames(loadings), "MR")], as.numeric)
-
-loadings$Max <- colnames(loadings[, -1])[max.col(loadings[, -1], ties.method = "first")] # should be 2:5
-
-loadings %>% kableExtra::kbl(caption = "Loadings") %>% kableExtra::kable_classic(full_width = F, html_font = "Cambria", position = "center") %>% 
-  kableExtra::kable_styling(bootstrap_options = c("hover", "condensed"), fixed_thead = T) %>% kableExtra::scroll_box(width = "100%", height = "400px")
-
-scores <- as.data.frame(cbind(rownames(rrmc_fa$scores[]), rrmc_fa$scores[])) %>% mutate_all(as.numeric)
-
-scores$Max <- colnames(scores)[max.col(scores, ties.method = "first")]
-
-scores %>% 
-  kableExtra::kbl(caption = "Scores") %>% 
-  kableExtra::kable_classic(full_width = F, html_font = "Cambria", position = "center") %>% 
-  kableExtra::kable_styling(bootstrap_options = c("hover", "condensed"), fixed_thead = T) %>% 
-  kableExtra::scroll_box(width = "100%", height = "400px")
-
-fa_pats <- loadings %>% 
-  select(-Max, -Variable) %>% 
-  mutate_all(as.numeric)
-
-fa_pats <- fa_pats %>% select(sort(colnames(.))) %>% as.matrix()
-print_patterns(fa_pats, pat_type = "factor", n = 1:3, title = "FA factors")
-scores %>% dplyr::select(-Max) %>% corr.test() %>% print(short=FALSE)
-```
-
-```{r, FA Viz}
-loadings %>% 
-  ggplot(aes(x = MR1, y = MR2)) + 
-  geom_point() + geom_label_repel(aes(label = Variable),
-                                  box.padding   = 0.35,
-                                  point.padding = 0.5,
-                                  segment.color = 'grey50') + 
-  theme(legend.position = "bottom") +
-  labs(title = "Variable Loadings on First and Second Factors")
-
-if ("MR3" %in% colnames(loadings)) {
-  loadings %>% 
-  ggplot(aes(x = MR1, y = MR3)) + 
-  geom_point() + geom_label_repel(aes(label = Variable),
-                                  box.padding   = 0.35,
-                                  point.padding = 0.5,
-                                  segment.color = 'grey50') + 
-  theme(legend.position = "none") +
-  labs(title = "Variable Loadings on First and Third Factors")
-}
-```
-
-```{r, FA loadings}
-plot_loadings <- loadings %>% select(-Max) %>% gather(key = "Factor", value = "Loading", -Variable) %>% mutate(Factor = str_replace(Factor, "MR", "Factor "))
-
-plot_loadings %>% 
-  ggplot(aes(x = Factor, y = Loading, fill = Factor)) + geom_col(position = "dodge") +
-  facet_wrap(~ Variable) + 
-  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1)) +
-  coord_flip() + geom_hline(yintercept = 0, size = 0.2) +
-  labs(title = "Variable Loadings on All Factors")
-```
-
-```{r, FA scores}
-scores %>% ggplot(aes(x = Max, fill = Max)) + geom_bar() +
-  labs(x = "Factors", y = "Number of Individuals", title = "Number with Highest Scores per Factor") +
-  theme(legend.position = "none")
-
-scores %>% group_by(Max) %>% summarise(n())
-
-scores %>% gather(key = "factor", value = "score", -Max) %>% dplyr::select(-Max) %>% 
-  ggplot(aes(x = score)) + geom_density() + facet_grid(factor~.) # should be MR1:MR4
-```
-
-
-```{r NMF, eval=FALSE, echo=TRUE}
+```{r NMF}
 library(NMF)
 
 num_cores <- ceiling(parallel::detectCores() / 2)
-nmf_mat <- rrmc_out$L
+nmf_mat <- pcp$L
 nmf_mat[nmf_mat < 0] <- 0
-res <- nmf(rrmc_out$L, rank = 3, method = "offset", nrun = 30, seed = 0, .opt = paste0('vp', num_cores))
+res <- nmf(nmf_mat, rank = rank, method = "offset", nrun = 30, seed = 0, .opt = paste0('vp', num_cores))
 
 # only compute the scores
 s <- featureScore(res)
@@ -501,15 +409,167 @@ str(s)
 W <- basis(res) # basis matrix / metagenes / contribution matrix
 H <- coef(res) # mixture coeffecient matrix / metagene expression profiles / profile matrix ie. loadings ?
 
-heatmaply(W, main = "NMF basis / contribution matrix (scores)", Rowv = F, Colv = F, 
-          ylab = params$rowvar_name, labRow = as.character(rowlabs),
-          cexRow = 100, row_side_colors = data.frame("cohort" = cohorts), showticklabels = c(T, F))
+# heatmaply(W, main = "NMF basis / contribution matrix (scores)", Rowv = F, Colv = F, 
+#           ylab = params$rowvar_name, labRow = as.character(rowlabs),
+#           cexRow = 100, row_side_colors = data.frame("cohort" = cohorts), showticklabels = c(T, F))
+# 
+# heatmaply(H, main = "NMF profile matrix (loadings)", Rowv = F, Colv = F,
+#           col_side_colors = data.frame("exposure family" = as.factor(params$colgroupings)))
 
-heatmaply(H, main = "NMF profile matrix (loadings)", Rowv = F, Colv = F,
-          col_side_colors = data.frame("exposure family" = as.factor(params$colgroupings)))
-
-loadings <- t(H) %>% as.tibble()
-
-print_patterns(loadings, colgroups = cng, title = "NMF loadings")
+loadings <- t(H) %>% as_tibble()
+rownames(loadings) <- colnames(pcp$L)
+print_patterns(loadings, title = "NMF loadings")
 ```
 
+```{r NMF analysis}
+nmf_scores <- W %>% 
+  as.data.frame() %>% 
+  mutate(date = queens_scaled$Date) %>% 
+  mutate(DayofWeek = as.character(wday(date, label = TRUE))) %>% 
+  mutate(DayofWeek = factor(DayofWeek, levels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))) %>% 
+  as_tibble()
+
+nmf_sources <- nmf_scores %>% pivot_longer(V1:V4, names_to = "source", values_to = "score") %>% 
+  group_by(source) %>% 
+  mutate(
+    source = as_factor(source),
+    # source = fct_recode(source, "Crustal" = "V1", "Industrial/Road" = "V2", "Traffic" = "V3", "Regional" = "V4", "Salt" = "V5")
+  )
+
+yr_num <- length(unique(year(nmf_sources$date)))
+```
+
+```{r trends over time}
+ggplot(nmf_sources, aes(date, score)) +
+  geom_smooth(method = "loess", span = 0.05, color = "black") +
+  facet_wrap(~source, scales = "free", ncol = 1) + 
+  xlab("") +
+  ylab("Factor Score") +
+  theme_classic() +
+  theme(
+    axis.title.y = element_text(size = 18),
+    strip.text = element_text(size = 14),
+    axis.text.x = element_text(size = 13),
+    axis.text.y = element_text(size = 11)
+  ) +
+  scale_x_date(date_labels = "%Y", date_breaks = "1 year")
+```
+
+```{r seasonal trends}
+season <- nmf_sources %>% mutate(season = metR::season(date))
+season %>% group_by(season, source) %>% summarise(mean = mean(score)) %>% 
+  pivot_wider(names_from = season, values_from = mean)
+
+season %>% group_by(season, source) %>% summarise(sd = sd(score)) %>% 
+  pivot_wider(names_from = season, values_from = sd)
+```
+
+```{r weekly trends}
+week <- nmf_sources %>% 
+  group_by(source, DayofWeek) %>% 
+  summarize(mean_score = mean(score, na.rm = TRUE))
+
+# plot weekday trends - Figure S5
+ggplot(week, aes(DayofWeek, mean_score)) +
+  geom_bar(stat = "identity") +
+  xlab("") +
+  facet_wrap(~source, scales = "free", ncol =1) +
+  ylab("Mean Factor Score") +
+  ylim(0, 3) +
+  theme_classic() +
+  theme(
+    axis.title.y = element_text(size = 18),
+    axis.text.x.bottom = element_text(size = 13, color = "black"),
+    strip.text = element_text(size = 14),
+    axis.text.y.left = element_text(size = 12)
+  )
+
+# tag weekend vs. weekdays
+week_day <- nmf_sources %>% 
+  mutate(week_end = if_else(DayofWeek %in% 
+                              c('Mon', 'Tue', 'Wed', 'Thu', 'Fri'), 
+                            'weekday', 'weekend'),
+         week_end = as_factor(week_end)) %>% 
+  pivot_wider(names_from = source, values_from = score)
+
+# t-test for weekday vs. weekend means - Table S3
+# repeat for each source
+# t.test(week_day$Salt~week_day$week_end)
+
+# find mean and SD for weekend/weekday
+# repeat for each source
+week_day %>% group_by(week_end) %>% summarize(m = mean(V1, na.rm = TRUE),
+                                              sd = sd(V1, na.rm = TRUE))
+```
+
+```{r NMF percentages}
+pcp_nmf_source_1 <- nmf_scores %>% 
+  select(V1) %>% 
+  as.matrix() %>% 
+  norm()
+
+pcp_nmf_source_2 <- nmf_scores %>% 
+  select(V2) %>% 
+  as.matrix() %>% 
+  norm()
+
+pcp_nmf_source_3 <- nmf_scores %>% 
+  select(V3) %>% 
+  as.matrix() %>% 
+  norm()
+
+pcp_nmf_source_4 <- nmf_scores %>% 
+  select(V4) %>% 
+  as.matrix() %>% 
+  norm()
+
+# pcp_nmf_source_5 <- nmf_scores %>% 
+#   select(V5) %>% 
+#   as.matrix() %>% 
+#   norm()
+
+# add norms together to get total
+tot = pcp_nmf_source_1 + pcp_nmf_source_2 + pcp_nmf_source_3 + pcp_nmf_source_4 #+ pcp_nmf_source_5
+
+# calculate percentages
+vals <- c((pcp_nmf_source_1/tot)*100, (pcp_nmf_source_2/tot)*100, (pcp_nmf_source_3/tot)*100, (pcp_nmf_source_4/tot)*100)#, (pcp_nmf_source_5/tot)*100)
+
+#create vector of source names
+val_names <- paste0('V', 1:4) # c("Crustal", "Industrial/Road", "Traffic", "Regional", "Salt")
+
+# label percentages vector with source names
+names(vals) <- val_names
+
+# make into tibble
+values <- cbind(vals, val_names) %>% 
+  as_tibble() %>% 
+  mutate(vals = as.double(vals),
+         vals = round(vals, digits = 0),
+         val_names = fct_reorder(val_names, vals)
+         )
+
+# pie chart - Figure S4
+values %>% 
+  as_tibble() %>% 
+  mutate(vals = as.double(vals)) %>% 
+  ggplot(aes(x = "", y = vals, fill = val_names)) +
+    geom_bar(stat = "identity", width = 1) +
+    coord_polar("y", start = 0) +
+    theme_void() +
+    theme(
+      legend.title = element_blank(),
+      legend.key.size = unit(1, 'cm'),
+      legend.text = element_text(size = 14)
+      ) +
+    geom_text(aes(label = vals),
+              position = position_stack(vjust = 0.5),
+              size = 6)
+
+```
+```{r nmf corr}
+nmf_scores %>% 
+  # rename(Crustal := V1, Industrial := V2, Traffic := V3, Regional := V4, Salt := V5) %>% 
+  GGally::ggcorr(method = c("pairwise.complete.obs", "pearson"), limits = FALSE,
+       label = TRUE, label_size = 5,
+       hjust = 1, size = 6, color = "grey50", layout.exp = 4)
+```

@@ -40,6 +40,14 @@ assumption made by PCP is that $Z_0 \sim \mathcal{N}(\mu, \sigma^2)$
 consists of i.i.d. Gaussian noise corrupting each entry of the overall
 exposure matrix $D$.
 
+The models in `pcpr` seek to decompose an observed data matrix `D` into
+estimated low-rank and sparse components `L` and `S` for use in
+downstream environmental health analyses. The functions in `pcpr` are
+outfitted with three environmental health (EH)-specific extensions
+making `pcpr` particularly powerful for EH research: 1. Missing value
+functionality 2. Leveraging potential limit of detection (LOD)
+information 3. Non-negativity constraint on the estimated `L` matrix
+
 ## Usage
 
 `pcpr` supplies all of the functions needed to incorporate PCP into an
@@ -120,9 +128,9 @@ gs <- grid_search_cv(D_tilde, pcp_fn = rrmc, grid = etas, r = 5)
 #> Initializing gridsearch...
 #> The completed gridsearch will NOT be saved to any files, but simply returned.
 #> Beginning parallel gridsearch using 16 cores and a multisession strategy...
-#> Start time: 2025-03-18 05:59:12.906059
+#> Start time: 2025-03-18 06:07:14.325709
 #> 
-#> Gridsearch completed at time: 2025-03-18 05:59:21.974377
+#> Gridsearch completed at time: 2025-03-18 06:07:23.489314
 #> Metrics calculations complete.
 top3_params <- dplyr::slice_head(dplyr::arrange(gs$summary_stats, rel_err), n = 3)
 r_star <- top3_params$r[1]

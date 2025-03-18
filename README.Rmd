@@ -36,7 +36,9 @@ pak::pak("Columbia-PRIME/pcpr")
 
 PCP algorithms model an observed exposure matrix $D$ as the sum of three underlying
 ground-truth matrices:
+
 $$\underset{\text{mixture}}{D_{n \times p}} = \underset{\text{low-rank}}{L_0} + \underset{\text{sparse}}{S_0} + \underset{\text{noise}}{Z_0}$$
+
 a low-rank matrix $L_0$ encoding consistent patterns of exposure, a sparse
 matrix $S_0$ isolating unique or outlying exposure events (that cannot be
 explained by the consistent exposure patterns), and dense noise $Z_0$. All of
@@ -75,7 +77,7 @@ We can see `L_0` has 3 underlying patterns using the `matrix_rank()` function:
 matrix_rank(L_0)
 ```
 
-Let's simulate a random 20% of the values as missing (`NA`) with the `corrupt_mat_randomly()` function:
+Because our mixtures data is often incomplete in practice, let's simulate a random 5% of the values as missing (`NA`) with the `corrupt_mat_randomly()` function:
 
 ```{r corrupt mat randomly}
 corrupted_data <- corrupt_mat_randomly(D, perc = 0.05)
@@ -126,11 +128,11 @@ We can give PCA an advantage by sharing PCP's discovery that the solution should
 L_pca <- proj_rank_r(D_tilde_0fill, r = r_star)
 ```
 
-Now let's look at PCP's estimate of the sparse matrix and fix any values that are "practically" zero
+Now let's look at PCP's estimate of the sparse matrix and fix any values that are "practically" zero using the `hard_threshold()` function.
 
 ```{r sparse}
 hist(pcp_model$S)
-pcp_model$S <- hard_threshold(pcp_model$S, 0.2)
+pcp_model$S <- hard_threshold(pcp_model$S, thresh = 0.2)
 ```
 
 Finally, let's see how we did in recovering `L_0` and `S_0`:

@@ -26,7 +26,9 @@ pak::pak("Columbia-PRIME/pcpr")
 
 PCP algorithms model an observed exposure matrix $D$ as the sum of three
 underlying ground-truth matrices:
+
 $$\underset{\text{mixture}}{D_{n \times p}} = \underset{\text{low-rank}}{L_0} + \underset{\text{sparse}}{S_0} + \underset{\text{noise}}{Z_0}$$
+
 a low-rank matrix $L_0$ encoding consistent patterns of exposure, a
 sparse matrix $S_0$ isolating unique or outlying exposure events (that
 cannot be explained by the consistent exposure patterns), and dense
@@ -69,7 +71,8 @@ matrix_rank(L_0)
 #> [1] 3
 ```
 
-Let’s simulate a random 20% of the values as missing (`NA`) with the
+Because our mixtures data is often incomplete in practice, let’s
+simulate a random 5% of the values as missing (`NA`) with the
 `corrupt_mat_randomly()` function:
 
 ``` r
@@ -117,9 +120,9 @@ gs <- grid_search_cv(D_tilde, pcp_fn = rrmc, grid = etas, r = 5)
 #> Initializing gridsearch...
 #> The completed gridsearch will NOT be saved to any files, but simply returned.
 #> Beginning parallel gridsearch using 16 cores and a multisession strategy...
-#> Start time: 2025-03-18 05:50:02.374775
+#> Start time: 2025-03-18 05:59:12.906059
 #> 
-#> Gridsearch completed at time: 2025-03-18 05:50:11.571404
+#> Gridsearch completed at time: 2025-03-18 05:59:21.974377
 #> Metrics calculations complete.
 top3_params <- dplyr::slice_head(dplyr::arrange(gs$summary_stats, rel_err), n = 3)
 r_star <- top3_params$r[1]
@@ -150,7 +153,7 @@ L_pca <- proj_rank_r(D_tilde_0fill, r = r_star)
 ```
 
 Now let’s look at PCP’s estimate of the sparse matrix and fix any values
-that are “practically” zero
+that are “practically” zero using the `hard_threshold()` function.
 
 ``` r
 hist(pcp_model$S)
@@ -159,7 +162,7 @@ hist(pcp_model$S)
 <img src="man/figures/README-sparse-1.png" width="100%" />
 
 ``` r
-pcp_model$S <- hard_threshold(pcp_model$S, 0.2)
+pcp_model$S <- hard_threshold(pcp_model$S, thresh = 0.2)
 ```
 
 Finally, let’s see how we did in recovering `L_0` and `S_0`:

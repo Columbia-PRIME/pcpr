@@ -313,11 +313,10 @@ grid_search_cv <- function(
   if (perc_test == 0) pcp_evals$rel_err <- NA
   # 3. Summarizing the results from the search:
   if (num_runs > 1) {
-    evals_summary <- pcp_evals %>%
-      dplyr::group_by(dplyr::across(tidyselect::all_of(param_names))) %>%
-      dplyr::summarise(rel_err = mean(rel_err, na.rm = T), L_rank = mean(L_rank, na.rm = T), S_sparsity = mean(S_sparsity, na.rm = T), iterations = mean(iterations, na.rm = T), run_error_perc = paste0(round(100 * sum(!is.na(run_error)) / dplyr::n(), 2), "%"), .groups = "drop")
+    evals_summary <- pcp_evals %>% dplyr::group_by(dplyr::across(tidyselect::all_of(param_names)))
+    evals_summary <- dplyr::summarise(evals_summary, rel_err = mean(evals_summary[["rel_err"]], na.rm = T), L_rank = mean(evals_summary[["L_rank"]], na.rm = T), S_sparsity = mean(evals_summary[["S_sparsity"]], na.rm = T), iterations = mean(evals_summary[["iterations"]], na.rm = T), run_error_perc = paste0(round(100 * sum(!is.na(evals_summary[["run_error"]])) / dplyr::n(), 2), "%"), .groups = "drop")
   } else {
-    evals_summary <- pcp_evals %>% dplyr::select(!run_num)
+    evals_summary <- dplyr::select(pcp_evals, !pcp_evals[["run_num"]])
   }
   if (verbose) cat("\nMetrics calculations complete.")
   # 4. package results:
@@ -327,20 +326,20 @@ grid_search_cv <- function(
     if ("L_list" %in% names(pcp_mats[[1]])) {
       Ls <- foreach::`%do%`(
         foreach::foreach(k = 1:length(pcp_mats), .combine = c),
-        pcp_mats[[k]]$L_list
+        pcp_mats$k$L_list
       )
       Ss <- foreach::`%do%`(
         foreach::foreach(k = 1:length(pcp_mats), .combine = c),
-        pcp_mats[[k]]$S_list
+        pcp_mats$k$S_list
       )
     } else {
       Ls <- foreach::`%do%`(
         foreach::foreach(k = 1:length(pcp_mats), .combine = c),
-        pcp_mats[[k]]$L
+        pcp_mats$k$L
       )
       Ss <- foreach::`%do%`(
         foreach::foreach(k = 1:length(pcp_mats), .combine = c),
-        pcp_mats[[k]]$S
+        pcp_mats$k$S
       )
     }
     results <- list(all_stats = pcp_evals, summary_stats = evals_summary, L_mats = Ls, S_mats = Ss, test_mats = test_mats, original_mat = D, constant_params = constant_params)

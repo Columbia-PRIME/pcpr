@@ -120,6 +120,7 @@ get_pcp_defaults <- function(D) {
 #' * `S`: The ground truth sparse matrix.
 #' * `S`: The ground truth dense (Gaussian) noise matrix.
 #'
+#' @seealso [corrupt_mat_randomly()]
 #' @examples
 #' # rank 3 example
 #' data <- sim_data()

@@ -1,18 +1,38 @@
 Type: Package
 Package: pcpr
-Title: Principal Component Pursuit in R for Environmental Epidemiology
-Version: 0.1.0
-Author: Lawrence G. Chillrud, Jaime Benavides, Elizabeth A. Gibson, Junhui
-    Zhang, Jingkai Yan, John N. Wright, Jeff Goldsmith, Marianthi-Anna
-    Kioumourtzoglou
-Maintainer: Lawrence G. Chillrud <lgc2139@columbia.edu>
-Description: Provides the software needed to apply PCP as it is tailored
-    for environmental data.
+Title: Principal Component Pursuit for Environmental Epidemiology
+Version: 1.0.0
+Date: 2025-03-17
+Authors@R: c(
+    person("Lawrence G.", "Chillrud", , "chili@u.northwestern.edu", role = c("aut", "cre")),
+    person("Jaime", "Benavides", role = "aut"),
+    person("Elizabeth A.", "Gibson", role = "aut"),
+    person("Junhui", "Zhang", role = "aut"),
+    person("Jingkai", "Yan", role = "aut"),
+    person("John N.", "Wright", role = "aut"),
+    person("Jeff", "Goldsmith", role = "aut"),
+    person("Marianthi-Anna", "Kioumourtzoglou", role = "aut")
+  )
+Description: Implementation of PCP for pattern recognition tailored to
+    environmental health data, as described in Gibson et al. (2022)
+    <https://doi.org/10.1289/EHP10479>
 License: GPL (>= 3)
 URL: https://github.com/Columbia-PRIME/pcpr
 BugReports: https://github.com/Columbia-PRIME/pcpr/issues
 Depends: 
     R (>= 2.10)
+Imports: 
+    dplyr,
+    foreach,
+    furrr,
+    future,
+    magrittr,
+    parallel,
+    progressr,
+    purrr,
+    stringr,
+    tidyselect
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2

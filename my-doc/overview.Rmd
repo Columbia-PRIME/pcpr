@@ -1,6 +1,6 @@
 ---
 title: "Principal component pursuit via `pcpr`"
-subtitle: "Pattern recognition in environmental mixtures analyses"
+subtitle: "Pattern recognition in environmental mixtures data"
 author: "Lawrence G. Chillrud"
 date: "`r Sys.Date()`"
 output: 
@@ -18,65 +18,167 @@ output:
 knitr::opts_chunk$set(fig.width = 8, fig.height = 8, message = FALSE)
 ```
 
-In this document, we illustrate how to employ Principal Component Pursuit (PCP) for pattern recognition in environmental health (EH) analyses with the `pcpr` R package. Additional information regarding `pcpr`'s statistical methodology and computational details are provided in [Chillrud et al. (2022)](). 
+In this document, we illustrate how to employ Principal Component Pursuit (PCP)
+for pattern recognition in environmental health (EH) analyses with the `pcpr` R
+package. Additional information regarding `pcpr`'s statistical methodology and
+computational details are provided in [Chillrud et al. (2022)]().
 
 # Overview
 
 ## The mixtures model
 
-PCP models an observed exposure matrix $D$ as the sum of three underlying ground-truth matrices:
+PCP models an observed exposure matrix $D$ as the sum of three underlying
+ground-truth matrices:
 $$
 \underset{\text{mixture}}{D_{n \times p}} = \underset{\text{low-rank}}{L_0} + \underset{\text{sparse}}{S_0} + \underset{\text{noise}}{Z_0}
 $$
-a low-rank matrix $L_0$ encoding consistent patterns of exposure, a sparse matrix $S_0$ isolating unique or outlying exposure events (that cannot be explained by the consistent exposure patterns), and dense noise $Z_0$. All of these matrices are of dimension $n \times p$, where $n$ is the number of observations (e.g., study participants or measurement dates) and $p$ is the number of exposures (chemical and/or non-chemical stressors). Beyond this mixtures model, the main (EH-relevant) assumption made by PCP is that $Z_0 \sim \mathcal{N}(\mu, \sigma^2)$ consists of i.i.d. Gaussian noise corrupting each entry of the overall exposure matrix $D$. A visual example of PCP's mixtures model is provided below:
+a low-rank matrix $L_0$ encoding consistent patterns of exposure, a sparse
+matrix $S_0$ isolating unique or outlying exposure events (that cannot be
+explained by the consistent exposure patterns), and dense noise $Z_0$. All of
+these matrices are of dimension $n \times p$, where $n$ is the number of
+observations (e.g., study participants or measurement dates) and $p$ is the
+number of exposures (chemical and/or non-chemical stressors). Beyond this
+mixtures model, the main (EH-relevant) assumption made by PCP is that
+$Z_0 \sim \mathcal{N}(\mu, \sigma^2)$ consists of i.i.d. Gaussian noise
+corrupting each entry of the overall exposure matrix $D$.
+A visual example of PCP's mixtures model is provided below:
 
 ![A visual example of the PCP mixtures model.](model_example.png)
 
-
-Under these minimal assumptions, PCP aims to decompose the observed mixture $D$ into the above mixtures model via an optimization program, thereby recovering the ground-truth $L_0$ and $S_0$ with accurate estimates $\hat{L}$ and $\hat{S}$.
+Under these minimal assumptions, PCP aims to decompose the observed mixture $D$
+into the above mixtures model via an optimization program, thereby recovering
+the ground-truth $L_0$ and $S_0$ with accurate estimates $\hat{L}$ and
+$\hat{S}$.
 
 ## The low-rank matrix
 
-The estimated low-rank matrix $\hat{L}$ provides information on the consistent exposure patterns, satisfying
+The estimated low-rank matrix $\hat{L}$ provides information on the consistent
+exposure patterns, satisfying
 $$
     r = \text{rank}(\hat{L}) \ll \min(n, p).
 $$
-The rank $r$ corresponds to the (relatively few) number of underlying patterns governing the mixture, such as specific sources or behaviors leading to exposure. Notice that $\hat{L} \in \mathbb{R}^{n \times p}$, meaning it is still defined in terms of the original variables. Put differently, $\hat{L}$ can be taken as a robust approximation to the true environmental mixture matrix, unperturbed by outliers (captured in $\hat{S}$) or noise (handled by PCP's noise term). In this way, the latent exposure patterns are *encoded* in $\hat{L}$ rather than directly estimated. To explicitly obtain the exposure patterns from $\hat{L}$, PCP may then be paired with various matrix factorization methods (e.g., PCA, factor analysis, or NMF) that yield chemical loadings and individual scores for use in downstream health models.
+The rank $r$ corresponds to the (relatively few) number of underlying patterns
+governing the mixture, such as specific sources or behaviors leading to
+exposure. Notice that $\hat{L} \in \mathbb{R}^{n \times p}$, meaning it is
+still defined in terms of the original variables. Put differently, $\hat{L}$
+can be taken as a robust approximation to the true environmental mixture matrix,
+unperturbed by outliers (captured in $\hat{S}$) or noise
+(handled by PCP's noise term). In this way, the latent exposure patterns are
+_encoded_ in $\hat{L}$ rather than directly estimated. To explicitly obtain the
+exposure patterns from $\hat{L}$, PCP may then be paired with various matrix
+factorization methods (e.g., principal components analysis, factor analysis, or
+non-negative matrix factorization) that yield chemical loadings and individual
+scores for use in downstream health models.
 
 ## The sparse matrix
 
-The estimated sparse matrix $\hat{S}$ captures unusually high/low outlying exposure events, unexplained by the identified patterns in $\hat{L}$. Most entries in $\hat{S}$ are 0, with non-zero entries identifying such extreme exposure activity. The number, location (i.e., support), and value of non-zero entries in $\hat{S}$ need not be \textit{a priori} defined; PCP isolates these during optimization.
+The estimated sparse matrix $\hat{S}$ captures unusually high/low outlying
+exposure events, unexplained by the identified patterns in $\hat{L}$. Most
+entries in $\hat{S}$ are 0, with non-zero entries identifying such extreme
+exposure activity. The number, location (i.e., support), and value of non-zero
+entries in $\hat{S}$ need not be a priori defined; PCP isolates these itself
+during optimization.
 
-# PCP algorithms
+# A brief summary of convexity
 
-|                                     | `root_pcp()`            | `RRMC()`               |
+Of the many flavors of PCP undergoing active study in the current literature,
+we offer two distinct models in `pcpr`: the convex model `root_pcp()` and
+non-convex model `rrmc()`.
+
+## Convex PCP
+
+Convex PCP formulations possess a number of particularly attractive properties,
+foremost of which is convexity, meaning that every local optimum is a global
+optimum, and a single best solution exists. Convex approaches to PCP also have
+the virtue that the rank $r$ of the recovered $\hat{L}$ matrix is determined
+during optimization, without researcher input.
+
+Unfortunately, these benefits come at a cost: convex PCP programs are expensive
+to run on large datasets, suffering from poor convergence rates.
+Moreover, convex PCP approaches are best suited to instances in which the target
+low-rank matrix $\L_0$ can be accurately modelled as low-rank (i.e. $\L_0$ is
+governed by only a few very well-defined patterns). This is often the case with
+image and video data (characterized by rapidly decaying singular values), but
+not common for EH data. EH data is typically is only approximately low-rank
+(characterized by complex patterns and slowly decaying singular values).
+
+## Non-convex PCP
+
+To alleviate the high computational complexity of convex methods, non-convex PCP
+frameworks have been developed. These drastically improve upon the convergence
+rates of their convex counterparts. Better still, non-convex PCP methods more
+flexibly accommodate data lacking a well-defined low-rank structure, so they are
+from the outset better suited to handling EH data. Non-convex formulations
+provide this flexibility by allowing the user to interrogate the data at
+different ranks.
+
+The drawback here is that non-convex algorithms can no longer determine the rank
+best describing the data autonomously, instead requiring the researcher to
+subjectively specify the rank as in PCA. One of the more glaring trade-offs made
+by non-convex methods for this improved run-time and flexibility is weaker
+theoretical promises; specifically, non-convex PCP runs the risk of finding
+spurious _local_ optima, rather than the _global_ optimum guaranteed by their
+convex siblings. Having said that, theory has been developed guaranteeing
+equivalent performance between non-convex implementations and closely related
+convex formulations under certain conditions. These advancements provide strong
+motivation for non-convex frameworks despite their weaker theoretical promises.
+
+# `pcpr` algorithms at a glance
+
+The table below offers a quick glance at the relative differences between the
+two PCP algorithms shipped with `pcpr`:
+
+|                                     | `root_pcp()`            | `rrmc()`               |
 |-------------------------------------|-------------------------|------------------------|
 | Convex?                             | _Yes_                   | _No_                   |
 | Convergence?                        | _Slow_                  | _Fast_                 |
-| Expected low-rank structure?        | _Well-defined_          | _Messy_                |
+| Expected low-rank structure?        | _Well-defined_          | _Complex_              |
 | Parameters?                         | $D, \lambda, \mu$       | $D, r, \eta$           |
+| Supports missing values?            | _Yes_                   | _Yes_                  |
 | Supports LOD penalty?               | _Yes_                   | _Yes_                  |
 | Supports non-negativity constraint? | _Yes_                   | _No_                   |
 | Rank determination?                 | _Autonomous_            | _User-defined_         |
-| Solver?                             | _ADMM_                  | _Iterative rank-based_ |
+| Sparse event identification?        | _Autonomous_            | _Autonomous_           |
+| Optimization approach?              | _ADMM_                  | _Iterative rank-based_ |
 
-## Root PCP
+## `root_pcp()`
 
-The convex model available in `pcpr` is Root PCP, denoted here as $\sqrt{\text{PCP}}$. For a comprehensive technical understanding, we refer readers to [Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/file/f65854da4622c1f1ad4ffeb361d7703c-Paper.pdf) introducing $\sqrt{\text{PCP}}$. Here we briefly introduce the `root_pcp` function in `pcpr`. 
+The convex model available in `pcpr` is `root_pcp()`. For a comprehensive
+technical understanding, we refer readers to
+[Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/file/f65854da4622c1f1ad4ffeb361d7703c-Paper.pdf)
+introducing the algorithm. Here we briefly introduce the `root_pcp()` function in `pcpr`:
 
-## RRMC
+## rrmc
+
+The non-convex model available in `pcpr` is `rrmc()`. We refer readers to
+[Cherapanamjeri et al. (2017)](https://proceedings.mlr.press/v70/cherapanamjeri17a.html)
+for an in depth look at rrmc's mathematical details.
 
 # Environmental health example analysis: PM2.5 source apportionment
 
-Here we will demonstrate how to apply PCP to environmental mixtures data using an example air pollution source apportionment analysis. Environmental health researchers often aim to identify sources that drive potentially harmful environmental exposures. Investigating potential associations between the identified sources, or patterns of exposure, and adverse health outcomes can then help pave the way toward targeted interventions or public health policy recommendations. 
+Here we will demonstrate how to apply PCP to environmental mixtures data using
+an example air pollution source apportionment analysis. Environmental health
+researchers often aim to identify sources that drive potentially harmful
+environmental exposures. Investigating potential associations between the
+identified sources, or patterns of exposure, and adverse health outcomes can
+then help pave the way toward targeted interventions or public health policy
+recommendations. 
 
-For our analysis, we aim to apportion speciated PM$_{2.5}$ to its sources using the `queens` dataset that comes with the `pcpr` R package. The `queens` dataset consists of real chemical concentrations (in µg/m$^3$) of 26 species of PM$_{2.5}$ measured every three to six days from 04/04/2001 through 12/30/2021 by an EPA AQS air monitor located in Queens, New York City.
+For our analysis, we aim to apportion speciated PM$_{2.5}$ to its sources using
+the `queens` dataset that comes with the `pcpr` R package. The `queens` dataset
+consists of real chemical concentrations (in µg/m$^3$) of 26 species of
+PM$_{2.5}$ measured every three to six days from 04/04/2001 through 12/30/2021
+by an EPA AQS air monitor located in Queens, New York City.
 
-We'll begin by exploring the raw `queens` data - corresponding to the $D$ matrix in our formal mixtures model above - before applying PCP to obtain estimates for $\hat{L}$ and $\hat{S}$. We can then compare the PCP-recovered low dimensional structure in $\hat{L}$ with the observed raw patterns of $D$.
+We'll begin by exploring the raw `queens` data - corresponding to the $D$ matrix
+in our formal mixtures model above - before applying PCP to obtain estimates for
+$\hat{L}$ and $\hat{S}$. We can then compare the PCP-recovered low dimensional
+structure in $\hat{L}$ with the observed raw patterns of $D$.
 
 ## Exploring the raw `queens` data
 
-First, let's load the `pcpr` package (along with a few other packages we will need for data processing) and take a look at the `queens` dataset:
+First, let's load the `pcpr` package (along with a few other packages we will
+need for data processing) and take a look at the `queens` dataset:
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -87,19 +189,23 @@ library(tidyr)
 library(lubridate)
 library(forcats)
 
-queens 
+queens
 ```
 
-Let's spend some time visualizing some of the trends of the raw dataset, to get a sense of what we're dealing with. We can start by plotting each of the measured chemical species as timeseries. Plotted in black are the raw observed PM$_{2.5}$ measurements (in µg/m$^3$) over time (04/04/2001 - 12/30/2021), and plotted in red are some (rough) lines of best fit: 
+Let's spend some time visualizing some of the trends of the raw dataset, to get
+a sense of what we're dealing with. We can start by plotting each of the
+measured chemical species as timeseries. Plotted in black are the raw observed
+PM$_{2.5}$ measurements (in µg/m$^3$) over time (04/04/2001 - 12/30/2021), and
+plotted in red are some (rough) lines of best fit: 
 ```{r}
 queens %>%
   pivot_longer(
     colnames(queens)[-1], names_to = "chem", values_to = "concentration"
   ) %>%
-  filter(!is.na(concentration)) %>% 
+  filter(!is.na(concentration)) %>%
   ggplot(aes(x = Date, y = concentration)) +
   geom_line() +
-  geom_smooth(color = "red", formula="y ~ x", method = "loess", span = 0.05) +
+  geom_smooth(color = "red", formula = "y ~ x", method = "loess", span = 0.05) +
   facet_wrap(~chem, scales = "free_y") +
   labs(x = "Date", y = "Concentration (µg/m^3)") +
   theme_bw()
@@ -140,7 +246,7 @@ The high dimensionality of our `queens_small` air pollution mixture matrix gives
 Before applying PCP to our mixture, it's good to first take a look at what Principal Component Analysis (PCA) is able to extract from the `queens_small` data. We do this for a couple of reasons: 
 
 1. First, we'd like to establish a baseline for comparison. To better understand the effect of applying PCP to the `queens_small` data, we'd like to see what low dimensional structures exist in the raw data from the outset. 
-2. Second, understanding the behavior of the singular values governing the raw data will help inform choices we must make pertaining to PCP's optimization scheme. A preliminary PCA will enable us to scrutinize our data's singular values. $\sqrt{\text{PCP}}$ is well-suited for data exhibiting rapidly decaying singular values (e.g., imaging data), while RRMC is best for more messy data with slowly decaying singular values (environmental mixtures data typically falls into this bucket).
+2. Second, understanding the behavior of the singular values governing the raw data will help inform choices we must make pertaining to PCP's optimization scheme. A preliminary PCA will enable us to scrutinize our data's singular values. $\sqrt{\text{PCP}}$ is well-suited for data exhibiting rapidly decaying singular values (e.g., imaging data), while rrmc is best for more messy data with slowly decaying singular values (environmental mixtures data typically falls into this bucket).
 
 Before we are able to call upon PCA (or PCP, for that matter) we need to first preprocess our data for better numerical stability. In practical terms, both PCA and PCP's statistical routines are sensitive to data with variable scales. Before arbitrarily normalizing or standardizing our data, let's examine the distribution of our `queens_small` dataset:
 
@@ -149,7 +255,7 @@ queens_small %>%
   pivot_longer(
     colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
   ) %>%
-  filter(!is.na(concentration)) %>% 
+  filter(!is.na(concentration)) %>%
   ggplot(aes(x = concentration)) +
   geom_histogram(bins = 50) +
   theme_bw() +
@@ -257,7 +363,7 @@ prelim_pca$var_df %>%
   labs(x = "Principal component", y = "Singular value") +
   ggtitle("Singular values of preliminary PCA")
 ```
-Here is a ncie example of slowly decaying singular values, suggesting we adopt `RRMC` as the PCP function of choice to reduce the dimensionality in our `queens_scaled` dataset.
+Here is a ncie example of slowly decaying singular values, suggesting we adopt `rrmc` as the PCP function of choice to reduce the dimensionality in our `queens_scaled` dataset.
 
 We can also briefly take a look at the PCA loadings, corresponding to each of the first six principal components (PCs), or first six patterns governing our data, to get an idea of the sources as PCA sees them in the raw data: 
 
@@ -270,11 +376,11 @@ Now that we have gotten acquainted with the raw data, let's move on to our PCP a
 
 ## PCP parameter gridsearch
 
-Given the structure of the singular values in our data (plotted above), we've determined that the non-convex `RRMC` function is the best place to start. This will allow us to interrogate the mixture with solutions of many different ranks (i.e., number of sources/patterns). To start, we need to run a gridsearch to determine the best hyperparameter `eta` to use with RRMC, along with the appropriate rank `r` that RRMC gravitates towards in order to explain the `queens_scaled` data well. Recall that `eta` is a dial controlling the interplay between how structured our recovered low-rank solution is and how sparse our recovered sparse solution is.
+Given the structure of the singular values in our data (plotted above), we've determined that the non-convex `rrmc` function is the best place to start. This will allow us to interrogate the mixture with solutions of many different ranks (i.e., number of sources/patterns). To start, we need to run a gridsearch to determine the best hyperparameter `eta` to use with rrmc, along with the appropriate rank `r` that rrmc gravitates towards in order to explain the `queens_scaled` data well. Recall that `eta` is a dial controlling the interplay between how structured our recovered low-rank solution is and how sparse our recovered sparse solution is.
 
 LGC 2/4/25 TODO: Refine above paragraph as well as all the sections (how this document is broken up)
 
-This time we avoid imputing the data with the chemical means, since we would like `RRMC` to recover missing values using the low-rank structure present in the data.
+This time we avoid imputing the data with the chemical means, since we would like `rrmc` to recover missing values using the low-rank structure present in the data.
 
 ```{r}
 D <- queens_scaled %>% 
@@ -282,14 +388,14 @@ D <- queens_scaled %>%
   as.matrix()
 ```
 
-Due to `RRMC`'s iterative rank-based procedure, we can fix the rank `r` in our gridsearch to be the maximum rank we would like to search up to. Here we've chosen `r=9`, since we do not expect more than 9 distinct sources to govern `queens` PM2.5 data from 2015-2021 (based on prior studies suggesting 5 sources would perhaps be more reasonable). We should now search through `eta`, ensuring we also cover the rough default value obtained via the `get_pcp_defaults` function in `pcpr`.
+Due to `rrmc`'s iterative rank-based procedure, we can fix the rank `r` in our gridsearch to be the maximum rank we would like to search up to. Here we've chosen `r=9`, since we do not expect more than 9 distinct sources to govern `queens` PM2.5 data from 2015-2021 (based on prior studies suggesting 5 sources would perhaps be more reasonable). We should now search through `eta`, ensuring we also cover the rough default value obtained via the `get_pcp_defaults` function in `pcpr`.
 ```{r long search, eval=FALSE, echo=TRUE}
 pcp_defaults <- D %>% get_pcp_defaults()
 default_eta <- pcp_defaults$eta
 
 grid <- grid_search_cv(
 	mat = D,
-	pcp_func = RRMC,
+	pcp_func = rrmc,
 	grid = data.frame(eta = c(c(0.005, 0.01), seq(0.05, 0.60, by = 0.05))),
 	r = 9,
 	runs = 150,
@@ -322,7 +428,7 @@ plot_mat <- function(D) {
 ```
 
 ```{r}
-rrmc_out <- RRMC(D, r = 4, eta = 0.1) # eta = 0.01?
+rrmc_out <- rrmc(D, r = 4, eta = 0.1) # eta = 0.01?
 # rachels_pcp <- root_pcp_noncvx_nonnegL_na(D, lambda = 0.00008, mu = 0.005, r = 7)
 # my_pcp <- new_root_pcp_noncvx_nonnegL_na_lod(D, lambda = 1e-04, mu = 0.005, r = 5)
 ```

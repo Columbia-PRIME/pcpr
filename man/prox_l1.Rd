@@ -2,7 +2,7 @@
 % Please edit documentation in R/prox_operators.R
 \name{prox_l1}
 \alias{prox_l1}
-\title{Prox L1}
+\title{Proximal gradient method for the L1 norm}
 \usage{
 prox_l1(S, c)
 }
@@ -15,12 +15,14 @@ prox_l1(S, c)
 The thresholded sparse matrix.
 }
 \description{
-\code{prox_l1} implements the proximal gradient method for the L1 norm.
-This soft thresholding encourages the \code{S} matrix to be sparse.
-The proximal gradient method is used to solve non-differentiable convex optimization problems.
-This is used in \code{stable_pcp} and \code{root_pcp}.
+\code{prox_l1()} implements the proximal gradient method for the L1 norm.
+In \code{\link[=root_pcp]{root_pcp()}}, this soft thresholding encourages the \code{S} matrix to be
+sparse. The proximal gradient method is used to solve non-differentiable
+convex optimization problems. \strong{This is an internal function needed by
+\code{\link[=root_pcp]{root_pcp()}}. It is not expected that users should require access to this
+function.}
 }
 \seealso{
-\code{\link{hard_thresholding}}, \code{\link{prox_frobenius}}, \code{\link{prox_nuclear}}
+\code{\link[=hard_thresholding]{hard_thresholding()}}, \code{\link[=prox_frobenius]{prox_frobenius()}}, \code{\link[=prox_nuclear]{prox_nuclear()}}
 }
 \keyword{internal}

@@ -2,104 +2,254 @@
 % Please edit documentation in R/grid_search_cv.R
 \name{grid_search_cv}
 \alias{grid_search_cv}
-\title{Cross-validated grid search of the parameters for Principle Component Pursuit (PCP).}
+\title{Cross-validated grid search for PCP models}
 \usage{
 grid_search_cv(
-  mat,
+  D,
   pcp_func,
   grid,
+  ...,
   scale_func = NULL,
-  parallel_approach = "multisession",
-  cores = parallel::detectCores(logical = F),
+  parallel_strategy = "multisession",
+  cores = parallel::detectCores(logical = FALSE),
   perc_test = 0.05,
   runs = 100,
   conserve_memory = FALSE,
   verbose = TRUE,
-  save_as = NULL,
-  ...
+  save_as = NULL
 )
 }
 \arguments{
-\item{mat}{The data matrix to conduct the grid search on.}
+\item{D}{The input data matrix (can contain \code{NA} values). Note that PCP will
+converge much more quickly when \code{D} has been standardized in some way (e.g.
+scaling columns by their standard deviations, or column-wise min-max
+normalization).}
 
-\item{pcp_func}{The PCP function to use when grid searching. \emph{Note: the PCP function passed must be able to handle missing \code{NA} values.} For example: \code{root_pcp_na}.}
+\item{pcp_func}{The PCP function to use when grid searching. Must be either
+\code{rrmc} or \code{root_pcp} (passed without the soft brackets).}
 
-\item{grid}{A dataframe with dimension N x P containing the N-many settings of P-many parameters to try. \emph{The columns of \code{grid} should be named exactly as they are in the function
-header of} \code{pcp_func}. For example, if \code{pcp_func = root_pcp_noncvx_na}, then the columns of \code{grid} should be named "lambda", "mu", and "r"
-An optional additional column named "rel_err" can be included that contains the mean relative error recorded by that row's parameter setting, with those rows (settings) that have not been tried left as \code{NA}.
-In this way, you can perform a grid search in which you already know the relative errors of some parameter settings, but would like to expand your knowledge of the unexplored parts of the grid further.}
+\item{grid}{A \code{data.frame} of dimension \code{n} by \code{p} containing the \code{n}-many
+settings of \code{p}-many parameters to try. \strong{The columns of \code{grid} should be
+named after the parameters in the function header of \code{pcp_func}.} For
+example, if \code{pcp_func = root_pcp}, then \code{names(grid)} must be set to
+\code{c("lambda", "mu")} if the grid is searching through different settings of
+\code{lambda} and \code{mu}. Likewise for \code{root_pcp = RRMC} and \code{eta} and \code{r}.}
 
-\item{scale_func}{(Optional) The function used to scale the input \code{mat} by column. By default, \code{scale_func = NULL}, and no scaling is to be done at all.}
+\item{...}{Any parameters required by \code{pcp_func} that could not be specified
+in \code{grid}. Importantly, these parameters are therefore kept constant (not
+involved in the grid search). The best example is the \code{LOD} parameter for
+those cases where the user has \code{LOD} information for PCP to leverage.}
 
-\item{parallel_approach}{(Optional) The computational approach used when conducting the gridsearch (to be passed on to the \code{future} package's \code{\link[future]{plan}} function). Must be one of: \code{"sequential", "multisession", "multicore"}. By default, \code{parallel_approach = "multisession"}, which does parallelization via sockets (in separate R sessions) and works on any operating system. If \code{parallel_approach = "sequential"} then the search will be conducted in serial. The option \code{parallel_approach = "multicore"} is not supported on Windows machines, nor in RStudio (must be run from the command line) but is faster than the \code{"multisession"} approach since it runs separate forked R processes.}
+\item{scale_func}{(Optional) The function used to scale the input \code{D} by
+column. By default, \code{scale_func = NULL}, and no scaling is to be done.}
 
-\item{cores}{(Optional) The number of cores to use when parallelizing the grid search. By default, \code{cores = parallel::detectCores(logical = F)}, which is the number of physical CPUs available on the machine.}
+\item{parallel_strategy}{(Optional) The parallelization strategy used when
+conducting the gridsearch (to be passed on to the \code{\link[future:plan]{future::plan()}}
+function). Must be one of: \code{"sequential"}, \code{"multisession"}, \code{"multicore"}
+or \code{"cluster"}. By default, \code{parallel_strategy = "multisession"}, which
+parallelizes the grid search via sockets in separate R \emph{sessions}. If
+\code{parallel_strategy = "sequential"} then the search will be conducted in
+serial and the \code{cores} argument is ignored. The option
+\code{parallel_strategy = "multicore"} is not supported on Windows
+machines, nor in .Rmd files (must be run in a .R script) but parallelizes
+the search much faster than \code{"multisession"} since it runs separate
+\emph{forked} R processes. The option \code{parallel_strategy = "cluster"}
+parallelizes using separate R sessions running typically on one or more
+machines. Support for other parallel strategies will be added in a future
+release of \code{pcpr}. It is recommended to use
+\code{parallel_strategy = "multicore"} or \code{"multisession"} when possible.}
 
-\item{perc_test}{(Optional) The fraction of entries of \code{mat} that will be randomly imputed as \code{NA} missing values (the test set). Can be anthing in the range \code{[0, 1)}. By default, \code{perc_test = 0.15}.}
+\item{cores}{(Optional) An integer specifying the number of cores to use when
+parallelizing the grid search. By default,
+\code{cores = parallel::detectCores(logical = F)}, which computes the number of
+physical CPUs available on the machine (see \code{\link[parallel:detectCores]{parallel::detectCores()}}).
+Ignored when \code{parallel_strategy = "sequential"}, must be \verb{> 1} otherwise.}
 
-\item{runs}{(Optional) The number of times to test a given parameter setting. By default, \code{runs = 1}.}
+\item{perc_test}{(Optional) The fraction of entries of \code{D} that will be
+randomly corrupted as \code{NA} missing values (the test set). Can be anthing in
+the range \verb{[0, 1)}. By default, \code{perc_test = 0.05}. See \strong{Best practices}
+section for more details.}
 
-\item{conserve_memory}{(Optional) A logical indicating if you only care about the actual statistics of the gridsearch and would therefore like to conserve memory when running the gridsearch. If set to \code{TRUE}, then only statistics on the parameters tested will be returned. By default, \code{conserve_memory = FALSE}, in which case additional objects saving the outputs of all runs of \code{pcp_func} will also be returned.}
+\item{runs}{(Optional) The number of times to test a given parameter setting.
+By default, \code{runs = 100}. See \strong{Best practices} section for more details.}
 
-\item{verbose}{(Optional) A logical indicating if you would like verbose output displayed or not. By default, \code{verbose = TRUE}.}
+\item{conserve_memory}{(Optional) A logical indicating if you only care about
+the statistics of the gridsearch and would therefore like to
+conserve memory when running the gridsearch. If set to \code{TRUE}, then only
+statistics on the parameters tested will be returned. By default,
+\code{conserve_memory = FALSE}, in which case additional objects saving the
+outputs of all runs of \code{pcp_func} will also be returned.}
 
-\item{save_as}{(Optional) A character containing the root of the file path used to save the output to. Importantly, this should not end in any file extension, since this character will be used to save both the resulting \code{[save_as].rds} and {[save_as]_README.txt} files. By default, \code{save_as = NULL}, in which case the gridsearch is not saved to any file.}
+\item{verbose}{(Optional) A logical indicating if you would like verbose
+output displayed or not (e.g. progress bars). By default, \code{verbose = TRUE}.}
 
-\item{...}{\emph{Any parameters required by \code{pcp_func} that could not be specified in \code{grid}. Importantly, these parameters are therefore kept constant (not involved in the grid search). The best example is the \code{LOD} parameter for those PCP functions that require the \code{LOD} argument.}}
+\item{save_as}{(Optional) A character containing the root of the file path
+used to save the output to. Importantly, this should not end in any file
+extension, since this character will be used to save both the resulting
+\verb{[save_as].rds} and \verb{[save_as]_README.txt} files. By default,
+\code{save_as = NULL}, in which case the gridsearch is not saved to any file.}
 }
 \value{
-A list containing the following:
-\describe{
-   \item{\code{all_stats}}{A \code{data.frame} containing the statistics of every run comprising the grid search. These statistics include the parameter settings for the run, along with the \code{run} number (used as the seed in the corruption step outlined in step 1 of the \strong{Methods} section), the relative error for the run \code{rel_err}, the rank of the recovered L matrix \code{L_rank}, the sparsity of the recovered S matrix \code{S_sparsity}, the number of \code{iterations} PCP took to reach convergence, and the error status \code{run_error} of the PCP run (\code{NA} if no error, otherwise a character).}
-   \item{\code{summary_stats}}{A \code{data.frame} containing a summary of the information in \code{all_stats}. Made to easily pass on to \code{\link{print_gs}}.}
-   \item{\code{L_mats}}{A list containing all the L matrices returned from PCP throughout the gridsearch. Therefore, \code{length(L_mats) == nrow(all_stats)}. Row i in \code{all_stats} corresponds to \code{L_mats[[i]]}. Only returned when \code{conserve_memory = FALSE}.}
-   \item{\code{S_mats}}{A list containing all the S matrices returned from PCP throughout the gridsearch. Therefore, \code{length(S_mats) == nrow(all_stats)}. Row i in \code{all_stats} corresponds to \code{S_mats[[i]]}. Only returned when \code{conserve_memory = FALSE}.}
-   \item{\code{test_mats}}{A list of \code{length(runs)} containing all the corrupted test mats (and their masks) used throughout the gridsearch. Note: \code{all_stats$run[i]} corresponds to \code{test_mats[[i]]}. Only returned when \code{conserve_memory = FALSE}.}
-   \item{\code{original_mat}}{The original data matrix \code{mat} after it was column scaled by \code{scale_func}. Only returned when \code{conserve_memory = FALSE}.}
-   \item{\code{constant_params}}{A copy of the constant parameters that were originally passed to the gridsearch (for record keeping).}
+A list containing:
+\itemize{
+\item \code{all_stats}: A \code{data.frame} containing the statistics of every run
+comprising the grid search. These statistics include the parameter
+settings for the run, along with the \code{run} number (used as the seed
+in the corruption step outlined in step 1 of the \strong{Procedure} section),
+the relative error for the run \code{rel_err}, the rank of the recovered L
+matrix \code{L_rank}, the sparsity of the recovered S matrix \code{S_sparsity},
+the number of \code{iterations} PCP took to reach convergence (for \code{\link[=root_pcp]{root_pcp()}}
+only), and the error status \code{run_error} of the PCP run (\code{NA} if no error,
+otherwise a character).
+\item \code{summary_stats}: A \code{data.frame} containing a summary of the information in
+\code{all_stats}. Summary made by column-wise averaging the results in
+\code{all_stats}.
+\item \code{L_mats}: A list containing all the \code{L} matrices returned from PCP
+throughout the gridsearch. Therefore, \code{length(L_mats) == nrow(all_stats)}.
+Row \code{i} in \code{all_stats} corresponds to \code{L_mats[[i]]}. Only returned when
+\code{conserve_memory = FALSE}.
+\item \code{S_mats}: A list containing all the S matrices returned from PCP throughout
+the gridsearch. Therefore, \code{length(S_mats) == nrow(all_stats)}. Row \code{i} in
+\code{all_stats} corresponds to \code{S_mats[[i]]}. Only returned when
+\code{conserve_memory = FALSE}.
+\item \code{test_mats}: A list of \code{length(runs)} containing all the corrupted test
+mats (and their masks) used throughout the gridsearch. Note:
+\code{all_stats$run[i]} corresponds to \code{test_mats[[i]]}. Only returned when
+\code{conserve_memory = FALSE}.
+\item \code{original_mat}: The original data matrix \code{D} \emph{after it was column scaled by
+\code{scale_func}.} Only returned when \code{conserve_memory = FALSE}.
+\item \code{constant_params}: A copy of the constant parameters that were originally
+passed to the gridsearch (for record keeping).
 }
 }
 \description{
-\code{grid_search_cv} conducts a cross-validated grid search of the parameters for a given data matrix \code{mat}, PCP function \code{pcp_func}, and settings of parameters to search through \code{grid}. See the \strong{Methods} section below for more details.
+\code{grid_search_cv()} conducts a Monte Carlo style cross-validated grid search
+of PCP parameters for a given data matrix \code{D}, PCP function \code{pcp_func}, and
+grid of parameter settings to search through \code{grid}. The run time of the grid
+search can be sped up using bespoke parallelization settings. See the below
+sections for details.
 }
-\section{Methods}{
+\section{The Monte Carlo style cross-validation procedure}{
 
 Each hyperparameter setting is cross-validated by:
 \enumerate{
-  \item Randomly corrupting \code{perc_test} percent of the entries in \code{mat} as missing (i.e. \code{NA} values), yielding \code{corrupted_mat}.
-  Done via the \code{\link{corrupt_mat_randomly}} function.
-  \item Running the PCP function (\code{pcp_func}) on \code{corrupted_mat}, giving \code{L_hat} and \code{S_hat}.
-  \item Recording the relative recovery errors of \code{L_hat} compared with the input data matrix \code{mat} for only those values that were imputed as missing during the corruption step. Ie. \code{||P_OmegaCompliment(mat - L_hat)||_F / ||P_OmegaCompliment(mat)||_F}.
-  \item Repeating steps 1-3 for a total of \code{runs} many times.
-  \item Reporting the mean of the \code{runs}-many runs for each parameter setting.
+\item Randomly corrupting \code{perc_test} percent of the entries in \code{D} as missing
+(i.e. \code{NA} values), yielding \code{D_tilde}. Done via \code{\link[=corrupt_mat_randomly]{corrupt_mat_randomly()}}.
+\item Running the PCP function \code{pcp_func} on \code{D_tilde}, yielding estimates \code{L}
+and \code{S}.
+\item Recording the relative recovery error of \code{L} compared with the input data
+matrix \code{D} for \emph{only those values that were imputed as missing during the
+corruption step} (step 1 above). Mathematically, calculate:
+\eqn{||P_{\Omega^c}(D - L)||_F / ||P_{\Omega^c}(D)||_F}, where
+\eqn{P_{\Omega^c}} selects only those entries where
+\code{is.na(D_tilde) == TRUE}.
+\item Repeating steps 1-3 for a total of \code{runs} many times, where each "run" has
+a unique random seed from \code{1} to \code{runs} associated with it.
+\item Performance statistics can then be calculated for each "run", and then
+summarized across all runs for average model performance statistics.
+}
+}
+
+\section{Best practices for \code{perc_test} and \code{runs}}{
+
+Experimentally, this grid search procedure retrieves the best performing
+PCP parameter settings when \code{perc_test} is relatively low, e.g.
+\code{perc_test = 0.05}, or 5\%, and \code{runs} is relatively high, e.g. \code{runs = 100}.
+
+The larger \code{perc_test} is, the more the test set turns into a matrix
+completion problem, rather than the desired matrix decomposition problem. To
+better resemble the actual problem PCP will be faced with come inference
+time, \code{perc_test} should therefore be kept relatively low.
+
+Choosing a reasonable value for \code{runs} is dependent on the need to keep
+\code{perc_test} relatively low. Ideally, a large enough \code{runs} is used so that
+many (if not all) of the entries in \code{D} are likely to eventually be tested.
+Note that since test set entries are chosen randomly for all runs \code{1} through
+\code{runs}, in the pathologically worst case scenario, the same exact test set
+could be drawn each time. In the ebst case scenario, a different test set is
+obtained each run, providing balanced coverage of \code{D}. Viewed another way,
+the smaller \code{runs} is, the more the results are susceptible to overfitting to
+the relatively few selected test sets.
+}
+
+\section{Interpretaion of results}{
+
+Once the grid search of has been conducted, the optimal hyperparameters can
+be chosen by examining the output statistics \code{summary_stats}. Below are a
+few suggestions for how to interpret the \code{summary_stats} table:
+\itemize{
+\item Generally speaking, the first thing a user will want to inspect is the
+\code{rel_err} statistic, capturing the relative discrepancy between recovered
+test sets and their original, observed (yet possibly noisy) values. Lower
+\code{rel_err} means the PCP model was better able to recover the held-out test
+set. So, in general, \strong{the best parameter settings are those with the
+lowest \code{rel_err}.} Having said this, it is important to remember that this
+statistic should be taken with a grain of salt: Because no ground truth \code{L}
+matrix exists, the \code{rel_err} measurement is forced to rely on the
+comparison between the \emph{noisy observed data} matrix \code{D} and the \emph{estimated
+low-rank model} \code{L}. So the \code{rel_err} metric is an "apples to oranges"
+relative error. For data that is a priori expected to be subject to a
+high degree of noise, it may actually be better to \emph{discard}
+parameter settings with \emph{suspiciously low} \code{rel_err}s (in which
+case the solution may be hallucinating an inaccurate low-rank structure
+from the observed noise).
+\item For grid searches using \code{\link[=root_pcp]{root_pcp()}} as the PCP model, parameters that
+fail to converge can be discarded. Generally, fewer \code{\link[=root_pcp]{root_pcp()}} iterations
+(\code{num_iter}) taken to reach convergence portend a more reliable / stable
+solution. In rare cases, the user may need to increase \code{\link[=root_pcp]{root_pcp()}}'s
+\code{max_iter} argument to reach convergence. \code{\link[=RRMC]{RRMC()}} does not report
+convergence metadata, as its optimization scheme runs for a fixed
+number of iterations.
+\item Parameter settings with unreasonable sparsity or rank measurements
+can also be discarded. Here, "unreasonable" means these reported metrics
+flagrantly contradict prior assumptions, knowledge, or work. For instance,
+most air pollution datasets contain a number of extreme exposure events, so
+PCP solutions returning sparse \code{S} models with 100\% sparsity have obviously
+been regularized too heavily. Solutions with lower sparsities should be
+preferred. Note that reported sparsity and rank measurements are \emph{estimates
+heavily dependent on the \code{thresh} set by the \code{\link[=sparsity]{sparsity()}} & \code{\link[=matrix_rank]{matrix_rank()}}
+functions}. E.g. it could be that the actual average matrix rank is much
+higher or lower when a threshold that better takes into account the
+relative scale of the singular values is used. Likewise for the sparsity
+estimations. Also, recall that the given value for \code{perc_test} artifically
+sets a sparsity floor, since those missing entries in the test set cannot
+be recovered in the \code{S} matrix. E.g. if \code{perc_test = 0.05}, then no
+parameter setting will have an estimated sparsity lower than 5\%.
 }
 }
 
 \examples{
-
-library(pcpr) # since we will be passing \code{grid_search_cv} a PCP function
-
-# simulate a data matrix:
-
-n <- 50
-p <- 10
-data <- sim_data(sim_seed = 1, nrow = n, ncol = p, rank = 3, sigma=0, add_sparse = FALSE)
-mat <- data$M
-
-# pick parameter settings of lambda and mu to try:
-
-lambdas <- c(1/sqrt(n), 1.25/sqrt(n), 1.5/sqrt(n))
-mus <- c(sqrt(p/2), sqrt(p/1.5), sqrt(p/1.25))
-param_grid <- expand.grid(lambda = lambdas, mu = mus)
-
-# run the grid search:
-
-search_results <- grid_search_cv(mat, pcp_func = root_pcp_na, grid_df = param_grid, cores = 4, perc_b = 0.2, runs = 20, verbose = TRUE, save_as = NULL)
-
-# visualize the output:
-
-print_gs2(search_results$summary_stats)
+####-------Simple simulated PCP problem-------####
+# First we will simulate a simple dataset with the sim_data() function.
+# The dataset will be a 100x10 matrix comprised of:
+# 1. A rank-3 component as the ground truth L matrix;
+# 2. A ground truth sparse component S w/outliers in 1st & last entries; and
+# 3. A dense Gaussian noise component
+data <- sim_data()
+# Normally we would conduct grid search to tune eta. But, to keep the example
+# short, we will just use best parameters from the below grid search example:
+\dontrun{
+eta_0 <- get_pcp_defaults(data$D)$eta
+eta_grid <- data.frame("eta" = sort(c(0.1 * eta_0, eta_0 * seq(1, 10, 2))), "r" = 7)
+gs <- grid_search_cv(data$D, rrmc, eta_grid)
+dplyr::arrange(gs$summary_stats, rel_err)
+}
+# The gs found the best rank to be 3, and the best eta to be 0.3 or 0.4, so
+# we will split the difference and use an eta of 0.35
+pcp_model <- rrmc(data$D, r = 3, eta = 0.35)
+data.frame(
+  "Observed_relative_error" = norm(data$L - data$D, "F") / norm(data$L, "F"),
+  "PCA_error" = norm(data$L - proj_rank_r(data$D, r = 3), "F") / norm(data$L, "F"),
+  "PCP_L_error" = norm(data$L - pcp_model$L, "F") / norm(data$L, "F"),
+  "PCP_S_error" = norm(data$S - pcp_model$S, "F") / norm(data$S, "F")
+)
+# Results:
+# The grid search correctly found the rank (3) of the ground truth L matrix!
+# PCP outperformed PCA in it's recovery of the L matrix (even though we let
+# PCA "cheat" by telling PCA it was looking for a rank 3 solution)!
+# PCP successfully isolated the outlying event in S!
 }
 \seealso{
-Older versions of PCP's gridsearch (not recommended): \code{\link{grid_search_cv}}, \code{\link{random_search_cv}}, \code{\link{bayes_search_cv}}, and \code{\link{print_gs}}
+\code{\link[=corrupt_mat_randomly]{corrupt_mat_randomly()}}, \code{\link[=sparsity]{sparsity()}}, \code{\link[=matrix_rank]{matrix_rank()}},
+\code{\link[=get_pcp_defaults]{get_pcp_defaults()}}
 }

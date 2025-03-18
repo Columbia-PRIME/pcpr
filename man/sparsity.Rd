@@ -2,23 +2,33 @@
 % Please edit documentation in R/grid_search_cv.R
 \name{sparsity}
 \alias{sparsity}
-\title{Calculate the sparsity of a given matrix.}
+\title{Estimate sparsity of given matrix}
 \usage{
-sparsity(S, c = 1e-05)
+sparsity(D, thresh = 1e-04)
 }
 \arguments{
-\item{S}{The input matrix whose sparsity is in question.}
+\item{D}{The input data matrix.}
 
-\item{c}{(Optional) a numeric threshold / tolerance used to determine if an entry in \code{S}
-is effectively 0. If the absolute value of an entry is below \code{c} then it is effectively 0.
-By default, \code{c = 1e-05}.}
+\item{thresh}{(Optional) A numeric threshold \verb{>= 0} used to determine if an
+entry in \code{D} is "practically zero". If the absolute value of an entry is
+below \code{thresh}, then it is judged to be "practically zero". By default,
+\code{thresh = 1e-04}.}
 }
 \value{
-The sparsity of \code{S}.
+The sparsity of \code{D}, measured as the percentage of entries in \code{D}
+that are "practically zero".
 }
 \description{
-\code{sparsity} computes the sparsity of a given matrix, \code{S}, using a given tolerance, \code{c}.
+\code{sparsity()} estimates the percentage of entries in a given data matrix \code{D}
+whose values are "practically zero". If the absolute value of an entry is
+below a given threshold parameter \code{thresh}, then that value is determined
+to be "practically zero", increasing the estimated sparsity of \code{D}.
 }
 \examples{
+sparsity(matrix(rep(c(1, 0), 8), 4, 4))
 sparsity(matrix(0:8, 3, 3))
+sparsity(matrix(0, 3, 3))
+}
+\seealso{
+\code{\link[=rank_matrix]{rank_matrix()}}
 }

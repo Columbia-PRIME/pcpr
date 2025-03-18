@@ -1,7 +1,8 @@
 # File: queens.R
 # Date: 07/15/2022
 # Author: Lawrence Chillrud <lgc2139@cumc.columbia.edu>
-# Description: Prepares queens speciated PM2.5 data for pcpr using raw data from EPA's AQS datamart.
+# Description: Prepares queens speciated PM2.5 data for pcpr using raw data from
+# EPA's AQS datamart.
 
 #--------------------------#
 ####      CONTENTS      ####
@@ -15,10 +16,11 @@
 #--------------------------#
 ####      N. NOTES      ####
 #--------------------------#
-# This script prepares the queens speciated PM2.5 data for the pcpr package using the raw daily
-# concentrations from the EPA's AQS data mart (The Queens monitor's AQS Site ID is: 36-081-0124).
-# This script relies on the the URLs defined in the "urls" vector below as raw inputs, generating
-# data/queens.rda as output. Documentation for the final queens dataset can be found in R/data.R
+# This script prepares the queens speciated PM2.5 data for the pcpr package
+# using the raw daily concentrations from the EPA's AQS data mart (The Queens
+# monitor's AQS Site ID is: 36-081-0124). This script relies on the the URLs
+# defined in the "urls" vector below as raw inputs, generating data/queens.rda
+# as output. Documentation for the final queens dataset can be found in R/data.R
 
 #--------------------------#
 #### 0. PACKAGE IMPORTS ####
@@ -30,26 +32,28 @@ library(tidyr)
 #--------------------------#
 ####  1. DOWNLOAD DATA  ####
 #--------------------------#
-# 1a. Define vector of URLs (years 2001 - 2021) for downloading daily Queens speciated PM2.5 data:
+# 1a. Define vector of URLs (years 2001-2021) for downloading data:
 urls <- paste0("https://www3.epa.gov/cgi-bin/broker?_service=data&_program=dataprog.Daily.sas&check=site&debug=0&year=", 2001:2021, "&site=36-081-0124")
 
-# 1b. Read the URLs in (this should take ~15-20min!):
+# 1b. Read the URLs in (this should take ~15-20min depending on OS!):
 raw_data <- purrr::map_dfr(urls, readr::read_csv)
 
 #--------------------------#
 ####  2. PREPARE DATA   ####
 #--------------------------#
 # 2a. Define speciated PM2.5 exposures of interest:
-chems <- c("aluminum", "ammonium ion", "arsenic", "barium", "bromine", "cadmium", "calcium",
-            "chlorine", "chromium", "copper", "elemental carbon", "iron", "lead", "magnesium",
-            "manganese", "nickel", "organic carbon", "potassium ion", "selenium", "silicon",
-            "sodium", "sulfur", "titanium", "total nitrate", "vanadium", "zinc")
+chems <- c("aluminum", "ammonium ion", "arsenic", "barium", "bromine",
+           "cadmium", "calcium", "chlorine", "chromium", "copper",
+           "elemental carbon", "iron", "lead", "magnesium", "manganese",
+           "nickel", "organic carbon", "potassium ion", "selenium", "silicon",
+           "sodium", "sulfur", "titanium", "total nitrate", "vanadium", "zinc")
 
-# 2b. Define chemical abbreviations for the column names of the final cleaned data:
-abbreviations <- c("Al", "NH4", "As", "Ba", "Br", "Cd", "Ca", "Cl", "Cr", "Cu", "EC", "Fe", "Pb",
-                   "Mg", "Mn", "Ni", "OC", "K", "Se", "Si", "Na", "S", "Ti", "NO3", "V", "Zn")
+# 2b. Define abbreviations for the column names of the final cleaned data:
+abbreviations <- c("Al", "NH4", "As", "Ba", "Br", "Cd", "Ca", "Cl", "Cr", "Cu",
+                   "EC", "Fe", "Pb", "Mg", "Mn", "Ni", "OC", "K", "Se", "Si",
+                   "Na", "S", "Ti", "NO3", "V", "Zn")
 
-# 2c. Extract daily (24 hour) PM2.5 species of interest, and pivot to wider format:
+# 2c. Extract daily (24h) PM2.5 species of interest, pivot to wider format:
 clean_data <- raw_data %>%
   mutate(`Parameter Name` = str_to_lower(`Parameter Name`)) %>%
   filter(

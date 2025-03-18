@@ -2,19 +2,293 @@
 % Please edit documentation in R/root_pcp.R
 \name{root_pcp}
 \alias{root_pcp}
-\title{Needs a code check!}
+\title{Square root principal component pursuit (convex PCP)}
 \usage{
 root_pcp(
   D,
-  lambda,
-  mu,
+  lambda = NULL,
+  mu = NULL,
   LOD = -Inf,
-  non_negative = T,
+  non_negative = TRUE,
   max_iter = 10000,
-  verbose = F
+  verbose = FALSE
 )
 }
-\description{
-Needs a code check!
+\arguments{
+\item{D}{The input data matrix (can contain \code{NA} values). Note that PCP will
+converge much more quickly when \code{D} has been standardized in some way (e.g.
+scaling columns by their standard deviations, or column-wise min-max
+normalization).}
+
+\item{lambda, mu}{(Optional) A pair of doubles regularizing the recovery of
+the \code{L} and \code{S} estimates. \code{lambda} controls the sparsity of the output \code{S}
+matrix; larger values penalize non-zero entries in \code{S} more stringently,
+driving the recovery of sparser \code{S} matrices. \code{mu} adjusts the model's
+sensitivity to noise; larger values will penalize errors between the
+predicted model and the observed data more severely. It is highly
+recommended the user tunes both of these parameters using
+\code{\link[=grid_search_cv]{grid_search_cv()}} for each unique data matrix \code{D}. By default, both
+\code{lambda} and \code{mu} are \code{NULL}, in which case the theoretically optimal
+values are used, calculated according to \code{\link[=get_pcp_defaults]{get_pcp_defaults()}}.}
+
+\item{LOD}{(Optional) The limit of detection (LOD) data. Entries in \code{D} that
+satisfy \code{D >= LOD} are understood to be above the LOD, otherwise those
+entries are treated as below the LOD. \code{LOD} can be either:
+\itemize{
+\item A double, implying a universal LOD common across all measurements in \code{D};
+\item A vector of length \code{ncol(D)}, signifying a column-specific LOD, where
+each entry in the \code{LOD} vector corresponds to the LOD for each column in
+\code{D}; or
+\item A matrix of dimension \code{dim(D)}, indicating an observation-specific LOD,
+where each entry in the \code{LOD} matrix corresponds to the LOD for each
+entry in \code{D}.
 }
-\keyword{internal}
+
+By default, \code{LOD = -Inf}, indicating there are no known LODs for PCP to
+leverage.}
+
+\item{non_negative}{(Optional) A logical indicating whether or not the
+non-negativity constraint should be used to constrain the output \code{L}
+matrix to have all entries \eqn{\geq 0}. By default, \code{non_negative = TRUE}.}
+
+\item{max_iter}{(Optional) An integer specifying the maximum number of
+iterations to allow PCP before giving up on meeting PCP's convergence
+criteria. By default, \code{max_iter = 10000}, suitable for most problems.}
+
+\item{verbose}{(Optional) A logical indicating whether or not to print
+information in real time over the course of PCP's optimization. By
+default, \code{verbose = FALSE}.}
+}
+\value{
+A list containing:
+\itemize{
+\item \code{L}: The rank-\code{r} low-rank matrix encoding the \code{r}-many latent patterns
+governing the observed input data matrix \code{D}. \code{dim(L)} will be the same
+as \code{dim(D)}. To explicitly obtain the underlying patterns, \code{L} can be
+used as the input to any matrix factorization technique of choice, e.g.
+PCA, factor analysis, or non-negative matrix factorization.
+\item \code{S}: The sparse matrix containing the rare outlying or extreme
+observations in \code{D} that are not explained by the underlying patterns in
+the corresponding \code{L} matrix. \code{dim(S)} will be the same as \code{dim(D)}.
+Most entries in \code{S} are \code{0}, while non-zero entries identify the extreme
+outlying observations in \code{D}.
+\item \code{num_iter}: The number of iterations taken to reach convergence. If
+\code{num_iter == max_iter} then \code{root_pcp()} did not converge.
+\item \code{objective}: A vector containing the values of \code{root_pcp()}'s objective
+function over the course of optimization.
+\item \code{converged}: A boolean indicating whether the convergence criteria were
+met before \code{max_iter} was reached.
+}
+}
+\description{
+\code{root_pcp()} implements the convex PCP algorithm "Square root principal
+component pursuit" as described in
+\href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{Zhang et al. (2021)}
+, outfitted with environmental health (EH)-specific extensions as described
+in \href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)}.
+
+Given an observed data matrix \code{D}, and regularization parameters \code{lambda} and
+\code{mu}, \code{root_pcp()} aims to find the best low-rank and sparse estimates \code{L}
+and \code{S}. The \code{L} matrix encodes latent patterns that govern the observed
+data. The \code{S} matrix captures any extreme events in the data unexplained by
+the underlying patterns in \code{L}.
+
+Being convex, \code{root_pcp()} determines the rank \code{r}, or number of latent
+patterns in the data, autonomously during it's optimization. As such, the
+user does not need to specify the desired rank \code{r} of the output \code{L} matrix
+as in the non-convex PCP model \code{\link[=rrmc]{rrmc()}}.
+
+Experimentally, the \code{root_pcp()} approach to PCP modeling has best been able
+to handle those datasets that are governed by well-defined underlying
+patterns, characterized by quickly decaying singular values. This is typical
+of imaging and video data, but uncommon for EH data. For observed data with a
+complex low rank structure (slowly decaying singular values), like EH data,
+\code{\link[=rrmc]{rrmc()}} may offer a better model estimate.
+
+Three EH-specific extensions are currently supported by \code{root_pcp()}:
+\enumerate{
+\item The model can handle missing values in the input data matrix \code{D};
+\item The model can also handle measurements that fall below the limit of
+detection (LOD), if provided \code{LOD} information by the user; and
+\item The model is also equipped with an optional non-negativity constraint
+on the low-rank \code{L} matrix, ensuring that all output values in \code{L} are
+\eqn{> 0}.
+}
+}
+\section{The objective function}{
+
+\code{root_pcp()} optimizes the following objective function:
+\deqn{\min_{L, S} ||L||_* + \lambda ||S||_1 + \mu ||L + S - D||_F}
+The first term is the nuclear norm of the \code{L} matrix, incentivizing \code{L} to be
+low-rank. The second term is the \eqn{\ell_1} norm of the \code{S} matrix,
+encouraging \code{S} to be sparse. The third term is the Frobenius norm
+applied to the model's noise, ensuring that the estimated low-rank and sparse
+models \code{L} and \code{S} together have high fidelity to the observed data \code{D}.
+The objective is not smooth nor differentiable, however it is convex and
+separable. As such, it is optimized using the Alternating Direction
+Method of Multipliers (ADMM) algorithm
+[\href{http://dx.doi.org/10.1561/2200000016}{Boyd et al. (2011)},
+\href{https://doi.org/10.1080/10556788.2019.1683553}{Gao et al. (2020)}].
+}
+
+\section{The \code{lambda} and \code{mu} parameters}{
+
+\itemize{
+\item \code{lambda} controls the sparsity of \code{root_pcp()}'s output \code{S} matrix;
+larger values of \code{lambda} penalize non-zero entries in \code{S} more
+stringently, driving the recovery of sparser \code{S} matrices. Therefore,
+if you a priori expect few outlying events in your model, you might
+expect a grid search to recover relatively larger \code{lambda} values, and
+vice-versa.
+\item \code{mu} adjusts \code{root_pcp()}'s sensitivity to noise; larger values of \code{mu}
+penalize errors between the predicted model and the observed data (i.e.
+noise), more severely. Environmental data subject to higher noise levels
+therefore require a \code{root_pcp()} model equipped with smaller \code{mu} values
+(since higher noise means a greater discrepancy between the observed
+mixture and the true underlying low-rank and sparse model). In virtually
+noise-free settings (e.g. simulations), larger values of \code{mu} would be
+appropriate.
+}
+
+The default values of \code{lambda} and \code{mu} offer \emph{theoretical} guarantees
+of optimal estimation performance, and stable recovery of \code{L} and \code{S}. By
+"stable", we mean \code{root_pcp()}'s reconstruction error is, in the worst case,
+proportional to the magnitude of the noise corrupting the observed data
+(\eqn{||Z||_F}), often outperforming this upper bound.
+\href{https://doi.org/10.1145/1970392.1970395}{Candès et al. (2011)} obtained
+the guarantee for \code{lambda}, while
+\href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{Zhang et al. (2021)}
+obtained the result for \code{mu}.
+}
+
+\section{Environmental health specific extensions}{
+
+We refer interested readers to
+\href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)} for the complete
+details regarding the EH-specific extensions.
+
+\strong{Missing value functionality:} PCP assumes that the same data generating
+mechanisms govern both the missing and the observed entries in \code{D}. Because
+PCP primarily seeks accurate estimation of \emph{patterns} rather than
+individual \emph{observations}, this assumption is reasonable, but in some edge
+cases may not always be justified. Missing values in \code{D} are therefore
+reconstructed in the recovered low-rank \code{L} matrix according to the
+underlying patterns in \code{L}. There are three corollaries to keep in mind
+regarding the quality of recovered missing observations:
+\enumerate{
+\item Recovery of missing entries in \code{D} relies on accurate estimation of
+\code{L};
+\item The fewer observations there are in \code{D}, the harder it is to accurately
+reconstruct \code{L} (therefore estimation of \emph{both} unobserved \emph{and} observed
+measurements in \code{L} degrades); and
+\item Greater proportions of missingness in \code{D} artifically drive up the
+sparsity of the estimated \code{S} matrix. This is because it is not possible
+to recover a sparse event in \code{S} when the corresponding entry in \code{D} is
+unobserved. By definition, sparse events in \code{S} cannot be explained by
+the consistent patterns in \code{L}. Practically, if 20\% of the entries in \code{D}
+are missing, then at least 20\% of the entries in \code{S} will be 0.
+}
+
+\strong{Handling measurements below the limit of detection:} When equipped with
+LOD information, PCP treats any estimations of values known to be below the
+LOD as equally valid if their approximations fall between 0 and the LOD. Over
+the course of optimization, observations below the LOD are pushed into this
+known range \eqn{[0, LOD]} using penalties from above and below: should a
+\eqn{< LOD} estimate be \eqn{< 0}, it is stringently penalized, since
+measured observations cannot be negative. On the other hand, if a \eqn{< LOD}
+estimate is \eqn{>} the LOD, it is also heavily penalized: less so than when
+\eqn{< 0}, but more so than observations known to be above the LOD, because
+we have prior information that these observations must be below LOD.
+Observations known to be above the LOD are penalized as usual, using the
+Frobenius norm in the above objective function.
+
+\href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)} demonstrates that
+in experimental settings with up to 50\% of the data corrupted below the LOD,
+PCP with the LOD extension boasts superior accuracy of recovered \code{L} models
+compared to PCA coupled with \eqn{LOD / \sqrt{2}} imputation. PCP even
+outperforms PCA in low-noise scenarios with as much as 75\% of the data
+corrupted below the LOD. The few situations in which PCA bettered PCP were
+those pathological cases in which \code{D} was characterized by extreme noise and
+huge proportions (i.e., 75\%) of observations falling below the LOD.
+
+\strong{The non-negativity constraint on \code{L}:} To enhance interpretability of
+PCP-rendered solutions, there is an optional non-negativity constraint
+that can be imposed on the \code{L} matrix to ensure all estimated values
+within it are \eqn{\geq 0}. This prevents researchers from having to deal
+with negative observation values and questions surrounding their meaning
+and utility. Non-negative \code{L} models also allow for seamless use of methods
+such as non-negative matrix factorization to extract non-negative patterns.
+The non-negativity constraint is incorporated in the ADMM splitting technique
+via the introduction of an additional optimization variable and corresponding
+constraint.
+}
+
+\examples{
+####-------Simple simulated PCP problem-------####
+# First we will simulate a simple dataset with the sim_data() function.
+# The dataset will be a 100x10 matrix comprised of:
+# 1. A rank-2 component as the ground truth L matrix;
+# 2. A ground truth sparse component S w/outliers along the diagonal; and
+# 3. A dense Gaussian noise component
+data <- sim_data(r = 2, sparse_nonzero_idxs = seq(1, 1000, 101), sigma = 0.1)
+# Normally we would conduct grid search to tune lambda and mu. But, to keep
+# the example short, we will just use best parameters found in the below grid
+# search example:
+\dontrun{
+lambda_0 <- get_pcp_defaults(data$D)$lambda
+mu_0 <- get_pcp_defaults(data$D)$mu
+lambdas <- lambda_0 + seq(-0.05, 0.2, 0.025)
+mus <- mu_0 + seq(-1, 1, 0.3)
+params <- expand.grid(lambdas, mus)
+names(params) <- c("lambda", "mu")
+gs <- grid_search_cv(data$D, root_pcp, params)
+dplyr::arrange(gs$summary_stats, rel_err)
+}
+# The gs found the best parameters to be lambda = 0.225 and mu = 3.04
+pcp_model <- root_pcp(data$D, lambda = 0.225, mu = 3.04)
+data.frame(
+  "Estimated_L_rank" = matrix_rank(pcp_model$L, 5e-2),
+  "Observed_relative_error" = norm(data$L - data$D, "F") / norm(data$L, "F"),
+  "PCA_error" = norm(data$L - proj_rank_r(data$D, r = 2), "F") / norm(data$L, "F"),
+  "PCP_L_error" = norm(data$L - pcp_model$L, "F") / norm(data$L, "F"),
+  "PCP_S_error" = norm(data$S - pcp_model$S, "F") / norm(data$S, "F")
+)
+# Results:
+# PCP found a rank 2 solution!
+# PCP outperformed PCA in it's recovery of the L matrix (even though we let
+# PCA "cheat" by telling PCA it was looking for a rank 2 solution)!
+# PCP successfully isolated the outlying events in S!
+}
+\references{
+Zhang, Junhui, Jingkai Yan, and John Wright.
+"Square root principal component pursuit: tuning-free noisy robust matrix
+recovery." Advances in Neural Information Processing Systems 34 (2021):
+29464-29475. [available
+\href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{here}]
+
+Gibson, Elizabeth A., Junhui Zhang, Jingkai Yan, Lawrence
+Chillrud, Jaime Benavides, Yanelli Nunez, Julie B. Herbstman, Jeff
+Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou.
+"Principal component pursuit for pattern identification in
+environmental mixtures." Environmental Health Perspectives 130, no.
+11 (2022): 117008. [available \href{https://doi.org/10.1289/EHP10479}{here}]
+
+Boyd, Stephen, Neal Parikh, Eric Chu, Borja Peleato, and Jonathan
+Eckstein. "Distributed optimization and statistical learning via the
+alternating direction method of multipliers." Foundations and Trends in
+Machine learning 3, no. 1 (2011): 1-122. [available
+\href{http://dx.doi.org/10.1561/2200000016}{here}]
+
+Gao, Wenbo, Donald Goldfarb, and Frank E. Curtis. "ADMM for
+multiaffine constrained optimization." Optimization Methods and Software
+35, no. 2 (2020): 257-303. [available
+\href{https://doi.org/10.1080/10556788.2019.1683553}{here}]
+
+Candès, Emmanuel J., Xiaodong Li, Yi Ma, and John Wright.
+"Robust principal component analysis?." Journal of the ACM (JACM)
+58, no. 3 (2011): 1-37. [available
+\href{https://doi.org/10.1145/1970392.1970395}{here}]
+}
+\seealso{
+\code{\link[=rrmc]{rrmc()}}
+}

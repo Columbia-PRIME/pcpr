@@ -2,7 +2,7 @@
 % Please edit documentation in R/prox_operators.R
 \name{prox_frobenius}
 \alias{prox_frobenius}
-\title{Prox Frobenius}
+\title{Proximal gradient method for the Frobenius norm}
 \usage{
 prox_frobenius(Z, c)
 }
@@ -15,12 +15,14 @@ prox_frobenius(Z, c)
 The thresholded error/noise matrix.
 }
 \description{
-\code{prox_frobenius} implements the proximal gradient method for the Frobenius norm.
-This thresholding minimizes the square root of the sum of squared error.
-The proximal gradient method is used to solve non-differentiable convex optimization problems.
-This is only used in \code{root_pcp}, since the squared Frobenius error in \code{stable_pcp} is differentiable.
+\code{prox_frobenius()} implements the proximal gradient method for the Frobenius
+norm. The proximal gradient method is used to solve non-differentiable convex
+optimization problems. In \code{\link[=root_pcp]{root_pcp()}}, this thresholding minimizes the
+square root of the sum of squared error, where the error is defined as
+\code{Z = D - L - S}. \strong{This is an internal function needed by \code{\link[=root_pcp]{root_pcp()}}. It is
+not expected that users should require access to this function.}
 }
 \seealso{
-\code{\link{prox_l1}}, \code{\link{prox_nuclear}}
+\code{\link[=prox_l1]{prox_l1()}}, \code{\link[=prox_nuclear]{prox_nuclear()}}
 }
 \keyword{internal}

@@ -2,30 +2,110 @@
 % Please edit documentation in R/utils.R
 \name{get_pcp_defaults}
 \alias{get_pcp_defaults}
-\title{Retrieves the default Root PCP parameter settings for a given matrix.}
+\title{Retrieve default PCP parameter settings for given matrix}
 \usage{
 get_pcp_defaults(D)
 }
 \arguments{
-\item{D}{The matrix for which the default lambda and mu are needed.}
+\item{D}{The input data matrix.}
 }
 \value{
-A list containing the default lambda and mu values used in most PCP functions, and the default eta value used in \code{\link{RRMC}}. labelled as "lambda", "mu", and "eta" respectively.
+A list containing:
+\itemize{
+\item \code{lambda}: The theoretically optimal \code{lambda} value used in \code{\link[=root_pcp]{root_pcp()}}.
+\item \code{mu}: The theoretically optimal \code{mu} value used in \code{\link[=root_pcp]{root_pcp()}}.
+\item \code{eta}: The default \code{eta} value used in \code{\link[=rrmc]{rrmc()}}.
+}
 }
 \description{
-\code{get_pcp_defaults} retrieves the default Root PCP lambda and mu parameter settings for a given matrix.
+\code{get_pcp_defaults()} calculates "default" PCP parameter settings \code{lambda},
+\code{mu} (used in \code{\link[=root_pcp]{root_pcp()}}), and \code{eta} (used in \code{\link[=rrmc]{rrmc()}}) for a given data
+matrix \code{D}.
+
+The "default" values of \code{lambda} and \code{mu} offer \emph{theoretical} guarantees
+of optimal estimation performance.
+\href{https://doi.org/10.1145/1970392.1970395}{Candès et al. (2011)} obtained
+the guarantee for \code{lambda}, while
+\href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{Zhang et al. (2021)}
+obtained the result for \code{mu}. \emph{It has not yet been proven whether or
+not \code{eta} enjoys similar properties.}
+
+\emph{In practice} it is common to find different optimal parameter values
+after tuning these parameters in a grid search. Therefore, \strong{it is
+recommended to use these defaults primarily to help define a reasonable
+initial parameter search space to pass into \code{\link[=grid_search_cv]{grid_search_cv()}}.}
 }
+\section{The intuition behind PCP parameters}{
+
+\code{\link[=root_pcp]{root_pcp()}}'s objective function is given by:
+\deqn{\min_{L, S} ||L||_* + \lambda ||S||_1 + \mu ||L + S - D||_F}
+\itemize{
+\item \code{lambda} controls the sparsity of \code{\link[=root_pcp]{root_pcp()}}'s output \code{S} matrix;
+larger values of \code{lambda} penalize non-zero entries in \code{S} more
+stringently, driving the recovery of sparser \code{S} matrices. Therefore,
+if you a priori expect few outlying events in your model, you might
+expect a grid search to recover relatively larger \code{lambda} values, and
+vice-versa.
+\item \code{mu} adjusts \code{\link[=root_pcp]{root_pcp()}}'s sensitivity to noise; larger values of \code{mu}
+penalize errors between the predicted model and the observed data (i.e.
+noise), more severely. Environmental data subject to higher noise levels
+therefore require a \code{\link[=root_pcp]{root_pcp()}} model equipped with smaller \code{mu} values
+(since higher noise means a greater discrepancy between the observed
+mixture and the true underlying low-rank and sparse model). In virtually
+noise-free settings (e.g. simulations), larger values of \code{mu} would be
+appropriate.
+}
+
+\code{\link[=rrmc]{rrmc()}}'s objective function is given by:
+\deqn{\min_{L, S} I_{rank(L) \leq r} + \eta ||S||_0 + ||L + S - D||_F^2}
+\itemize{
+\item \code{eta} controls the sparsity of \code{\link[=rrmc]{rrmc()}}'s output \code{S} matrix, just as
+\code{lambda} does for \code{\link[=root_pcp]{root_pcp()}}. Because there are no other parameters
+scaling the noise term, \code{eta} can be thought of as a ratio between
+\code{\link[=root_pcp]{root_pcp()}}'s \code{lambda} and \code{mu}: Larger values of \code{eta} will place a
+greater emphasis on penalizing the non-zero entries in \code{S} over penalizing
+the errors between the predicted and observed data (the dense noise \code{Z}).
+}
+}
+
+\section{The calculation of the "default" PCP parameters}{
+
+\itemize{
+\item \code{lambda} is calculated as \eqn{\lambda = 1 / \sqrt{\max(n, p)},} where
+\eqn{n} and \eqn{p} are the dimensions of the input matrix
+\eqn{D_{n \times p}}
+[\href{https://doi.org/10.1145/1970392.1970395}{Candès et al. (2011)}].
+\item \code{mu} is calculated as \eqn{\mu = \sqrt{\frac{\min(n, p)}{2}},} where
+\eqn{n} and \eqn{p} are as above
+[\href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{Zhang et al. (2021)}].
+\item \code{eta} is simply \eqn{\eta = \frac{\lambda}{\mu}}.
+}
+}
+
 \examples{
+# Examine the queens PM2.5 data
+queens
+# Get rid of the Date column
+D <- queens[, 2:ncol(queens)]
+# Get default PCP parameters
+default_params <- get_pcp_defaults(D)
+# Use default parameters to define parameter search space
+scaling_factors <- sort(c(10^seq(-2, 4, 1), 2 * 10^seq(-2, 4, 1)))
+etas_to_grid_search <- default_params$eta * scaling_factors
+etas_to_grid_search
+}
+\references{
+Candès, Emmanuel J., Xiaodong Li, Yi Ma, and John Wright.
+"Robust principal component analysis?." Journal of the ACM (JACM)
+58, no. 3 (2011): 1-37. [available
+\href{https://doi.org/10.1145/1970392.1970395}{here}]
 
-# simulate a data matrix:
-
-n <- 50
-p <- 10
-data <- sim_data(sim_seed = 1, nrow = n, ncol = p, rank = 3, sigma=0, add_sparse = FALSE)
-D <- data$M
-
-# get the default PCP parameters:
-default <- get_pcp_defaults(D)
-default_lambda <- default$lambda
-default_mu <- default$mu
+Zhang, Junhui, Jingkai Yan, and John Wright.
+"Square root principal component pursuit: tuning-free noisy robust matrix
+recovery." Advances in Neural Information Processing Systems 34 (2021):
+29464-29475. [available
+\href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{here}]
+}
+\seealso{
+\code{\link[=grid_search_cv]{grid_search_cv()}}
 }

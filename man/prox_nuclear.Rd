@@ -2,7 +2,7 @@
 % Please edit documentation in R/prox_operators.R
 \name{prox_nuclear}
 \alias{prox_nuclear}
-\title{Prox Nuclear}
+\title{Proximal gradient method for the nuclear norm}
 \usage{
 prox_nuclear(L, c)
 }
@@ -12,20 +12,23 @@ prox_nuclear(L, c)
 \item{c}{The amount by which the prox nuclear method penalizes \code{L}.}
 }
 \value{
-\code{prox_nuclear} returns a list containing the following two objects:
-\describe{
-   \item{\code{X}}{The thresholded low-rank matrix.}
-   \item{\code{X_nuclear_norm}}{The sum of the absolute values of the thresholded singular values (used in objective function).}
+A list containing:
+\itemize{
+\item \code{X}: The thresholded low-rank matrix.
+\item \code{X_nuclear_norm}: The sum of the absolute values of the thresholded
+singular values (used in objective function).
 }
 }
 \description{
-\code{prox_nuclear} implements the proximal gradient method for the nuclear norm.
-The nuclear norm is equivalent to the L2 norm of the singular values of the matrix.
-This singular value thresholding encourages the low-rank \code{L} matrix to be low rank.
-The proximal gradient method is used to solve non-differentiable convex optimization problems.
-This is used in \code{stable_pcp} and \code{root_pcp}.
+\code{prox_nuclear()} implements the proximal gradient method for the nuclear
+norm. The nuclear norm is equivalent to the L2 norm of the singular values of
+the matrix. This singular value thresholding encourages the low-rank \code{L}
+matrix to be low-rank in \code{\link[=root_pcp]{root_pcp()}}. The proximal gradient method is used
+to solve non-differentiable convex optimization problems. \strong{This is an
+internal function needed by \code{\link[=root_pcp]{root_pcp()}}. It is not expected that users
+should require access to this function.}
 }
 \seealso{
-\code{\link{proj_rank_r}}, \code{\link{prox_frobenius}}, \code{\link{prox_l1}}
+\code{\link[=proj_rank_r]{proj_rank_r()}}, \code{\link[=prox_frobenius]{prox_frobenius()}}, \code{\link[=prox_l1]{prox_l1()}}
 }
 \keyword{internal}

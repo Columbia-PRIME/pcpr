@@ -23,9 +23,8 @@ A list containing:
 matrix \code{D}.
 
 The "default" values of \code{lambda} and \code{mu} offer \emph{theoretical} guarantees
-of optimal estimation performance.
-\href{https://doi.org/10.1145/1970392.1970395}{Candès et al. (2011)} obtained
-the guarantee for \code{lambda}, while
+of optimal estimation performance. Candès et al. (2011) obtained the
+guarantee for \code{lambda}, while
 \href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{Zhang et al. (2021)}
 obtained the result for \code{mu}. \emph{It has not yet been proven whether or
 not \code{eta} enjoys similar properties.}
@@ -73,8 +72,7 @@ the errors between the predicted and observed data (the dense noise \code{Z}).
 \itemize{
 \item \code{lambda} is calculated as \eqn{\lambda = 1 / \sqrt{\max(n, p)},} where
 \eqn{n} and \eqn{p} are the dimensions of the input matrix
-\eqn{D_{n \times p}}
-[\href{https://doi.org/10.1145/1970392.1970395}{Candès et al. (2011)}].
+\eqn{D_{n \times p}} Candès et al. (2011).
 \item \code{mu} is calculated as \eqn{\mu = \sqrt{\frac{\min(n, p)}{2}},} where
 \eqn{n} and \eqn{p} are as above
 [\href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{Zhang et al. (2021)}].
@@ -97,8 +95,7 @@ etas_to_grid_search
 \references{
 Candès, Emmanuel J., Xiaodong Li, Yi Ma, and John Wright.
 "Robust principal component analysis?." Journal of the ACM (JACM)
-58, no. 3 (2011): 1-37. [available
-\href{https://doi.org/10.1145/1970392.1970395}{here}]
+58, no. 3 (2011): 1-37.
 
 Zhang, Junhui, Jingkai Yan, and John Wright.
 "Square root principal component pursuit: tuning-free noisy robust matrix

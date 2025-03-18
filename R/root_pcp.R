@@ -5,7 +5,7 @@
 #' component pursuit" as described in
 #' [Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)
 #' , outfitted with environmental health (EH)-specific extensions as described
-#' in [Gibson et al. (2022)](https://doi.org/10.1289/EHP10479).
+#' in Gibson et al. (2022).
 #'
 #' Given an observed data matrix `D`, and regularization parameters `lambda` and
 #' `mu`, `root_pcp()` aims to find the best low-rank and sparse estimates `L`
@@ -43,9 +43,7 @@
 #' models `L` and `S` together have high fidelity to the observed data `D`.
 #' The objective is not smooth nor differentiable, however it is convex and
 #' separable. As such, it is optimized using the Alternating Direction
-#' Method of Multipliers (ADMM) algorithm
-#' [[Boyd et al. (2011)](http://dx.doi.org/10.1561/2200000016),
-#' [Gao et al. (2020)](https://doi.org/10.1080/10556788.2019.1683553)].
+#' Method of Multipliers (ADMM) algorithm Boyd et al. (2011), Gao et al. (2020).
 #'
 #' @section The `lambda` and `mu` parameters:
 #' * `lambda` controls the sparsity of `root_pcp()`'s output `S` matrix;
@@ -68,15 +66,14 @@
 #' "stable", we mean `root_pcp()`'s reconstruction error is, in the worst case,
 #' proportional to the magnitude of the noise corrupting the observed data
 #' (\eqn{||Z||_F}), often outperforming this upper bound.
-#' [Candès et al. (2011)](https://doi.org/10.1145/1970392.1970395) obtained
-#' the guarantee for `lambda`, while
+#' Candès et al. (2011) obtained the guarantee for `lambda`, while
 #' [Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)
 #' obtained the result for `mu`.
 #'
 #' @section Environmental health specific extensions:
 #' We refer interested readers to
-#' [Gibson et al. (2022)](https://doi.org/10.1289/EHP10479) for the complete
-#' details regarding the EH-specific extensions.
+#' Gibson et al. (2022) for the complete details regarding the EH-specific
+#' extensions.
 #'
 #' **Missing value functionality:** PCP assumes that the same data generating
 #' mechanisms govern both the missing and the observed entries in `D`. Because
@@ -111,7 +108,7 @@
 #' Observations known to be above the LOD are penalized as usual, using the
 #' Frobenius norm in the above objective function.
 #'
-#' [Gibson et al. (2022)](https://doi.org/10.1289/EHP10479) demonstrates that
+#' Gibson et al. (2022) demonstrates that
 #' in experimental settings with up to 50% of the data corrupted below the LOD,
 #' PCP with the LOD extension boasts superior accuracy of recovered `L` models
 #' compared to PCA coupled with \eqn{LOD / \sqrt{2}} imputation. PCP even
@@ -215,20 +212,17 @@
 #'   Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou.
 #'   "Principal component pursuit for pattern identification in
 #'   environmental mixtures." Environmental Health Perspectives 130, no.
-#'   11 (2022): 117008. [available [here](https://doi.org/10.1289/EHP10479)]
+#'   11 (2022): 117008.
 #' @references Boyd, Stephen, Neal Parikh, Eric Chu, Borja Peleato, and Jonathan
 #'   Eckstein. "Distributed optimization and statistical learning via the
 #'   alternating direction method of multipliers." Foundations and Trends in
-#'   Machine learning 3, no. 1 (2011): 1-122. [available
-#'   [here](http://dx.doi.org/10.1561/2200000016)]
+#'   Machine learning 3, no. 1 (2011): 1-122.
 #' @references Gao, Wenbo, Donald Goldfarb, and Frank E. Curtis. "ADMM for
 #'   multiaffine constrained optimization." Optimization Methods and Software
-#'   35, no. 2 (2020): 257-303. [available
-#'   [here](https://doi.org/10.1080/10556788.2019.1683553)]
+#'   35, no. 2 (2020): 257-303.
 #' @references Candès, Emmanuel J., Xiaodong Li, Yi Ma, and John Wright.
 #'   "Robust principal component analysis?." Journal of the ACM (JACM)
-#'   58, no. 3 (2011): 1-37. [available
-#'   [here](https://doi.org/10.1145/1970392.1970395)]
+#'   58, no. 3 (2011): 1-37.
 #' @export
 root_pcp <- function(D, lambda = NULL, mu = NULL, LOD = -Inf, non_negative = TRUE, max_iter = 10000, verbose = FALSE) {
   # 1. Initialize variables:

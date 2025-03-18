@@ -6,9 +6,8 @@
 #' matrix `D`.
 #'
 #' The "default" values of `lambda` and `mu` offer _theoretical_ guarantees
-#' of optimal estimation performance.
-#' [Candès et al. (2011)](https://doi.org/10.1145/1970392.1970395) obtained
-#' the guarantee for `lambda`, while
+#' of optimal estimation performance. Candès et al. (2011) obtained the
+#' guarantee for `lambda`, while
 #' [Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)
 #' obtained the result for `mu`. _It has not yet been proven whether or
 #' not `eta` enjoys similar properties._
@@ -48,8 +47,7 @@
 #' @section The calculation of the "default" PCP parameters:
 #' * `lambda` is calculated as \eqn{\lambda = 1 / \sqrt{\max(n, p)},} where
 #'   \eqn{n} and \eqn{p} are the dimensions of the input matrix
-#'   \eqn{D_{n \times p}}
-#'   [[Candès et al. (2011)](https://doi.org/10.1145/1970392.1970395)].
+#'   \eqn{D_{n \times p}} Candès et al. (2011).
 #' * `mu` is calculated as \eqn{\mu = \sqrt{\frac{\min(n, p)}{2}},} where
 #'   \eqn{n} and \eqn{p} are as above
 #'   [[Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)].
@@ -76,8 +74,7 @@
 #' etas_to_grid_search
 #' @references Candès, Emmanuel J., Xiaodong Li, Yi Ma, and John Wright.
 #'   "Robust principal component analysis?." Journal of the ACM (JACM)
-#'   58, no. 3 (2011): 1-37. [available
-#'   [here](https://doi.org/10.1145/1970392.1970395)]
+#'   58, no. 3 (2011): 1-37.
 #' @references Zhang, Junhui, Jingkai Yan, and John Wright.
 #'   "Square root principal component pursuit: tuning-free noisy robust matrix
 #'   recovery." Advances in Neural Information Processing Systems 34 (2021):

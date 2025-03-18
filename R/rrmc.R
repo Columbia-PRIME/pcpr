@@ -5,8 +5,7 @@
 #' completion" as described in
 #' [Cherapanamjeri et al. (2017)](https://proceedings.mlr.press/v70/cherapanamjeri17a.html)
 #' (see Algorithm 3), outfitted with environmental health (EH)-specific
-#' extensions as described in
-#' [Gibson et al. (2022)](https://doi.org/10.1289/EHP10479).
+#' extensions as described in Gibson et al. (2022).
 #'
 #' Given an observed data matrix `D`, maximum rank to search up to `r`, and
 #' regularization parameter `eta`, `rrmc()` seeks to find the best low-rank
@@ -61,8 +60,8 @@
 #'
 #' @section Environmental health specific extensions:
 #' We refer interested readers to
-#' [Gibson et al. (2022)](https://doi.org/10.1289/EHP10479) for the complete
-#' details regarding the EH-specific extensions.
+#' Gibson et al. (2022) for the complete details regarding the EH-specific
+#' extensions.
 #'
 #' **Missing value functionality:** PCP assumes that the same data generating
 #' mechanisms govern both the missing and the observed entries in `D`. Because
@@ -97,7 +96,7 @@
 #' Observations known to be above the LOD are penalized as usual, using the
 #' Frobenius norm in the above objective function.
 #'
-#' [Gibson et al. (2022)](https://doi.org/10.1289/EHP10479) demonstrates that
+#' Gibson et al. (2022) demonstrates that
 #' in experimental settings with up to 50% of the data corrupted below the LOD,
 #' PCP with the LOD extension boasts superior accuracy of recovered `L` models
 #' compared to PCA coupled with \eqn{LOD / \sqrt{2}} imputation. PCP even
@@ -195,7 +194,7 @@
 #'   Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou.
 #'   "Principal component pursuit for pattern identification in
 #'   environmental mixtures." Environmental Health Perspectives 130, no.
-#'   11 (2022): 117008. [available [here](https://doi.org/10.1289/EHP10479)]
+#'   11 (2022): 117008.
 #' @export
 rrmc <- function(D, r, eta = NULL, LOD = -Inf) {
   # 1. Initialize variables:

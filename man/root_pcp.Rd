@@ -85,7 +85,7 @@ met before \code{max_iter} was reached.
 component pursuit" as described in
 \href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{Zhang et al. (2021)}
 , outfitted with environmental health (EH)-specific extensions as described
-in \href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)}.
+in Gibson et al. (2022).
 
 Given an observed data matrix \code{D}, and regularization parameters \code{lambda} and
 \code{mu}, \code{root_pcp()} aims to find the best low-rank and sparse estimates \code{L}
@@ -126,9 +126,7 @@ applied to the model's noise, ensuring that the estimated low-rank and sparse
 models \code{L} and \code{S} together have high fidelity to the observed data \code{D}.
 The objective is not smooth nor differentiable, however it is convex and
 separable. As such, it is optimized using the Alternating Direction
-Method of Multipliers (ADMM) algorithm
-[\href{http://dx.doi.org/10.1561/2200000016}{Boyd et al. (2011)},
-\href{https://doi.org/10.1080/10556788.2019.1683553}{Gao et al. (2020)}].
+Method of Multipliers (ADMM) algorithm Boyd et al. (2011), Gao et al. (2020).
 }
 
 \section{The \code{lambda} and \code{mu} parameters}{
@@ -155,8 +153,7 @@ of optimal estimation performance, and stable recovery of \code{L} and \code{S}.
 "stable", we mean \code{root_pcp()}'s reconstruction error is, in the worst case,
 proportional to the magnitude of the noise corrupting the observed data
 (\eqn{||Z||_F}), often outperforming this upper bound.
-\href{https://doi.org/10.1145/1970392.1970395}{Candès et al. (2011)} obtained
-the guarantee for \code{lambda}, while
+Candès et al. (2011) obtained the guarantee for \code{lambda}, while
 \href{https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html}{Zhang et al. (2021)}
 obtained the result for \code{mu}.
 }
@@ -164,8 +161,8 @@ obtained the result for \code{mu}.
 \section{Environmental health specific extensions}{
 
 We refer interested readers to
-\href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)} for the complete
-details regarding the EH-specific extensions.
+Gibson et al. (2022) for the complete details regarding the EH-specific
+extensions.
 
 \strong{Missing value functionality:} PCP assumes that the same data generating
 mechanisms govern both the missing and the observed entries in \code{D}. Because
@@ -202,7 +199,7 @@ we have prior information that these observations must be below LOD.
 Observations known to be above the LOD are penalized as usual, using the
 Frobenius norm in the above objective function.
 
-\href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)} demonstrates that
+Gibson et al. (2022) demonstrates that
 in experimental settings with up to 50\% of the data corrupted below the LOD,
 PCP with the LOD extension boasts superior accuracy of recovered \code{L} models
 compared to PCA coupled with \eqn{LOD / \sqrt{2}} imputation. PCP even
@@ -271,23 +268,20 @@ Chillrud, Jaime Benavides, Yanelli Nunez, Julie B. Herbstman, Jeff
 Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou.
 "Principal component pursuit for pattern identification in
 environmental mixtures." Environmental Health Perspectives 130, no.
-11 (2022): 117008. [available \href{https://doi.org/10.1289/EHP10479}{here}]
+11 (2022): 117008.
 
 Boyd, Stephen, Neal Parikh, Eric Chu, Borja Peleato, and Jonathan
 Eckstein. "Distributed optimization and statistical learning via the
 alternating direction method of multipliers." Foundations and Trends in
-Machine learning 3, no. 1 (2011): 1-122. [available
-\href{http://dx.doi.org/10.1561/2200000016}{here}]
+Machine learning 3, no. 1 (2011): 1-122.
 
 Gao, Wenbo, Donald Goldfarb, and Frank E. Curtis. "ADMM for
 multiaffine constrained optimization." Optimization Methods and Software
-35, no. 2 (2020): 257-303. [available
-\href{https://doi.org/10.1080/10556788.2019.1683553}{here}]
+35, no. 2 (2020): 257-303.
 
 Candès, Emmanuel J., Xiaodong Li, Yi Ma, and John Wright.
 "Robust principal component analysis?." Journal of the ACM (JACM)
-58, no. 3 (2011): 1-37. [available
-\href{https://doi.org/10.1145/1970392.1970395}{here}]
+58, no. 3 (2011): 1-37.
 }
 \seealso{
 \code{\link[=rrmc]{rrmc()}}

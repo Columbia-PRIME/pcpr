@@ -69,8 +69,7 @@ function over the course of optimization.
 completion" as described in
 \href{https://proceedings.mlr.press/v70/cherapanamjeri17a.html}{Cherapanamjeri et al. (2017)}
 (see Algorithm 3), outfitted with environmental health (EH)-specific
-extensions as described in
-\href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)}.
+extensions as described in Gibson et al. (2022).
 
 Given an observed data matrix \code{D}, maximum rank to search up to \code{r}, and
 regularization parameter \code{eta}, \code{rrmc()} seeks to find the best low-rank
@@ -132,8 +131,8 @@ the errors between the predicted and observed data \code{Z = L + S - D}.
 \section{Environmental health specific extensions}{
 
 We refer interested readers to
-\href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)} for the complete
-details regarding the EH-specific extensions.
+Gibson et al. (2022) for the complete details regarding the EH-specific
+extensions.
 
 \strong{Missing value functionality:} PCP assumes that the same data generating
 mechanisms govern both the missing and the observed entries in \code{D}. Because
@@ -170,7 +169,7 @@ we have prior information that these observations must be below LOD.
 Observations known to be above the LOD are penalized as usual, using the
 Frobenius norm in the above objective function.
 
-\href{https://doi.org/10.1289/EHP10479}{Gibson et al. (2022)} demonstrates that
+Gibson et al. (2022) demonstrates that
 in experimental settings with up to 50\% of the data corrupted below the LOD,
 PCP with the LOD extension boasts superior accuracy of recovered \code{L} models
 compared to PCA coupled with \eqn{LOD / \sqrt{2}} imputation. PCP even
@@ -222,7 +221,7 @@ Chillrud, Jaime Benavides, Yanelli Nunez, Julie B. Herbstman, Jeff
 Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou.
 "Principal component pursuit for pattern identification in
 environmental mixtures." Environmental Health Perspectives 130, no.
-11 (2022): 117008. [available \href{https://doi.org/10.1289/EHP10479}{here}]
+11 (2022): 117008.
 }
 \seealso{
 \code{\link[=root_pcp]{root_pcp()}}

@@ -103,7 +103,7 @@ get_pcp_defaults <- function(D) {
 #'   `n = 100`, and `p = 10`.
 #' @param r (Optional) An integer specifying the rank of the simulated dataset's
 #'   low-rank component. Intuitively, the number of latent patterns governing
-#'   the simulated dataset. By default, `r = 3`.
+#'   the simulated dataset. By default, `r` = 3.
 #' @param sparse_nonzero_idxs (Optional) An integer vector specifying the
 #'   indices of the non-zero elements in the sparse component. By default,
 #'   `sparse_nonzero_idxs = NULL`, in which case it is defined to be the
@@ -131,6 +131,7 @@ get_pcp_defaults <- function(D) {
 #' matrix_rank(data$D)
 #' matrix_rank(data$L)
 #' @export
+#' @importFrom stats rnorm runif
 sim_data <- function(n = 100, p = 10, r = 3, sparse_nonzero_idxs = NULL, sigma = 0.05, seed = 42) {
   set.seed(seed)
   if (is.null(sparse_nonzero_idxs)) sparse_nonzero_idxs <- c(1, n * p)

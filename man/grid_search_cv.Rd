@@ -33,7 +33,7 @@ settings of \code{p}-many parameters to try. \strong{The columns of \code{grid} 
 named after the parameters in the function header of \code{pcp_fn}.} For
 example, if \code{pcp_fn = root_pcp}, then \code{names(grid)} must be set to
 \code{c("lambda", "mu")} if the grid is searching through different settings of
-\code{lambda} and \code{mu}. Likewise for \code{root_pcp = RRMC} and \code{eta} and \code{r}.}
+\code{lambda} and \code{mu}. Likewise for \code{pcp_fn = rrmc} and \code{eta} and \code{r}.}
 
 \item{...}{Any parameters required by \code{pcp_fn} that could not be specified
 in \code{grid}. Importantly, these parameters are therefore kept constant (not
@@ -199,7 +199,7 @@ from the observed noise).
 fail to converge can be discarded. Generally, fewer \code{\link[=root_pcp]{root_pcp()}} iterations
 (\code{num_iter}) taken to reach convergence portend a more reliable / stable
 solution. In rare cases, the user may need to increase \code{\link[=root_pcp]{root_pcp()}}'s
-\code{max_iter} argument to reach convergence. \code{\link[=RRMC]{RRMC()}} does not report
+\code{max_iter} argument to reach convergence. \code{\link[=rrmc]{rrmc()}} does not report
 convergence metadata, as its optimization scheme runs for a fixed
 number of iterations.
 \item Parameter settings with unreasonable sparsity or rank measurements

@@ -38,7 +38,7 @@ prox_frobenius <- function(Z, c) {
 #'
 #' @returns The thresholded sparse matrix.
 #'
-#' @seealso [hard_thresholding()], [prox_frobenius()], [prox_nuclear()]
+#' @seealso [hard_threshold()], [prox_frobenius()], [prox_nuclear()]
 #' @keywords internal
 prox_l1 <- function(S, c) {
   sign(S) * pmax(abs(S) - c, 0)

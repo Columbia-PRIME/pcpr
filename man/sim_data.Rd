@@ -20,7 +20,7 @@ number of \code{n} observations (rows) and \code{p} variables (columns). By defa
 
 \item{r}{(Optional) An integer specifying the rank of the simulated dataset's
 low-rank component. Intuitively, the number of latent patterns governing
-the simulated dataset. By default, \code{r = 3}.}
+the simulated dataset. By default, \code{r} = 3.}
 
 \item{sparse_nonzero_idxs}{(Optional) An integer vector specifying the
 indices of the non-zero elements in the sparse component. By default,
@@ -56,4 +56,7 @@ matrix_rank(data$L)
 data <- sim_data(n = 1000, p = 25, r = 7)
 matrix_rank(data$D)
 matrix_rank(data$L)
+}
+\seealso{
+\code{\link[=corrupt_mat_randomly]{corrupt_mat_randomly()}}
 }

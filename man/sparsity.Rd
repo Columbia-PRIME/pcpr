@@ -30,5 +30,5 @@ sparsity(matrix(0:8, 3, 3))
 sparsity(matrix(0, 3, 3))
 }
 \seealso{
-\code{\link[=rank_matrix]{rank_matrix()}}
+\code{\link[=matrix_rank]{matrix_rank()}}
 }

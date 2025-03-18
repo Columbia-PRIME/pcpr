@@ -23,6 +23,6 @@ convex optimization problems. \strong{This is an internal function needed by
 function.}
 }
 \seealso{
-\code{\link[=hard_thresholding]{hard_thresholding()}}, \code{\link[=prox_frobenius]{prox_frobenius()}}, \code{\link[=prox_nuclear]{prox_nuclear()}}
+\code{\link[=hard_threshold]{hard_threshold()}}, \code{\link[=prox_frobenius]{prox_frobenius()}}, \code{\link[=prox_nuclear]{prox_nuclear()}}
 }
 \keyword{internal}

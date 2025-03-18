@@ -318,7 +318,11 @@ hard_threshold <- function(D, thresh) {
 #' X <- proj_rank_r(data$D, r = 1)
 #' after_proj_err <- norm(X - data$L, "F") / norm(data$L, "F")
 #' proj_v_obs_err <- norm(X - data$D, "F") / norm(data$D, "F")
-#' data.frame("Observed_error" = before_proj_err, "Projected_error" = after_proj_err, "Projected_vs_observed_error" = proj_v_obs_err)
+#' data.frame(
+#'   "Observed_error" = before_proj_err,
+#'   "Projected_error" = after_proj_err,
+#'   "Projected_vs_observed_error" = proj_v_obs_err
+#' )
 #' @export
 proj_rank_r <- function(D, r) {
   # Checking simple cases

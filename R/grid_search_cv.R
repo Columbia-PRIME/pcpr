@@ -67,7 +67,7 @@
 #'   fail to converge can be discarded. Generally, fewer [root_pcp()] iterations
 #'   (`num_iter`) taken to reach convergence portend a more reliable / stable
 #'   solution. In rare cases, the user may need to increase [root_pcp()]'s
-#'   `max_iter` argument to reach convergence. [RRMC()] does not report
+#'   `max_iter` argument to reach convergence. [rrmc()] does not report
 #'   convergence metadata, as its optimization scheme runs for a fixed
 #'   number of iterations.
 #' * Parameter settings with unreasonable sparsity or rank measurements
@@ -94,7 +94,7 @@
 #'   named after the parameters in the function header of `pcp_fn`.** For
 #'   example, if `pcp_fn = root_pcp`, then `names(grid)` must be set to
 #'   `c("lambda", "mu")` if the grid is searching through different settings of
-#'   `lambda` and `mu`. Likewise for `root_pcp = RRMC` and `eta` and `r`.
+#'   `lambda` and `mu`. Likewise for `pcp_fn = rrmc` and `eta` and `r`.
 #' @param ... Any parameters required by `pcp_fn` that could not be specified
 #'   in `grid`. Importantly, these parameters are therefore kept constant (not
 #'   involved in the grid search). The best example is the `LOD` parameter for
@@ -513,7 +513,7 @@ eval_params <- function(settings, test_mat, pcp_model, test_mask) {
 #' @returns The sparsity of `D`, measured as the percentage of entries in `D`
 #'   that are "practically zero".
 #'
-#' @seealso [rank_matrix()]
+#' @seealso [matrix_rank()]
 #' @examples
 #' sparsity(matrix(rep(c(1, 0), 8), 4, 4))
 #' sparsity(matrix(0:8, 3, 3))

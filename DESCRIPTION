@@ -2,7 +2,6 @@ Type: Package
 Package: pcpr
 Title: Principal Component Pursuit for Environmental Epidemiology
 Version: 1.0.0
-Date: 2025-03-17
 Authors@R: c(
     person("Lawrence G.", "Chillrud", , "chili@u.northwestern.edu", role = c("aut", "cre")),
     person("Jaime", "Benavides", role = "aut"),
@@ -13,14 +12,14 @@ Authors@R: c(
     person("Jeff", "Goldsmith", role = "aut"),
     person("Marianthi-Anna", "Kioumourtzoglou", role = "aut")
   )
-Description: Implementation of PCP for pattern recognition tailored to
-    environmental health data, as described in Gibson et al. (2022)
-    <https://doi.org/10.1289/EHP10479>
+Description: Implementation of the pattern recognition technique Principal
+    Component Pursuit tailored to environmental health data, as described in
+    Gibson et al. (2022) <https://doi.org/10.1289/EHP10479>.
 License: GPL (>= 3)
 URL: https://github.com/Columbia-PRIME/pcpr
 BugReports: https://github.com/Columbia-PRIME/pcpr/issues
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
 Imports: 
     dplyr,
     foreach,
@@ -31,7 +30,6 @@ Imports:
     progressr,
     purrr,
     stringr,
-    tibble,
     tidyselect
 Encoding: UTF-8
 LazyData: true

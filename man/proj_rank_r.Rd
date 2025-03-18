@@ -44,7 +44,11 @@ before_proj_err <- norm(data$D - data$L, "F") / norm(data$L, "F")
 X <- proj_rank_r(data$D, r = 1)
 after_proj_err <- norm(X - data$L, "F") / norm(data$L, "F")
 proj_v_obs_err <- norm(X - data$D, "F") / norm(data$D, "F")
-data.frame("Observed_error" = before_proj_err, "Projected_error" = after_proj_err, "Projected_vs_observed_error" = proj_v_obs_err)
+data.frame(
+  "Observed_error" = before_proj_err,
+  "Projected_error" = after_proj_err,
+  "Projected_vs_observed_error" = proj_v_obs_err
+)
 }
 \seealso{
 \code{\link[=prox_nuclear]{prox_nuclear()}}

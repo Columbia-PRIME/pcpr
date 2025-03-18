@@ -219,6 +219,10 @@ grid_search_cv <- function(
 ) {
   # 0. Error handling:
   constant_params <- list(...)
+  if ("r" %in% names(constant_params)) {
+    grid$r <- constant_params$r
+    constant_params[["r"]] <- NULL
+  }
   repeated_vars <- intersect(names(constant_params), colnames(grid))
   if (length(repeated_vars) > 0) stop(paste0('Arguments passed to "..." and "grid" are in conflict with one another. The following variables appear in both arguments and are therefore ambiguous: ', paste(repeated_vars, collapse = ", ")))
   if (!is.matrix(D)) stop('Invalid value passed for argument "D". Argument "D" must be a matrix. See documentation with "?grid_search_cv".')

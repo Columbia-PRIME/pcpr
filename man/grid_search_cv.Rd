@@ -6,14 +6,14 @@
 \usage{
 grid_search_cv(
   D,
-  pcp_func,
+  pcp_fn,
   grid,
   ...,
-  scale_func = NULL,
+  scale_fn = NULL,
   parallel_strategy = "multisession",
-  cores = parallel::detectCores(logical = FALSE),
+  num_cores = parallel::detectCores(logical = FALSE),
   perc_test = 0.05,
-  runs = 100,
+  num_runs = 100,
   conserve_memory = FALSE,
   verbose = TRUE,
   save_as = NULL
@@ -25,23 +25,23 @@ converge much more quickly when \code{D} has been standardized in some way (e.g.
 scaling columns by their standard deviations, or column-wise min-max
 normalization).}
 
-\item{pcp_func}{The PCP function to use when grid searching. Must be either
+\item{pcp_fn}{The PCP function to use when grid searching. Must be either
 \code{rrmc} or \code{root_pcp} (passed without the soft brackets).}
 
 \item{grid}{A \code{data.frame} of dimension \code{n} by \code{p} containing the \code{n}-many
 settings of \code{p}-many parameters to try. \strong{The columns of \code{grid} should be
-named after the parameters in the function header of \code{pcp_func}.} For
-example, if \code{pcp_func = root_pcp}, then \code{names(grid)} must be set to
+named after the parameters in the function header of \code{pcp_fn}.} For
+example, if \code{pcp_fn = root_pcp}, then \code{names(grid)} must be set to
 \code{c("lambda", "mu")} if the grid is searching through different settings of
 \code{lambda} and \code{mu}. Likewise for \code{root_pcp = RRMC} and \code{eta} and \code{r}.}
 
-\item{...}{Any parameters required by \code{pcp_func} that could not be specified
+\item{...}{Any parameters required by \code{pcp_fn} that could not be specified
 in \code{grid}. Importantly, these parameters are therefore kept constant (not
 involved in the grid search). The best example is the \code{LOD} parameter for
 those cases where the user has \code{LOD} information for PCP to leverage.}
 
-\item{scale_func}{(Optional) The function used to scale the input \code{D} by
-column. By default, \code{scale_func = NULL}, and no scaling is to be done.}
+\item{scale_fn}{(Optional) The function used to scale the input \code{D} by
+column. By default, \code{scale_fn = NULL}, and no scaling is to be done.}
 
 \item{parallel_strategy}{(Optional) The parallelization strategy used when
 conducting the gridsearch (to be passed on to the \code{\link[future:plan]{future::plan()}}
@@ -49,7 +49,7 @@ function). Must be one of: \code{"sequential"}, \code{"multisession"}, \code{"mu
 or \code{"cluster"}. By default, \code{parallel_strategy = "multisession"}, which
 parallelizes the grid search via sockets in separate R \emph{sessions}. If
 \code{parallel_strategy = "sequential"} then the search will be conducted in
-serial and the \code{cores} argument is ignored. The option
+serial and the \code{num_cores} argument is ignored. The option
 \code{parallel_strategy = "multicore"} is not supported on Windows
 machines, nor in .Rmd files (must be run in a .R script) but parallelizes
 the search much faster than \code{"multisession"} since it runs separate
@@ -59,10 +59,10 @@ machines. Support for other parallel strategies will be added in a future
 release of \code{pcpr}. It is recommended to use
 \code{parallel_strategy = "multicore"} or \code{"multisession"} when possible.}
 
-\item{cores}{(Optional) An integer specifying the number of cores to use when
-parallelizing the grid search. By default,
-\code{cores = parallel::detectCores(logical = F)}, which computes the number of
-physical CPUs available on the machine (see \code{\link[parallel:detectCores]{parallel::detectCores()}}).
+\item{num_cores}{(Optional) An integer specifying the number of cores to use
+when parallelizing the grid search. By default,
+\code{num_cores = parallel::detectCores(logical = F)}, which computes the number
+of physical CPUs available on the machine (see \code{\link[parallel:detectCores]{parallel::detectCores()}}).
 Ignored when \code{parallel_strategy = "sequential"}, must be \verb{> 1} otherwise.}
 
 \item{perc_test}{(Optional) The fraction of entries of \code{D} that will be
@@ -70,15 +70,16 @@ randomly corrupted as \code{NA} missing values (the test set). Can be anthing in
 the range \verb{[0, 1)}. By default, \code{perc_test = 0.05}. See \strong{Best practices}
 section for more details.}
 
-\item{runs}{(Optional) The number of times to test a given parameter setting.
-By default, \code{runs = 100}. See \strong{Best practices} section for more details.}
+\item{num_runs}{(Optional) The number of times to test a given parameter
+setting. By default, \code{num_runs = 100}. See \strong{Best practices} section for
+more details.}
 
 \item{conserve_memory}{(Optional) A logical indicating if you only care about
 the statistics of the gridsearch and would therefore like to
 conserve memory when running the gridsearch. If set to \code{TRUE}, then only
 statistics on the parameters tested will be returned. By default,
 \code{conserve_memory = FALSE}, in which case additional objects saving the
-outputs of all runs of \code{pcp_func} will also be returned.}
+outputs of all runs of \code{pcp_fn} will also be returned.}
 
 \item{verbose}{(Optional) A logical indicating if you would like verbose
 output displayed or not (e.g. progress bars). By default, \code{verbose = TRUE}.}
@@ -112,19 +113,19 @@ Row \code{i} in \code{all_stats} corresponds to \code{L_mats[[i]]}. Only returne
 the gridsearch. Therefore, \code{length(S_mats) == nrow(all_stats)}. Row \code{i} in
 \code{all_stats} corresponds to \code{S_mats[[i]]}. Only returned when
 \code{conserve_memory = FALSE}.
-\item \code{test_mats}: A list of \code{length(runs)} containing all the corrupted test
+\item \code{test_mats}: A list of \code{length(num_runs)} containing all the corrupted test
 mats (and their masks) used throughout the gridsearch. Note:
 \code{all_stats$run[i]} corresponds to \code{test_mats[[i]]}. Only returned when
 \code{conserve_memory = FALSE}.
 \item \code{original_mat}: The original data matrix \code{D} \emph{after it was column scaled by
-\code{scale_func}.} Only returned when \code{conserve_memory = FALSE}.
+\code{scale_fn}.} Only returned when \code{conserve_memory = FALSE}.
 \item \code{constant_params}: A copy of the constant parameters that were originally
 passed to the gridsearch (for record keeping).
 }
 }
 \description{
 \code{grid_search_cv()} conducts a Monte Carlo style cross-validated grid search
-of PCP parameters for a given data matrix \code{D}, PCP function \code{pcp_func}, and
+of PCP parameters for a given data matrix \code{D}, PCP function \code{pcp_fn}, and
 grid of parameter settings to search through \code{grid}. The run time of the grid
 search can be sped up using bespoke parallelization settings. See the below
 sections for details.
@@ -135,7 +136,7 @@ Each hyperparameter setting is cross-validated by:
 \enumerate{
 \item Randomly corrupting \code{perc_test} percent of the entries in \code{D} as missing
 (i.e. \code{NA} values), yielding \code{D_tilde}. Done via \code{\link[=corrupt_mat_randomly]{corrupt_mat_randomly()}}.
-\item Running the PCP function \code{pcp_func} on \code{D_tilde}, yielding estimates \code{L}
+\item Running the PCP function \code{pcp_fn} on \code{D_tilde}, yielding estimates \code{L}
 and \code{S}.
 \item Recording the relative recovery error of \code{L} compared with the input data
 matrix \code{D} for \emph{only those values that were imputed as missing during the
@@ -143,33 +144,34 @@ corruption step} (step 1 above). Mathematically, calculate:
 \eqn{||P_{\Omega^c}(D - L)||_F / ||P_{\Omega^c}(D)||_F}, where
 \eqn{P_{\Omega^c}} selects only those entries where
 \code{is.na(D_tilde) == TRUE}.
-\item Repeating steps 1-3 for a total of \code{runs} many times, where each "run" has
-a unique random seed from \code{1} to \code{runs} associated with it.
+\item Repeating steps 1-3 for a total of \code{num_runs}-many times, where each "run"
+has a unique random seed from \code{1} to \code{num_runs} associated with it.
 \item Performance statistics can then be calculated for each "run", and then
 summarized across all runs for average model performance statistics.
 }
 }
 
-\section{Best practices for \code{perc_test} and \code{runs}}{
+\section{Best practices for \code{perc_test} and \code{num_runs}}{
 
 Experimentally, this grid search procedure retrieves the best performing
 PCP parameter settings when \code{perc_test} is relatively low, e.g.
-\code{perc_test = 0.05}, or 5\%, and \code{runs} is relatively high, e.g. \code{runs = 100}.
+\code{perc_test = 0.05}, or 5\%, and \code{num_runs} is relatively high, e.g.
+\code{num_runs = 100}.
 
 The larger \code{perc_test} is, the more the test set turns into a matrix
 completion problem, rather than the desired matrix decomposition problem. To
 better resemble the actual problem PCP will be faced with come inference
 time, \code{perc_test} should therefore be kept relatively low.
 
-Choosing a reasonable value for \code{runs} is dependent on the need to keep
-\code{perc_test} relatively low. Ideally, a large enough \code{runs} is used so that
-many (if not all) of the entries in \code{D} are likely to eventually be tested.
-Note that since test set entries are chosen randomly for all runs \code{1} through
-\code{runs}, in the pathologically worst case scenario, the same exact test set
-could be drawn each time. In the ebst case scenario, a different test set is
-obtained each run, providing balanced coverage of \code{D}. Viewed another way,
-the smaller \code{runs} is, the more the results are susceptible to overfitting to
-the relatively few selected test sets.
+Choosing a reasonable value for \code{num_runs} is dependent on the need to keep
+\code{perc_test} relatively low. Ideally, a large enough \code{num_runs} is used so
+that many (if not all) of the entries in \code{D} are likely to eventually be
+tested. Note that since test set entries are chosen randomly for all runs \code{1}
+through \code{num_runs}, in the pathologically worst case scenario, the same exact
+test set could be drawn each time. In the ebst case scenario, a different
+test set is obtained each run, providing balanced coverage of \code{D}. Viewed
+another way, the smaller \code{num_runs} is, the more the results are susceptible
+to overfitting to the relatively few selected test sets.
 }
 
 \section{Interpretaion of results}{

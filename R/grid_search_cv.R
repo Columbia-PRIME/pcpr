@@ -1,7 +1,7 @@
 #' Cross-validated grid search for PCP models
 #'
 #' `grid_search_cv()` conducts a Monte Carlo style cross-validated grid search
-#' of PCP parameters for a given data matrix `D`, PCP function `pcp_func`, and
+#' of PCP parameters for a given data matrix `D`, PCP function `pcp_fn`, and
 #' grid of parameter settings to search through `grid`. The run time of the grid
 #' search can be sped up using bespoke parallelization settings. See the below
 #' sections for details.
@@ -10,7 +10,7 @@
 #' Each hyperparameter setting is cross-validated by:
 #' 1. Randomly corrupting `perc_test` percent of the entries in `D` as missing
 #'   (i.e. `NA` values), yielding `D_tilde`. Done via [corrupt_mat_randomly()].
-#' 2. Running the PCP function `pcp_func` on `D_tilde`, yielding estimates `L`
+#' 2. Running the PCP function `pcp_fn` on `D_tilde`, yielding estimates `L`
 #'    and `S`.
 #' 3. Recording the relative recovery error of `L` compared with the input data
 #'    matrix `D` for _only those values that were imputed as missing during the
@@ -18,30 +18,31 @@
 #'    \eqn{||P_{\Omega^c}(D - L)||_F / ||P_{\Omega^c}(D)||_F}, where
 #'    \eqn{P_{\Omega^c}} selects only those entries where
 #'    `is.na(D_tilde) == TRUE`.
-#' 4. Repeating steps 1-3 for a total of `runs` many times, where each "run" has
-#'    a unique random seed from `1` to `runs` associated with it.
+#' 4. Repeating steps 1-3 for a total of `num_runs`-many times, where each "run"
+#'    has a unique random seed from `1` to `num_runs` associated with it.
 #' 5. Performance statistics can then be calculated for each "run", and then
 #'    summarized across all runs for average model performance statistics.
 #'
-#' @section Best practices for `perc_test` and `runs`:
+#' @section Best practices for `perc_test` and `num_runs`:
 #' Experimentally, this grid search procedure retrieves the best performing
 #' PCP parameter settings when `perc_test` is relatively low, e.g.
-#' `perc_test = 0.05`, or 5%, and `runs` is relatively high, e.g. `runs = 100`.
+#' `perc_test = 0.05`, or 5%, and `num_runs` is relatively high, e.g.
+#' `num_runs = 100`.
 #'
 #' The larger `perc_test` is, the more the test set turns into a matrix
 #' completion problem, rather than the desired matrix decomposition problem. To
 #' better resemble the actual problem PCP will be faced with come inference
 #' time, `perc_test` should therefore be kept relatively low.
 #'
-#' Choosing a reasonable value for `runs` is dependent on the need to keep
-#' `perc_test` relatively low. Ideally, a large enough `runs` is used so that
-#' many (if not all) of the entries in `D` are likely to eventually be tested.
-#' Note that since test set entries are chosen randomly for all runs `1` through
-#' `runs`, in the pathologically worst case scenario, the same exact test set
-#' could be drawn each time. In the ebst case scenario, a different test set is
-#' obtained each run, providing balanced coverage of `D`. Viewed another way,
-#' the smaller `runs` is, the more the results are susceptible to overfitting to
-#' the relatively few selected test sets.
+#' Choosing a reasonable value for `num_runs` is dependent on the need to keep
+#' `perc_test` relatively low. Ideally, a large enough `num_runs` is used so
+#' that many (if not all) of the entries in `D` are likely to eventually be
+#' tested. Note that since test set entries are chosen randomly for all runs `1`
+#' through `num_runs`, in the pathologically worst case scenario, the same exact
+#' test set could be drawn each time. In the ebst case scenario, a different
+#' test set is obtained each run, providing balanced coverage of `D`. Viewed
+#' another way, the smaller `num_runs` is, the more the results are susceptible
+#' to overfitting to the relatively few selected test sets.
 #'
 #' @section Interpretaion of results:
 #' Once the grid search of has been conducted, the optimal hyperparameters can
@@ -86,27 +87,27 @@
 #'   parameter setting will have an estimated sparsity lower than 5%.
 #'
 #' @inheritParams rrmc
-#' @param pcp_func The PCP function to use when grid searching. Must be either
+#' @param pcp_fn The PCP function to use when grid searching. Must be either
 #'   `rrmc` or `root_pcp` (passed without the soft brackets).
 #' @param grid A `data.frame` of dimension `n` by `p` containing the `n`-many
 #'   settings of `p`-many parameters to try. **The columns of `grid` should be
-#'   named after the parameters in the function header of `pcp_func`.** For
-#'   example, if `pcp_func = root_pcp`, then `names(grid)` must be set to
+#'   named after the parameters in the function header of `pcp_fn`.** For
+#'   example, if `pcp_fn = root_pcp`, then `names(grid)` must be set to
 #'   `c("lambda", "mu")` if the grid is searching through different settings of
 #'   `lambda` and `mu`. Likewise for `root_pcp = RRMC` and `eta` and `r`.
-#' @param ... Any parameters required by `pcp_func` that could not be specified
+#' @param ... Any parameters required by `pcp_fn` that could not be specified
 #'   in `grid`. Importantly, these parameters are therefore kept constant (not
 #'   involved in the grid search). The best example is the `LOD` parameter for
 #'   those cases where the user has `LOD` information for PCP to leverage.
-#' @param scale_func (Optional) The function used to scale the input `D` by
-#'   column. By default, `scale_func = NULL`, and no scaling is to be done.
+#' @param scale_fn (Optional) The function used to scale the input `D` by
+#'   column. By default, `scale_fn = NULL`, and no scaling is to be done.
 #' @param parallel_strategy (Optional) The parallelization strategy used when
 #'   conducting the gridsearch (to be passed on to the [future::plan()]
 #'   function). Must be one of: `"sequential"`, `"multisession"`, `"multicore"`
 #'   or `"cluster"`. By default, `parallel_strategy = "multisession"`, which
 #'   parallelizes the grid search via sockets in separate R _sessions_. If
 #'   `parallel_strategy = "sequential"` then the search will be conducted in
-#'   serial and the `cores` argument is ignored. The option
+#'   serial and the `num_cores` argument is ignored. The option
 #'   `parallel_strategy = "multicore"` is not supported on Windows
 #'   machines, nor in .Rmd files (must be run in a .R script) but parallelizes
 #'   the search much faster than `"multisession"` since it runs separate
@@ -115,23 +116,24 @@
 #'   machines. Support for other parallel strategies will be added in a future
 #'   release of `pcpr`. It is recommended to use
 #'   `parallel_strategy = "multicore"` or `"multisession"` when possible.
-#' @param cores (Optional) An integer specifying the number of cores to use when
-#'   parallelizing the grid search. By default,
-#'   `cores = parallel::detectCores(logical = F)`, which computes the number of
-#'   physical CPUs available on the machine (see [parallel::detectCores()]).
+#' @param num_cores (Optional) An integer specifying the number of cores to use
+#'   when parallelizing the grid search. By default,
+#'   `num_cores = parallel::detectCores(logical = F)`, which computes the number
+#'   of physical CPUs available on the machine (see [parallel::detectCores()]).
 #'   Ignored when `parallel_strategy = "sequential"`, must be `> 1` otherwise.
 #' @param perc_test (Optional) The fraction of entries of `D` that will be
 #'   randomly corrupted as `NA` missing values (the test set). Can be anthing in
 #'   the range `[0, 1)`. By default, `perc_test = 0.05`. See **Best practices**
 #'   section for more details.
-#' @param runs (Optional) The number of times to test a given parameter setting.
-#'   By default, `runs = 100`. See **Best practices** section for more details.
+#' @param num_runs (Optional) The number of times to test a given parameter
+#'   setting. By default, `num_runs = 100`. See **Best practices** section for
+#'   more details.
 #' @param conserve_memory (Optional) A logical indicating if you only care about
 #'   the statistics of the gridsearch and would therefore like to
 #'   conserve memory when running the gridsearch. If set to `TRUE`, then only
 #'   statistics on the parameters tested will be returned. By default,
 #'   `conserve_memory = FALSE`, in which case additional objects saving the
-#'   outputs of all runs of `pcp_func` will also be returned.
+#'   outputs of all runs of `pcp_fn` will also be returned.
 #' @param verbose (Optional) A logical indicating if you would like verbose
 #'   output displayed or not (e.g. progress bars). By default, `verbose = TRUE`.
 #' @param save_as (Optional) A character containing the root of the file path
@@ -161,12 +163,12 @@
 #'   the gridsearch. Therefore, `length(S_mats) == nrow(all_stats)`. Row `i` in
 #'   `all_stats` corresponds to `S_mats[[i]]`. Only returned when
 #'   `conserve_memory = FALSE`.
-#' * `test_mats`: A list of `length(runs)` containing all the corrupted test
+#' * `test_mats`: A list of `length(num_runs)` containing all the corrupted test
 #'   mats (and their masks) used throughout the gridsearch. Note:
 #'   `all_stats$run[i]` corresponds to `test_mats[[i]]`. Only returned when
 #'   `conserve_memory = FALSE`.
 #' * `original_mat`: The original data matrix `D` _after it was column scaled by
-#'   `scale_func`._ Only returned when `conserve_memory = FALSE`.
+#'   `scale_fn`._ Only returned when `conserve_memory = FALSE`.
 #' * `constant_params`: A copy of the constant parameters that were originally
 #'   passed to the gridsearch (for record keeping).
 #' @seealso [corrupt_mat_randomly()], [sparsity()], [matrix_rank()],
@@ -205,14 +207,14 @@
 #' @importFrom magrittr %>%
 grid_search_cv <- function(
   D,
-  pcp_func,
+  pcp_fn,
   grid,
   ...,
-  scale_func = NULL,
+  scale_fn = NULL,
   parallel_strategy = "multisession",
-  cores = parallel::detectCores(logical = FALSE),
+  num_cores = parallel::detectCores(logical = FALSE),
   perc_test = 0.05,
-  runs = 100,
+  num_runs = 100,
   conserve_memory = FALSE,
   verbose = TRUE,
   save_as = NULL
@@ -227,11 +229,11 @@ grid_search_cv <- function(
   if (length(repeated_vars) > 0) stop(paste0('Arguments passed to "..." and "grid" are in conflict with one another. The following variables appear in both arguments and are therefore ambiguous: ', paste(repeated_vars, collapse = ", ")))
   if (!is.matrix(D)) stop('Invalid value passed for argument "D". Argument "D" must be a matrix. See documentation with "?grid_search_cv".')
   if (!(parallel_strategy %in% c("sequential", "multisession", "multicore", "cluster"))) stop('Invalid value passed for argument "parallel_strategy". Must be one of: {"sequential", "multisession", "multicore", "cluster"}. See documentation with "?grid_search_cv".')
-  if (parallel_strategy != "sequential" && cores == 1) stop('Arguments "parallel_strategy" and "cores" are in conflict with one another. If you want to use 1 core then "parallel_strategy" should be set to "sequential". If you want to run the gridsearch in parallel then cores should be > 1.')
+  if (parallel_strategy != "sequential" && num_cores == 1) stop('Arguments "parallel_strategy" and "num_cores" are in conflict with one another. If you want to use 1 core then "parallel_strategy" should be set to "sequential". If you want to run the gridsearch in parallel then num_cores should be > 1.')
   if (parallel_strategy == "multicore" && Sys.info()['sysname'] == "Windows") stop('Argument "parallel_strategy" cannot be set to "multicore" on a Windows machine. Please use "multisession", "cluster", or "sequential" instead. See documentation with "?grid_search_cv".')
   if (perc_test < 0 || perc_test >= 1) stop('Invalid value passed for argument "perc_test". Argument "perc_test" must be in the range [0, 1). See documentation with "?grid_search_cv".')
-  if (runs < 1) stop('Invalid value passed for argument "runs". Argument "runs" must be >= 1. See documentation with "?grid_search_cv".')
-  if (perc_test == 0 && runs > 1) stop('Arguments "perc_test" and "runs" are in conflict with one another. Argument "runs" cannot be greater than 1 if "perc_test" is 0. See documentation with "?grid_search_cv".')
+  if (num_runs < 1) stop('Invalid value passed for argument "num_runs". Argument "num_runs" must be >= 1. See documentation with "?grid_search_cv".')
+  if (perc_test == 0 && num_runs > 1) stop('Arguments "perc_test" and "num_runs" are in conflict with one another. Argument "num_runs" cannot be greater than 1 if "perc_test" is 0. See documentation with "?grid_search_cv".')
   if (!is.logical(verbose)) stop('Invalid value passed for argument "verbose". Must be a logical (TRUE / FALSE). See documentation with "?grid_search_cv".')
   if (!is.null(save_as) && stringr::str_detect(save_as, "\\.")) stop('Invalid value passed for argument "save_as". There must NOT be any periods (".") in "save_as". The proper file extensions are automatically added.')
   # 1. Setting up the search:
@@ -258,20 +260,20 @@ grid_search_cv <- function(
   # 1c. Setting up the params to search through:
   param_names <- grid %>% dplyr::select(!tidyselect::all_of(metrics)) %>% colnames()
   points_to_eval <- which(is.na(grid$rel_err))
-  params <- data.frame(grid[points_to_eval, param_names], run_num = rep(1:runs, each = length(points_to_eval)), row.names = NULL)
+  params <- data.frame(grid[points_to_eval, param_names], run_num = rep(1:num_runs, each = length(points_to_eval)), row.names = NULL)
   colnames(params) <- c(param_names, "run_num")
   # 1d. Scaling the matrix by column:
-  if (!is.null(scale_func)) D <- apply(D, 2, scale_func)
+  if (!is.null(scale_fn)) D <- apply(D, 2, scale_fn)
   # 1e. Creating the test sets:
-  test_mats <- purrr::map(1:runs, ~ corrupt_mat_randomly(D, perc = perc_test, seed = .x))
+  test_mats <- purrr::map(1:num_runs, ~ corrupt_mat_randomly(D, perc = perc_test, seed = .x))
   # 1f. Parallel programming setup:
   start_time <- Sys.time()
-  if (cores == 1) {
+  if (num_cores == 1) {
     future::plan(parallel_strategy)
     if (verbose) cat(paste0("\nBeginning sequential gridsearch...\nStart time: ", start_time, "\n"))
   } else {
-    future::plan(parallel_strategy, workers = cores)
-    if (verbose) cat(paste0("\nBeginning parallel gridsearch using ", cores, " cores and a ", parallel_strategy, " strategy...\nStart time: ", start_time, "\n"))
+    future::plan(parallel_strategy, workers = num_cores)
+    if (verbose) cat(paste0("\nBeginning parallel gridsearch using ", num_cores, " cores and a ", parallel_strategy, " strategy...\nStart time: ", start_time, "\n"))
   }
   # 1g. Progress bar setup:
   p <- progressr::progressor(steps = nrow(params))
@@ -283,7 +285,7 @@ grid_search_cv <- function(
       tryCatch(expr = {
         param_setting <- as.data.frame(params[i, param_names])
         colnames(param_setting) <- param_names
-        pcp_mat <- do.call(pcp_func, c(constant_params, as.list(param_setting), list(D = test_mats[[params$run_num[i]]]$D_tilde)))
+        pcp_mat <- do.call(pcp_fn, c(constant_params, as.list(param_setting), list(D = test_mats[[params$run_num[i]]]$D_tilde)))
         eval_params(settings = params[i,], test_mat = D, pcp_model = pcp_mat, test_mask = test_mats[[params$run_num[i]]]$tilde_mask)
       }, error = function(e) {
         cbind(params[i,], data.frame(rel_err = NA, L_rank = NA, S_sparsity = NA, iterations = NA, run_error = paste0(e)))
@@ -296,7 +298,7 @@ grid_search_cv <- function(
       param_setting <- as.data.frame(params[i, param_names])
       colnames(param_setting) <- param_names
       tryCatch(expr = {
-        do.call(pcp_func, c(constant_params, as.list(param_setting), list(D = test_mats[[params$run_num[i]]]$D_tilde)))
+        do.call(pcp_fn, c(constant_params, as.list(param_setting), list(D = test_mats[[params$run_num[i]]]$D_tilde)))
       }, error = function(e) {
         list(message = paste0(e), settings = as.list(param_setting), test_mat = test_mats[[params$run_num[i]]]$D_tilde)
       })
@@ -310,7 +312,7 @@ grid_search_cv <- function(
   if (verbose) cat(paste0("\nGridsearch completed at time: ", end_time))
   if (perc_test == 0) pcp_evals$rel_err <- NA
   # 3. Summarizing the results from the search:
-  if (runs > 1) {
+  if (num_runs > 1) {
     evals_summary <- pcp_evals %>%
       dplyr::group_by(dplyr::across(tidyselect::all_of(param_names))) %>%
       dplyr::summarise(rel_err = mean(rel_err, na.rm = T), L_rank = mean(L_rank, na.rm = T), S_sparsity = mean(S_sparsity, na.rm = T), iterations = mean(iterations, na.rm = T), run_error_perc = paste0(round(100 * sum(!is.na(run_error)) / dplyr::n(), 2), "%"), .groups = "drop")
@@ -358,16 +360,16 @@ grid_search_cv <- function(
       paste(rep('-', 80), collapse =""),
       paste0("\tGridsearch start time: ", start_time),
       paste0("\tGridsearch end time: ", end_time),
-      paste0("\tPCP function used: ", deparse(pcp_func)[1]),
+      paste0("\tPCP function used: ", deparse(pcp_fn)[1]),
       paste0("\tTotal number of settings searched through: ", nrow(params)),
       paste0("\tParameters searched through: "),
       params_summary,
       paste0("\nGridsearch settings:"),
-      paste0("\tScale function used: ", deparse(scale_func)[1]),
+      paste0("\tScale function used: ", deparse(scale_fn)[1]),
       paste0("\tParallelization strategy used: ", parallel_strategy),
-      paste0("\tCores used: ", cores),
+      paste0("\tCores used: ", num_cores),
       paste0("\tPercent of matrix corrupted for test set: ", round(perc_test*100, 3), "%"),
-      paste0("\tRuns per parameter setting: ", runs),
+      paste0("\tRuns per parameter setting: ", num_runs),
       paste0("\tMemory conserved?: ", conserve_memory),
       paste0("\tConstant parameters passed to PCP: ", paste(names(constant_params), collapse = ", "), "\n"),
       paste(rep("-", 80), collapse = "")

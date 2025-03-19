@@ -205,6 +205,7 @@
 #' # PCP successfully isolated the outlying event in S!
 #' @export
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 grid_search_cv <- function(
   D,
   pcp_fn,
@@ -313,10 +314,11 @@ grid_search_cv <- function(
   if (perc_test == 0) pcp_evals$rel_err <- NA
   # 3. Summarizing the results from the search:
   if (num_runs > 1) {
-    evals_summary <- pcp_evals %>% dplyr::group_by(dplyr::across(tidyselect::all_of(param_names)))
-    evals_summary <- dplyr::summarise(evals_summary, rel_err = mean(evals_summary[["rel_err"]], na.rm = T), L_rank = mean(evals_summary[["L_rank"]], na.rm = T), S_sparsity = mean(evals_summary[["S_sparsity"]], na.rm = T), iterations = mean(evals_summary[["iterations"]], na.rm = T), run_error_perc = paste0(round(100 * sum(!is.na(evals_summary[["run_error"]])) / dplyr::n(), 2), "%"), .groups = "drop")
+    evals_summary <- pcp_evals %>%
+      dplyr::group_by(dplyr::across(tidyselect::all_of(param_names))) %>%
+      dplyr::summarise(rel_err = mean(.data[["rel_err"]], na.rm = T), L_rank = mean(.data[["L_rank"]], na.rm = T), S_sparsity = mean(.data[["S_sparsity"]], na.rm = T), iterations = mean(.data[["iterations"]], na.rm = T), run_error_perc = paste0(round(100 * sum(!is.na(.data[["run_error"]])) / dplyr::n(), 2), "%"), .groups = "drop")
   } else {
-    evals_summary <- dplyr::select(pcp_evals, !pcp_evals[["run_num"]])
+    evals_summary <- pcp_evals %>% dplyr::select(!.data[["run_num"]])
   }
   if (verbose) cat("\nMetrics calculations complete.")
   # 4. package results:

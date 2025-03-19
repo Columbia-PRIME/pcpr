@@ -316,9 +316,10 @@ grid_search_cv <- function(
   if (num_runs > 1) {
     evals_summary <- pcp_evals %>%
       dplyr::group_by(dplyr::across(tidyselect::all_of(param_names))) %>%
-      dplyr::summarise(rel_err = mean(.data[["rel_err"]], na.rm = T), L_rank = mean(.data[["L_rank"]], na.rm = T), S_sparsity = mean(.data[["S_sparsity"]], na.rm = T), iterations = mean(.data[["iterations"]], na.rm = T), run_error_perc = paste0(round(100 * sum(!is.na(.data[["run_error"]])) / dplyr::n(), 2), "%"), .groups = "drop")
+      dplyr::summarise(rel_err = mean(.data[["rel_err"]], na.rm = T), L_rank = mean(.data[["L_rank"]], na.rm = T), S_sparsity = mean(.data[["S_sparsity"]], na.rm = T), iterations = mean(.data[["iterations"]], na.rm = T), run_error_perc = paste0(round(100 * sum(!is.na(.data[["run_error"]])) / dplyr::n(), 2), "%"), .groups = "drop") %>%
+      dplyr::arrange(.data[["rel_err"]])
   } else {
-    evals_summary <- pcp_evals %>% dplyr::select(!.data[["run_num"]])
+    evals_summary <- pcp_evals %>% dplyr::select(!.data[["run_num"]]) %>% dplyr::arrange(.data[["rel_err"]])
   }
   if (verbose) cat("\nMetrics calculations complete.")
   # 4. package results:

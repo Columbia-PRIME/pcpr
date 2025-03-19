@@ -37,7 +37,8 @@ pak::pak("Columbia-PRIME/pcpr")
 PCP algorithms model an observed exposure matrix $D$ as the sum of three underlying
 ground-truth matrices:
 
-$$\underset{\text{mixture}}{D_{n \times p}} = \underset{\text{low-rank}}{L_0} + \underset{\text{sparse}}{S_0} + \underset{\text{noise}}{Z_0}$$
+![An example PCP model](man/figures/README-pcp-model-1.jpeg)
+<!-- $$\underset{\text{mixture}}{D_{n \times p}} = \underset{\text{low-rank}}{L_0} + \underset{\text{sparse}}{S_0} + \underset{\text{noise}}{Z_0}$$ -->
 
 a low-rank matrix $L_0$ encoding consistent patterns of exposure, a sparse
 matrix $S_0$ isolating unique or outlying exposure events (that cannot be
@@ -61,8 +62,12 @@ analyses. The functions in `pcpr` are outfitted with three environmental health
 ## Usage
 
 `pcpr` supplies all of the functions needed to incorporate PCP into an
-environmental health analyses. Let's work through a short simulated example
-first.
+environmental health analyses.
+
+Below we run through a brief example, using `pcpr` to simulate an environmental mixture
+and then recover the mixture's underlying consistent patterns and sparse outliers.
+
+### Simulating data
 
 The `sim_data()` function lets users generate simple mixtures models for
 quick experimentation. Let's use it to simulate a noisy environmental mixture
@@ -73,7 +78,11 @@ matrix, and dense Gaussian noise corrupting all the measurements in the matrix:
 ```{r sim data}
 library(pcpr)
 
-data <- sim_data(n = 100, p = 10, r = 3, sparse_nonzero_idxs = seq(1, 1000, 101), sigma = 0.05)
+data <- sim_data(
+  n = 100, p = 10, r = 3,
+  sparse_nonzero_idxs = seq(1, 1000, 101),
+  sigma = 0.05
+)
 D <- data$D
 L_0 <- data$L
 S_0 <- data$S
@@ -86,7 +95,7 @@ We can see `L_0` has 3 underlying patterns using the `matrix_rank()` function:
 matrix_rank(L_0)
 ```
 
-Because our mixtures data is often incomplete in practice, let's simulate a random 5% of the values as missing (`NA`) with the `corrupt_mat_randomly()` function:
+Because our mixtures data is often incomplete in practice, let's simulate a random 5% of the values as missing `NA` with the `corrupt_mat_randomly()` function:
 
 ```{r corrupt mat randomly}
 corrupted_data <- corrupt_mat_randomly(D, perc = 0.05)
@@ -94,6 +103,12 @@ D_tilde <- corrupted_data$D_tilde
 D_tilde_0fill <- D_tilde
 D_tilde_0fill[is.na(D_tilde)] <- 0
 ```
+
+The `D_tilde` matrix represents our observed, messy mixtures model, suffering from incomplete `NA` observations.
+In a moment we will run our PCP model on `D_tilde` directly. The `D_tilde_0fill` matrix imputes `NA` values
+with `0`, allowing us to call functions that do not support missing `NA` values.
+
+### PCP model selection
 
 There are two PCP algorithms shipped with `pcpr`: the convex `root_pcp()`
 [[Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)]
@@ -107,44 +122,68 @@ plot(sing(D_tilde_0fill), type = "b", main = "Singular values of the observed mi
 
 `rrmc()` is best suited for data characterized by slowly decaying singular values, indicative of complex underlying patterns.
 Most EH data can be described this way. `root_pcp()` is best for data characterized by rapidly decaying singular values, indicative of very well-defined latent patterns.
-For a simple example like the above, both PCP models are perfectly suitable. We will use `rrmc()`.
 
-To estimate the low-rank and sparse matrices, `rrmc()` needs to be given a maximum rank `r` and regularization parameter `eta`. To find these, we will conduct a brief
-grid search using the `grid_search_cv()` function, searching all models up to from rank 1 through 5, and examining all values of `eta` near the default value calculated via `get_pcp_defaults()`:
+For a simple example like the above, both PCP models are perfectly suitable. 
+We will use `rrmc()`, as this is the model environmental health researchers will likely employ most frequently.
+
+### Tuning PCP parameters via grid search
+
+To estimate the low-rank and sparse matrices, `rrmc()` needs to be given a maximum rank `r` and regularization parameter `eta`. To determine the optimal values of `r` and `eta`, we will conduct a brief
+grid search using the `grid_search_cv()` function. In our grid search below, we will examine all models from ranks 1 through 5 and all values of `eta` near the default, calculated with `get_pcp_defaults()`.
+
+The `rrmc()` approach to PCP uses an iterative rank-based procedure to recover `L` and `S`, meaning it first constructs a rank `1` model and iteratively builds up to the specified rank `r` solution.
+As such, for our grid search with `grid_search_cv()`, we pass `etas` as the `grid` argument we are searching and we send `r` = 5 as a constant parameter common to all models in the search.
+Since `length(etas) = 6` and `r` = 5, we are grid searching through 30 different PCP models. The `num_runs` argument in `grid_search_cv()` determines how many (random) tests should be performed for each unique model setting.
+By default, `num_runs = 100`, so our grid search tunes `r` and `eta` by measuring the performance of 300 different PCP models.
 
 ```{r grid search}
 eta_0 <- get_pcp_defaults(D_tilde)$eta
-cat(eta_0)
+cat(paste("Default eta value: ", eta_0))
 etas <- data.frame("eta" = sort(c(0.1 * eta_0, eta_0 * seq(1, 10, 2))))
 gs <- grid_search_cv(D_tilde, pcp_fn = rrmc, grid = etas, r = 5)
-top3_params <- dplyr::slice_head(dplyr::arrange(gs$summary_stats, rel_err), n = 3)
-r_star <- top3_params$r[1]
-eta_star <- round(top3_params$eta[1], 3)
-top3_params
+r_star <- gs$summary_stats$r[1]
+eta_star <- round(gs$summary_stats$eta[1], 3)
+head(gs$summary_stats)
 ```
 
-The grid search correctly identified the rank `r r_star` solution as the best (lowest relative error rate)! The corresponding `eta` = `r eta_star`.
+Inspecting the `summary_stats` table from the output grid search provides the mean aggregated statistics for each of the 30 distinct parameter settings we tested.
+The grid search correctly identified the rank `r r_star` solution as the best (lowest relative error rate). The corresponding `eta` = `r eta_star`.
+
+### Running PCP
+
 Now we can run our PCP model:
 
 ```{r rrmc}
 pcp_model <- rrmc(D_tilde, r = r_star, eta = eta_star)
 ```
 
-As a baseline of comparison, let's see how well PCA can recover `L_0`.
-We can give PCA an advantage by sharing PCP's discovery that the solution should be rank `r r_star`:
-
-```{r pca}
-L_pca <- proj_rank_r(D_tilde_0fill, r = r_star)
-```
-
-Now let's look at PCP's estimate of the sparse matrix and fix any values that are "practically" zero using the `hard_threshold()` function.
+Let's briefly inspect PCP's estimate of the sparse matrix `S`, and fix any values that are "practically" zero using the `hard_threshold()` function.
+The histogram below shows a majority of the entries in `S` are between -0.2 and 0.2, so we will call those values "practically" zero, and the rest
+true outlying exposure events.
 
 ```{r sparse}
 hist(pcp_model$S)
 pcp_model$S <- hard_threshold(pcp_model$S, thresh = 0.2)
 ```
 
-Finally, let's see how we did in recovering `L_0` and `S_0`:
+### Benchmarking with PCA
+
+Before evaluating our PCP model, let's see how well a more traditional method such as
+Principal Compoenents Analysis (PCA) can recover `L_0`, to provide a benchmark for comparison.
+
+The `proj_rank_r()` function (project matrix to rank `r`) approximates an input matrix
+as low-rank using a rank-`r` truncated SVD, the same way PCA approximates a low-rank matrix.
+Normally, a researcher would need to determine `r` subjectively. We will give PCA an advantage
+by sharing PCP's discovery from the above grid search that the solution should be of rank `r r_star`:
+
+```{r pca}
+L_pca <- proj_rank_r(D_tilde_0fill, r = r_star)
+```
+
+### Evaluating PCP against the ground truth
+
+Finally, let's see how we did in recovering `L_0` and `S_0`. We will examine the relative error between our model's estimates and the simulated ground truth matrices.
+We use the Frobenius norm to calculate the relative errors between the matrices:
 
 ```{r performance metrics}
 data.frame(
@@ -156,12 +195,17 @@ data.frame(
 )
 ```
 
-PCP outperformed PCA by quite a bit! We successfully recovered the chemical exposure patterns in `L_0` and extreme exposure events in `S_0` with only small relative errors in each.
+PCP outperformed PCA by quite a bit! PCP's relative recovery error on the `L_0` matrix stood at only `r round(norm(L_0 - pcp_model$L, "F") / norm(L_0, "F") * 100, 2)`%,
+compared to an observed relative error of `r round(norm(L_0 - D_tilde_0fill, "F") / norm(L_0, "F") * 100, 2)`% and PCA's relative error of `r round(norm(L_0 - L_pca, "F") / norm(L_0, "F") * 100, 2)`%.
+PCP's sparse matrix estimate was only off from the ground truth `S_0` by `r round(norm(S_0 - pcp_model$S, "F") / norm(S_0, "F") * 100, 2)`%.
+
 We can now pair our estimated `L` matrix with any matrix factorization method of our choice (e.g. factor analysis or NMF) to extract the latent chemical exposure patterns.
 These patterns, along with the isolated outlying exposure events in `S`, can then be incorporated with any outcomes of interest in downstream epidemiological analyses.
 
-The `pcpr` package also ships with a real world air pollution dataset `queens` consisting of PM2.5 measurements (in µg/m^3) of
-26 PM2.5 chemical species, recorded every three to six days from 04/04/2001 through 12/30/2021 courtesy of an EPA AQS monitoring site in Queens, NY:
+## A real world application
+
+The `pcpr` package also ships with a real world air pollution dataset `queens` consisting of fine particulate matter measurements (in µg/m^3) of
+26 PM2.5 chemical species, recorded every three to six days from 04/04/2001 through 12/30/2021 courtesy of an EPA AQS monitoring site in Queens, New York City (NYC):
 
 ```{r queens}
 queens
@@ -169,9 +213,23 @@ queens
 
 You can follow along a real source apportionment analysis using the `queens` data in the source apportionment vignette.
 
+## PCP in environmental health studies
+
+The methods in `pcpr` have already been applied in many environmental health studies. Several are listed below:
+
+* [Tao et al. (2023)](https://doi.org/10.1097/EE9.0000000000000243) apply PCP to investigate the association between source-specific fine particulate matter and myocardial infarction hospitalizations in NYC. 
+* [Wu et al. (2024)](https://doi.org/10.1021/acs.est.3c10314) employ PCP for exposome profiling of environmental pollutants in seminal plasma, uncovering novel associations with semen parameters.
+* [Benavides et al. (2024)](https://doi.org/10.1016/j.envint.2024.108526) use PCP to develop a Community Severity Index in NYC, measuring the barrier effect of road infrastructure and traffic in cities. 
+
 ## References
 Gibson, Elizabeth A., Junhui Zhang, Jingkai Yan, Lawrence Chillrud, Jaime Benavides, Yanelli Nunez, Julie B. Herbstman, Jeff Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou. "Principal component pursuit for pattern identification in environmental mixtures." Environmental Health Perspectives 130, no. 11 (2022): 117008. [available [here](https://doi.org/10.1289/EHP10479)]
 
 Zhang, Junhui, Jingkai Yan, and John Wright. "Square root principal component pursuit: tuning-free noisy robust matrix recovery." Advances in Neural Information Processing Systems 34 (2021): 29464-29475. [available [here](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)]
 
-Cherapanamjeri, Yeshwanth, Kartik Gupta, and Prateek Jain. "Nearly optimal robust matrix completion." International Conference on Machine Learning. PMLR, 2017. [available [here](https://proceedings.mlr.press/v70/cherapanamjeri17a.html)]
+Cherapanamjeri, Yeshwanth, Kartik Gupta, and Prateek Jain. "Nearly optimal robust matrix completion." International Conference on Machine Learning. PMLR, (2017). [available [here](https://proceedings.mlr.press/v70/cherapanamjeri17a.html)]
+
+Tao, Rachel H., Lawrence G. Chillrud, Yanelli Nunez, Sebastian T. Rowland, Amelia K. Boehme, Jingkai Yan, Jeff Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou. "Applying principal component pursuit to investigate the association between source-specific fine particulate matter and myocardial infarction hospitalizations in New York City." Environmental Epidemiology 7 (2), (2023). [available [here](https://doi.org/10.1097/EE9.0000000000000243)]
+
+Wu, Haotian, Vrinda Kalia, Katherine E. Manz, Lawrence Chillrud, Nathalie Hoffmann Dishon, Gabriela L. Jackson, Christian K. Dye, Raoul Orvieto, Adva Aizer, Hagai Levine, Marianthi-Anna Kioumourtzoglou, Kurt D. Pennell, Andrea A. Baccarelli, and Ronit Machtinger. "Exposome Profiling of Environmental Pollutants in Seminal Plasma and Novel Associations with Semen Parameters." Environmental Science & Technology, 58 (31), (2024): 13594-13604. [available [here](https://doi.org/10.1021/acs.est.3c10314)]
+
+Benavides, Jaime, Sabah Usmani, Vijay Kumar, and Marianthi-Anna Kioumourtzoglou. "Development of a community severance index for urban areas in the United States: A case study in New York City." Environment International, 185, (2024): 108526. [available [here](https://doi.org/10.1016/j.envint.2024.108526)]

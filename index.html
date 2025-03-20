@@ -56,7 +56,7 @@
 <div class="page-header"><h1 id="pcpr">pcpr<a class="anchor" aria-label="anchor" href="#pcpr"></a>
 </h1></div>
 <!-- badges: start -->
-<!-- badges: end -->
+
 <p>The R package <code>pcpr</code> implements Principal Component Pursuit (PCP), a robust dimensionality reduction technique, for pattern recognition tailored to environmental health data. The statistical methodology and computational details are provided in <a href="https://doi.org/10.1289/EHP10479" class="external-link">Gibson et al. (2022)</a>.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -137,9 +137,9 @@
 <span><span class="co">#&gt; Initializing gridsearch...</span></span>
 <span><span class="co">#&gt; The completed gridsearch will NOT be saved to any files, but simply returned.</span></span>
 <span><span class="co">#&gt; Beginning parallel gridsearch using 16 cores and a multisession strategy...</span></span>
-<span><span class="co">#&gt; Start time: 2025-03-19 18:11:47.364554</span></span>
+<span><span class="co">#&gt; Start time: 2025-03-19 20:38:29.869495</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Gridsearch completed at time: 2025-03-19 18:11:56.672843</span></span>
+<span><span class="co">#&gt; Gridsearch completed at time: 2025-03-19 20:38:39.14417</span></span>
 <span><span class="co">#&gt; Metrics calculations complete.</span></span>
 <span><span class="va">r_star</span> <span class="op">&lt;-</span> <span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">$</span><span class="va">r</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">eta_star</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">$</span><span class="va">eta</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
@@ -281,7 +281,12 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>

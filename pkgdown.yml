@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   quickstart-sim-example: quickstart-sim-example.html
-last_built: 2025-03-20T01:24Z
+last_built: 2025-03-20T01:40Z
 urls:
   reference: https://columbia-prime.github.io/pcpr/reference
   article: https://columbia-prime.github.io/pcpr/articles

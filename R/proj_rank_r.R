@@ -45,7 +45,9 @@
 proj_rank_r <- function(D, r) {
   # Checking simple cases
   if (ncol(D) < r || nrow(D) < r) stop("r > matrix rank")
-  if (ncol(D) == r || nrow(D) == r) return(D)
+  if (ncol(D) == r || nrow(D) == r) {
+    return(D)
+  }
   # Singular value decomposition of D
   USV <- svd(D)
   # Truncate singular values yielding truncated diagonal matrix Sigma

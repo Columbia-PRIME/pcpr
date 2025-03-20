@@ -6,11 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Principal Component Pursuit for Environmental Epidemiology • pcpr</title>
-<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Principal Component Pursuit for Environmental Epidemiology">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><script src="deps/MathJax-3.2.2/tex-chtml.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Principal Component Pursuit for Environmental Epidemiology">
 <meta name="description" content="Implementation of the pattern recognition technique Principal Component Pursuit tailored to environmental health data, as described in Gibson et al. (2022) &lt;doi:10.1289/EHP10479&gt;.">
 <meta property="og:description" content="Implementation of the pattern recognition technique Principal Component Pursuit tailored to environmental health data, as described in Gibson et al. (2022) &lt;doi:10.1289/EHP10479&gt;.">
 </head>
@@ -18,7 +18,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">pcpr</a>
 
@@ -35,7 +35,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/quickstart-sim-example.html">Quick start: applying PCP to a simulated environmental mixture</a></li>
+<li><a class="dropdown-item" href="articles/pcp-applied.html">Air pollution source apportionment with PCP</a></li>
+    <li><a class="dropdown-item" href="articles/pcp-quickstart.html">Quickstart: applying PCP to a simulated environmental mixture</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -45,6 +46,14 @@
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/Columbia-PRIME/pcpr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
+<li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
+  </ul>
+</li>
       </ul>
 </div>
 
@@ -69,9 +78,9 @@
 <div class="section level2">
 <h2 id="modeling-overview">Modeling overview<a class="anchor" aria-label="anchor" href="#modeling-overview"></a>
 </h2>
-<p>PCP algorithms model an observed exposure matrix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math> as the sum of three underlying ground-truth matrices:</p>
+<p>PCP algorithms model an observed exposure matrix <span class="math inline">\(D\)</span> as the sum of three underlying ground-truth matrices:</p>
 <p><img src="reference/figures/README-pcp-model-1.jpeg" alt="An example PCP model"><!-- $$\underset{\text{mixture}}{D_{n \times p}} = \underset{\text{low-rank}}{L_0} + \underset{\text{sparse}}{S_0} + \underset{\text{noise}}{Z_0}$$ --></p>
-<p>a low-rank matrix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>0</mn></msub><annotation encoding="application/x-tex">L_0</annotation></semantics></math> encoding consistent patterns of exposure, a sparse matrix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>0</mn></msub><annotation encoding="application/x-tex">S_0</annotation></semantics></math> isolating unique or outlying exposure events (that cannot be explained by the consistent exposure patterns), and dense noise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Z</mi><mn>0</mn></msub><annotation encoding="application/x-tex">Z_0</annotation></semantics></math>. All of these matrices are of dimension <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>×</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">n \times p</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> is the number of observations (e.g. study participants or measurement dates) and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> is the number of exposures (e.g. chemical and/or non-chemical stressors). Beyond this mixtures model, the main assumption made by PCP is that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Z</mi><mn>0</mn></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Z_0 \sim \mathcal{N}(\mu, \sigma^2)</annotation></semantics></math> consists of i.i.d. Gaussian noise corrupting each entry of the overall exposure matrix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>.</p>
+<p>a low-rank matrix <span class="math inline">\(L_0\)</span> encoding consistent patterns of exposure, a sparse matrix <span class="math inline">\(S_0\)</span> isolating unique or outlying exposure events (that cannot be explained by the consistent exposure patterns), and dense noise <span class="math inline">\(Z_0\)</span>. All of these matrices are of dimension <span class="math inline">\(n \times p\)</span>, where <span class="math inline">\(n\)</span> is the number of observations (e.g. study participants or measurement dates) and <span class="math inline">\(p\)</span> is the number of exposures (e.g. chemical and/or non-chemical stressors). Beyond this mixtures model, the main assumption made by PCP is that <span class="math inline">\(Z_0 \sim \mathcal{N}(\mu, \sigma^2)\)</span> consists of i.i.d. Gaussian noise corrupting each entry of the overall exposure matrix <span class="math inline">\(D\)</span>.</p>
 <p>The models in <code>pcpr</code> seek to decompose an observed data matrix <code>D</code> into estimated low-rank and sparse components <code>L</code> and <code>S</code> for use in downstream environmental health analyses. The functions in <code>pcpr</code> are outfitted with three environmental health (EH)-specific extensions making <code>pcpr</code> particularly powerful for EH research:</p>
 <ol style="list-style-type: decimal">
 <li>Missing value functionality</li>
@@ -87,9 +96,9 @@
 <div class="section level3">
 <h3 id="simulating-data">Simulating data<a class="anchor" aria-label="anchor" href="#simulating-data"></a>
 </h3>
-<p>The <code><a href="reference/sim_data.html">sim_data()</a></code> function lets users generate simple mixtures models for quick experimentation. Let’s use it to simulate a noisy environmental mixture comprised of 100 observations of 10 chemicals, with three underlying chemical exposure patterns (or a rank <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">r = 3</annotation></semantics></math>), extreme outlying exposure events along the diagonal of the matrix, and dense Gaussian noise corrupting all the measurements in the matrix:</p>
+<p>The <code><a href="reference/sim_data.html">sim_data()</a></code> function lets users generate simple mixtures models for quick experimentation. Let’s use it to simulate a noisy environmental mixture comprised of 100 observations of 10 chemicals, with three underlying chemical exposure patterns (or a rank <span class="math inline">\(r = 3\)</span>), extreme outlying exposure events along the diagonal of the matrix, and dense Gaussian noise corrupting all the measurements in the matrix:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Columbia-PRIME/pcpr" class="external-link">pcpr</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://columbia-prime.github.io/pcpr/">pcpr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sim_data.html">sim_data</a></span><span class="op">(</span></span>
 <span>  n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">10</span>, r <span class="op">=</span> <span class="fl">3</span>,</span>
@@ -137,9 +146,9 @@
 <span><span class="co">#&gt; Initializing gridsearch...</span></span>
 <span><span class="co">#&gt; The completed gridsearch will NOT be saved to any files, but simply returned.</span></span>
 <span><span class="co">#&gt; Beginning parallel gridsearch using 16 cores and a multisession strategy...</span></span>
-<span><span class="co">#&gt; Start time: 2025-03-19 20:38:29.869495</span></span>
+<span><span class="co">#&gt; Start time: 2025-03-20 01:02:07.802605</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Gridsearch completed at time: 2025-03-19 20:38:39.14417</span></span>
+<span><span class="co">#&gt; Gridsearch completed at time: 2025-03-20 01:02:17.022088</span></span>
 <span><span class="co">#&gt; Metrics calculations complete.</span></span>
 <span><span class="va">r_star</span> <span class="op">&lt;-</span> <span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">$</span><span class="va">r</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">eta_star</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">$</span><span class="va">eta</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
@@ -270,21 +279,35 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Lawrence G. Chillrud <br><small class="roles"> Author, maintainer </small>  </li>
-<li>Jaime Benavides <br><small class="roles"> Author </small>  </li>
-<li>Elizabeth A. Gibson <br><small class="roles"> Author </small>  </li>
-<li>Junhui Zhang <br><small class="roles"> Author </small>  </li>
-<li>Jingkai Yan <br><small class="roles"> Author </small>  </li>
-<li>John N. Wright <br><small class="roles"> Author </small>  </li>
-<li>Jeff Goldsmith <br><small class="roles"> Author </small>  </li>
-<li>Marianthi-Anna Kioumourtzoglou <br><small class="roles"> Author </small>  </li>
+<li>
+<a href="https://lawrence-chillrud.github.io/" class="external-link">Lawrence G. Chillrud</a> <br><small class="roles"> Author, maintainer, copyright holder </small> <a href="https://orcid.org/0000-0003-0727-0161" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>
+<a href="https://www.linkedin.com/in/jaime-benavides-72959356/" class="external-link">Jaime Benavides</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-1851-5155" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>
+<a href="https://lizzy.codes/index.html" class="external-link">Elizabeth A. Gibson</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0001-5119-5133" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>
+<a href="https://scholar.google.com/citations?user=LyLU8koAAAAJ&amp;hl=en" class="external-link">Junhui Zhang</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0009-0008-5922-1058" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>
+<a href="https://www.linkedin.com/in/jingkai-yan-a49a9516a/" class="external-link">Jingkai Yan</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-2094-2092" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>
+<a href="https://www.columbia.edu/~jw2966/" class="external-link">John N. Wright</a> <br><small class="roles"> Author </small>  </li>
+<li>
+<a href="https://jeffgoldsmith.com/" class="external-link">Jeff Goldsmith</a> <br><small class="roles"> Author </small>  </li>
+<li>
+<a href="https://marianthi.github.io/makLAB.github.io/" class="external-link">Marianthi-Anna Kioumourtzoglou</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0001-5710-4992" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>
+<a href="https://www.columbia.edu/" class="external-link">Columbia University</a> <br><small class="roles"> Funder </small>  </li>
+<li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
 
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
+<li><a href="https://cran.r-project.org/package=pcpr" class="external-link"><img src="https://www.r-pkg.org/badges/version/pcpr" alt="CRAN status"></a></li>
 <li><a href="https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://www.gnu.org/licenses/gpl-3.0" class="external-link"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a></li>
+<li><a href="https://cranlogs.r-pkg.org/badges/grand-total/pcpr" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/pcpr" alt="Total Downloads"></a></li>
 </ul>
 </div>
 
@@ -293,7 +316,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Lawrence G. Chillrud, Jaime Benavides, Elizabeth A. Gibson, Junhui Zhang, Jingkai Yan, John N. Wright, Jeff Goldsmith, Marianthi-Anna Kioumourtzoglou.</p>
+  <p>Developed by <a href="https://lawrence-chillrud.github.io/" class="external-link">Lawrence G. Chillrud</a>, <a href="https://www.linkedin.com/in/jaime-benavides-72959356/" class="external-link">Jaime Benavides</a>, <a href="https://lizzy.codes/index.html" class="external-link">Elizabeth A. Gibson</a>, <a href="https://scholar.google.com/citations?user=LyLU8koAAAAJ&amp;hl=en" class="external-link">Junhui Zhang</a>, <a href="https://www.linkedin.com/in/jingkai-yan-a49a9516a/" class="external-link">Jingkai Yan</a>, <a href="https://www.columbia.edu/~jw2966/" class="external-link">John N. Wright</a>, <a href="https://jeffgoldsmith.com/" class="external-link">Jeff Goldsmith</a>, <a href="https://marianthi.github.io/makLAB.github.io/" class="external-link">Marianthi-Anna Kioumourtzoglou</a>, <a href="https://www.columbia.edu/" class="external-link">Columbia University</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">

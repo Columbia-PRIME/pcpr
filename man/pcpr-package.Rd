@@ -12,6 +12,7 @@ Implementation of the pattern recognition technique Principal Component Pursuit 
 Useful links:
 \itemize{
   \item \url{https://github.com/Columbia-PRIME/pcpr}
+  \item \url{https://columbia-prime.github.io/pcpr/}
   \item Report bugs at \url{https://github.com/Columbia-PRIME/pcpr/issues}
 }
 

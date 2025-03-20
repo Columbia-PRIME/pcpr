@@ -6,3 +6,7 @@
 *.csv
 *.DS_Store
 my-doc/
+inst/doc
+/doc/
+/Meta/
+docs

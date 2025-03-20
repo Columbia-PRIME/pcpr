@@ -5,7 +5,13 @@
 
 <!-- badges: start -->
 
+[![CRAN
+status](https://www.r-pkg.org/badges/version/pcpr)](https://cran.r-project.org/package=pcpr)
 [![R-CMD-check](https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml)
+[![License: GPL
+v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Total
+Downloads](https://cranlogs.r-pkg.org/badges/grand-total/pcpr)](https://cranlogs.r-pkg.org/badges/grand-total/pcpr)
 <!-- badges: end -->
 
 The R package `pcpr` implements Principal Component Pursuit (PCP), a
@@ -166,9 +172,9 @@ gs <- grid_search_cv(D_tilde, pcp_fn = rrmc, grid = etas, r = 5)
 #> Initializing gridsearch...
 #> The completed gridsearch will NOT be saved to any files, but simply returned.
 #> Beginning parallel gridsearch using 16 cores and a multisession strategy...
-#> Start time: 2025-03-19 20:38:29.869495
+#> Start time: 2025-03-20 01:02:07.802605
 #> 
-#> Gridsearch completed at time: 2025-03-19 20:38:39.14417
+#> Gridsearch completed at time: 2025-03-20 01:02:17.022088
 #> Metrics calculations complete.
 r_star <- gs$summary_stats$r[1]
 eta_star <- round(gs$summary_stats$eta[1], 3)

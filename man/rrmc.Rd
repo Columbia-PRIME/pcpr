@@ -69,7 +69,7 @@ function over the course of optimization.
 completion" as described in
 \href{https://proceedings.mlr.press/v70/cherapanamjeri17a.html}{Cherapanamjeri et al. (2017)}
 (see Algorithm 3), outfitted with environmental health (EH)-specific
-extensions as described in Gibson et al. (2022).
+extensions as described in \href{\doi{doi:10.1289/EHP10479}}{Gibson et al. (2022)}.
 
 Given an observed data matrix \code{D}, maximum rank to search up to \code{r}, and
 regularization parameter \code{eta}, \code{rrmc()} seeks to find the best low-rank

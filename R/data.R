@@ -1,4 +1,4 @@
-#' Daily chemical concentrations of 26 PM2.5 species from Queens, NY (2001-2021)
+#' Daily chemical concentrations of 26 PM2.5 species from Queens, NYC (2001-2021)
 #'
 #' A dataset containing the chemical concentrations (in µg/m^3) of 26 PM2.5
 #' species measured every three to six days from 04/04/2001 through 12/30/2021

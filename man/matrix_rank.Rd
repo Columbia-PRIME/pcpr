@@ -9,20 +9,24 @@ matrix_rank(D, thresh = NULL)
 \arguments{
 \item{D}{The input data matrix.}
 
-\item{thresh}{(Optional) A double \verb{eqn\{> 0\}}, specifying the relative
+\item{thresh}{(Optional) A double \eqn{> 0}, specifying the relative
 threshold by which "practically zero" is determined, used to calculate the
 rank of \code{D}. By default, \code{thresh = NULL}, in which case the threshold is
 set to \code{max(dim(D)) * .Machine$double.eps}.}
 }
 \value{
-An integer representing the rank of \code{D}.
+An integer estimating the rank of \code{D}.
 }
 \description{
 \code{matrix_rank()} estimates the rank of a given data matrix \code{D} by counting the
 number of "practically nonzero" singular values of \code{D}.
 
+The rank of a matrix is the number of linearly independent columns or rows in
+the matrix, governing the structure of the data. It can intuitively be
+thought of as the number of inherent latent patterns in the data.
+
 A singular value \eqn{s} is determined to be "practically nonzero" if
-\eqn{s \geq s_max * thresh}, i.e. if it is greater than or equal to the
+\eqn{s \geq s_{max} \cdot thresh}, i.e. if it is greater than or equal to the
 maximum singular value in \code{D} scaled by a given threshold \code{thresh}.
 }
 \examples{

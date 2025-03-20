@@ -1,4 +1,53 @@
 url: https://columbia-prime.github.io/pcpr/
 template:
   bootstrap: 5
+  math-rendering: mathjax
+  light-switch: true
 
+authors:
+  Lawrence G. Chillrud:
+    href: https://lawrence-chillrud.github.io/
+  Jaime Benavides:
+    href: https://www.linkedin.com/in/jaime-benavides-72959356/
+  Elizabeth A. Gibson:
+    href: https://lizzy.codes/index.html
+  Junhui Zhang:
+    href: https://scholar.google.com/citations?user=LyLU8koAAAAJ&hl=en
+  Jingkai Yan:
+    href: https://www.linkedin.com/in/jingkai-yan-a49a9516a/
+  John N. Wright:
+    href: https://www.columbia.edu/~jw2966/
+  Jeff Goldsmith:
+    href: https://jeffgoldsmith.com/
+  Marianthi-Anna Kioumourtzoglou:
+    href: https://marianthi.github.io/makLAB.github.io/
+  Columbia University:
+    href: https://www.columbia.edu/
+
+reference:
+- title: PCP algorithms
+  contents:
+  - root_pcp
+  - rrmc
+
+- title: Parameter tuning
+  contents:
+  - grid_search_cv
+  - get_pcp_defaults
+
+- title: Matrix statistics
+  contents:
+  - sing
+  - matrix_rank
+  - sparsity
+
+- title: Matrix manipulation
+  contents:
+  - hard_threshold
+  - proj_rank_r
+
+- title: Data access
+  contents:
+  - queens
+  - sim_data
+  - corrupt_mat_randomly

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{sim_data}
 \alias{sim_data}
-\title{Simulate data}
+\title{Simulate simple mixtures data D = L + S + Z}
 \usage{
 sim_data(
   n = 100,

@@ -11,24 +11,29 @@ Implementation of the pattern recognition technique Principal Component Pursuit 
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/Columbia-PRIME/pcpr}
   \item \url{https://columbia-prime.github.io/pcpr/}
+  \item \url{https://github.com/Columbia-PRIME/pcpr}
   \item Report bugs at \url{https://github.com/Columbia-PRIME/pcpr/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Lawrence G. Chillrud \email{chili@u.northwestern.edu}
+\strong{Maintainer}: Lawrence G. Chillrud \email{lawrencechillrud@gmail.com} (\href{https://orcid.org/0000-0003-0727-0161}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Jaime Benavides
-  \item Elizabeth A. Gibson
-  \item Junhui Zhang
-  \item Jingkai Yan
+  \item Jaime Benavides (\href{https://orcid.org/0000-0002-1851-5155}{ORCID})
+  \item Elizabeth A. Gibson (\href{https://orcid.org/0000-0001-5119-5133}{ORCID})
+  \item Junhui Zhang (\href{https://orcid.org/0009-0008-5922-1058}{ORCID})
+  \item Jingkai Yan (\href{https://orcid.org/0000-0002-2094-2092}{ORCID})
   \item John N. Wright
   \item Jeff Goldsmith
-  \item Marianthi-Anna Kioumourtzoglou
+  \item Marianthi-Anna Kioumourtzoglou (\href{https://orcid.org/0000-0001-5710-4992}{ORCID})
+}
+
+Other contributors:
+\itemize{
+  \item Columbia University (00hj8s172) [funder]
 }
 
 }

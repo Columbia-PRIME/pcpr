@@ -1,8 +1,8 @@
 ---
-title: "Quick start: applying PCP to a simulated environmental mixture"
+title: "Quickstart: applying PCP to a simulated environmental mixture"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Quick start: applying PCP to a simulated environmental mixture}
+  %\VignetteIndexEntry{Quickstart: applying PCP to a simulated environmental mixture}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -26,9 +26,13 @@ In this vignette, we will see how to leverage the functions in `pcpr` to:
 3. Tune PCP's parameters using a cross-validated grid search; and
 4. Evaluate PCP's performance against the simulated ground truth mixture model.
 
-## Preliminaries
+We start by loading and attaching the `pcpr` package to our current R session.
 
-### PCP modeling overview
+```{r setup}
+library(pcpr)
+```
+
+## PCP modeling overview
 
 PCP algorithms model an observed exposure matrix $D$ as the sum of three underlying
 ground-truth matrices:
@@ -49,7 +53,7 @@ The models in `pcpr` seek to decompose an observed data matrix `D` into estimate
 low-rank and sparse components `L` and `S` for use in downstream environmental health
 analyses.
 
-### Extensions for environmental health data
+## Extensions for environmental health data
 
 The functions in `pcpr` are outfitted with three environmental health
 (EH)-specific extensions, making `pcpr` particularly powerful for EH research:
@@ -64,15 +68,7 @@ The functions in `pcpr` are outfitted with three environmental health
   values in the estimated low-rank matrix `L` to be $\geq 0$, better modeling real world
   mixtures data.
 
-## Simulated environmental mixture example  
-
-We start by loading and attaching the `pcpr` package to our current R session.
-
-```{r setup}
-library(pcpr)
-```
-
-### Simulating data
+## Simulating data
 
 The `sim_data()` function lets users generate simple mixtures models for
 quick experimentation. Let's use it to simulate a noisy environmental mixture
@@ -82,8 +78,6 @@ the diagonal of the matrix, and dense Gaussian noise corrupting all the
 measurements in the matrix:
 
 ```{r sim data}
-library(pcpr)
-
 data <- sim_data(
   n = 100, p = 10, r = 3,
   sparse_nonzero_idxs = seq(1, 1000, 101),
@@ -125,7 +119,7 @@ incomplete `NA` observations. In a moment we will run our PCP model on `D_tilde`
 directly. The `D_tilde_imputed` matrix imputes `NA` values with `0`, allowing us to
 call functions that do not support missing `NA` values.
 
-### PCP model selection
+## PCP model selection
 
 There are two PCP algorithms shipped with `pcpr`: the convex `root_pcp()`
 [[Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)]
@@ -147,7 +141,7 @@ For a simple example like the above, both PCP models are perfectly suitable.
 We will use `rrmc()`, as this is the model environmental health researchers will
 likely employ most frequently.
 
-### Tuning PCP parameters via grid search
+## Tuning PCP parameters via grid search
 
 To estimate the low-rank and sparse matrices, `rrmc()` needs to be given a maximum rank
 `r` and regularization parameter `eta`. To determine the optimal values of `r` and `eta`,
@@ -180,7 +174,7 @@ aggregated statistics for each of the 30 distinct parameter settings we tested.
 The grid search correctly identified the rank `r r_star` solution as the best
 (lowest relative error rate). The corresponding `eta` = `r eta_star`.
 
-### Running PCP
+## Running PCP
 
 Now we can run our PCP model:
 
@@ -198,7 +192,7 @@ hist(pcp_model$S)
 pcp_model$S <- hard_threshold(pcp_model$S, thresh = 0.2)
 ```
 
-### Benchmarking with PCA
+## Benchmarking with PCA
 
 Before evaluating our PCP model, let's see how well a more traditional method such as
 Principal Compoenents Analysis (PCA) can recover `L_0`, to provide a benchmark for
@@ -214,7 +208,7 @@ should be of rank `r r_star`:
 L_pca <- proj_rank_r(D_tilde_imputed, r = r_star)
 ```
 
-### Evaluating PCP against the ground truth
+## Evaluating PCP against the ground truth
 
 Finally, let's see how we did in recovering `L_0` and `S_0`. We will examine the
 relative error between our model's estimates and the simulated ground truth matrices.

@@ -156,7 +156,7 @@
 #'
 #' @seealso [root_pcp()]
 #' @examples
-#' ####-------Simple simulated PCP problem-------####
+#' #### -------Simple simulated PCP problem-------####
 #' # First we will simulate a simple dataset with the sim_data() function.
 #' # The dataset will be a 100x10 matrix comprised of:
 #' # 1. A rank-3 component as the ground truth L matrix;
@@ -326,7 +326,9 @@ hard_threshold <- function(D, thresh) {
 proj_rank_r <- function(D, r) {
   # Checking simple cases
   if (ncol(D) < r || nrow(D) < r) stop("r > matrix rank")
-  if (ncol(D) == r || nrow(D) == r) return(D)
+  if (ncol(D) == r || nrow(D) == r) {
+    return(D)
+  }
   # Singular value decomposition of D
   USV <- svd(D)
   # Truncate singular values yielding truncated diagonal matrix Sigma

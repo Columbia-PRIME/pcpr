@@ -42,16 +42,20 @@ raw_data <- purrr::map_dfr(urls, readr::read_csv)
 ####  2. PREPARE DATA   ####
 #--------------------------#
 # 2a. Define speciated PM2.5 exposures of interest:
-chems <- c("aluminum", "ammonium ion", "arsenic", "barium", "bromine",
-           "cadmium", "calcium", "chlorine", "chromium", "copper",
-           "elemental carbon", "iron", "lead", "magnesium", "manganese",
-           "nickel", "organic carbon", "potassium ion", "selenium", "silicon",
-           "sodium", "sulfur", "titanium", "total nitrate", "vanadium", "zinc")
+chems <- c(
+  "aluminum", "ammonium ion", "arsenic", "barium", "bromine",
+  "cadmium", "calcium", "chlorine", "chromium", "copper",
+  "elemental carbon", "iron", "lead", "magnesium", "manganese",
+  "nickel", "organic carbon", "potassium ion", "selenium", "silicon",
+  "sodium", "sulfur", "titanium", "total nitrate", "vanadium", "zinc"
+)
 
 # 2b. Define abbreviations for the column names of the final cleaned data:
-abbreviations <- c("Al", "NH4", "As", "Ba", "Br", "Cd", "Ca", "Cl", "Cr", "Cu",
-                   "EC", "Fe", "Pb", "Mg", "Mn", "Ni", "OC", "K", "Se", "Si",
-                   "Na", "S", "Ti", "NO3", "V", "Zn")
+abbreviations <- c(
+  "Al", "NH4", "As", "Ba", "Br", "Cd", "Ca", "Cl", "Cr", "Cu",
+  "EC", "Fe", "Pb", "Mg", "Mn", "Ni", "OC", "K", "Se", "Si",
+  "Na", "S", "Ti", "NO3", "V", "Zn"
+)
 
 # 2c. Extract daily (24h) PM2.5 species of interest, pivot to wider format:
 clean_data <- raw_data %>%
@@ -85,4 +89,4 @@ readr::write_csv(queens, here::here("data-raw/queens.csv"))
 save(queens, file = here::here("data/queens.rda"))
 
 # 3c. For administrative use (i.e., for the pcpr package):
-#usethis::use_data(queens, overwrite = TRUE)
+# usethis::use_data(queens, overwrite = TRUE)

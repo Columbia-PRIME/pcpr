@@ -221,7 +221,7 @@ constraint.
 }
 
 \examples{
-####-------Simple simulated PCP problem-------####
+#### -------Simple simulated PCP problem-------####
 # First we will simulate a simple dataset with the sim_data() function.
 # The dataset will be a 100x10 matrix comprised of:
 # 1. A rank-2 component as the ground truth L matrix;

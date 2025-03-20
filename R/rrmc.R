@@ -5,7 +5,7 @@
 #' completion" as described in
 #' [Cherapanamjeri et al. (2017)](https://proceedings.mlr.press/v70/cherapanamjeri17a.html)
 #' (see Algorithm 3), outfitted with environmental health (EH)-specific
-#' extensions as described in Gibson et al. (2022) \doi{doi:10.1289/EHP10479}.
+#' extensions as described in Gibson et al. (2022).
 #'
 #' Given an observed data matrix `D`, maximum rank to search up to `r`, and
 #' regularization parameter `eta`, `rrmc()` seeks to find the best low-rank

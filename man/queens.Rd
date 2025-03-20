@@ -3,7 +3,7 @@
 \docType{data}
 \name{queens}
 \alias{queens}
-\title{Daily chemical concentrations of 26 PM2.5 species from Queens, NY (2001-2021)}
+\title{Daily chemical concentrations of 26 PM2.5 species from Queens, NYC (2001-2021)}
 \format{
 A tibble with 2443 rows and 27 variables:
 \itemize{

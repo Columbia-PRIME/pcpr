@@ -174,7 +174,7 @@
 #' @seealso [corrupt_mat_randomly()], [sparsity()], [matrix_rank()],
 #'   [get_pcp_defaults()]
 #' @examples
-#' ####-------Simple simulated PCP problem-------####
+#' #### -------Simple simulated PCP problem-------####
 #' # First we will simulate a simple dataset with the sim_data() function.
 #' # The dataset will be a 100x10 matrix comprised of:
 #' # 1. A rank-3 component as the ground truth L matrix;
@@ -207,19 +207,18 @@
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
 grid_search_cv <- function(
-  D,
-  pcp_fn,
-  grid,
-  ...,
-  scale_fn = NULL,
-  parallel_strategy = "multisession",
-  num_cores = parallel::detectCores(logical = FALSE),
-  perc_test = 0.05,
-  num_runs = 100,
-  conserve_memory = FALSE,
-  verbose = TRUE,
-  save_as = NULL
-) {
+    D,
+    pcp_fn,
+    grid,
+    ...,
+    scale_fn = NULL,
+    parallel_strategy = "multisession",
+    num_cores = parallel::detectCores(logical = FALSE),
+    perc_test = 0.05,
+    num_runs = 100,
+    conserve_memory = FALSE,
+    verbose = TRUE,
+    save_as = NULL) {
   # 0. Error handling:
   constant_params <- list(...)
   if ("r" %in% names(constant_params)) {
@@ -231,7 +230,7 @@ grid_search_cv <- function(
   if (!is.matrix(D)) stop('Invalid value passed for argument "D". Argument "D" must be a matrix. See documentation with "?grid_search_cv".')
   if (!(parallel_strategy %in% c("sequential", "multisession", "multicore", "cluster"))) stop('Invalid value passed for argument "parallel_strategy". Must be one of: {"sequential", "multisession", "multicore", "cluster"}. See documentation with "?grid_search_cv".')
   if (parallel_strategy != "sequential" && num_cores == 1) stop('Arguments "parallel_strategy" and "num_cores" are in conflict with one another. If you want to use 1 core then "parallel_strategy" should be set to "sequential". If you want to run the gridsearch in parallel then num_cores should be > 1.')
-  if (parallel_strategy == "multicore" && Sys.info()['sysname'] == "Windows") stop('Argument "parallel_strategy" cannot be set to "multicore" on a Windows machine. Please use "multisession", "cluster", or "sequential" instead. See documentation with "?grid_search_cv".')
+  if (parallel_strategy == "multicore" && Sys.info()["sysname"] == "Windows") stop('Argument "parallel_strategy" cannot be set to "multicore" on a Windows machine. Please use "multisession", "cluster", or "sequential" instead. See documentation with "?grid_search_cv".')
   if (perc_test < 0 || perc_test >= 1) stop('Invalid value passed for argument "perc_test". Argument "perc_test" must be in the range [0, 1). See documentation with "?grid_search_cv".')
   if (num_runs < 1) stop('Invalid value passed for argument "num_runs". Argument "num_runs" must be >= 1. See documentation with "?grid_search_cv".')
   if (perc_test == 0 && num_runs > 1) stop('Arguments "perc_test" and "num_runs" are in conflict with one another. Argument "num_runs" cannot be greater than 1 if "perc_test" is 0. See documentation with "?grid_search_cv".')
@@ -259,7 +258,9 @@ grid_search_cv <- function(
     }
   }
   # 1c. Setting up the params to search through:
-  param_names <- grid %>% dplyr::select(!tidyselect::all_of(metrics)) %>% colnames()
+  param_names <- grid %>%
+    dplyr::select(!tidyselect::all_of(metrics)) %>%
+    colnames()
   points_to_eval <- which(is.na(grid$rel_err))
   params <- data.frame(grid[points_to_eval, param_names], run_num = rep(1:num_runs, each = length(points_to_eval)), row.names = NULL)
   colnames(params) <- c(param_names, "run_num")
@@ -287,9 +288,9 @@ grid_search_cv <- function(
         param_setting <- as.data.frame(params[i, param_names])
         colnames(param_setting) <- param_names
         pcp_mat <- do.call(pcp_fn, c(constant_params, as.list(param_setting), list(D = test_mats[[params$run_num[i]]]$D_tilde)))
-        eval_params(settings = params[i,], test_mat = D, pcp_model = pcp_mat, test_mask = test_mats[[params$run_num[i]]]$tilde_mask)
+        eval_params(settings = params[i, ], test_mat = D, pcp_model = pcp_mat, test_mask = test_mats[[params$run_num[i]]]$tilde_mask)
       }, error = function(e) {
-        cbind(params[i,], data.frame(rel_err = NA, L_rank = NA, S_sparsity = NA, iterations = NA, run_error = paste0(e)))
+        cbind(params[i, ], data.frame(rel_err = NA, L_rank = NA, S_sparsity = NA, iterations = NA, run_error = paste0(e)))
       })
     }, .progress = old_progress_bar)
     future::plan("sequential")
@@ -306,7 +307,7 @@ grid_search_cv <- function(
     }, .progress = old_progress_bar)
     future::plan("sequential")
     pcp_evals <- purrr::map_dfr(1:nrow(params), .f = function(i) {
-      eval_params(settings = params[i,], test_mat = D, pcp_model = pcp_mats[[i]], test_mask = test_mats[[params$run_num[i]]]$tilde_mask)
+      eval_params(settings = params[i, ], test_mat = D, pcp_model = pcp_mats[[i]], test_mask = test_mats[[params$run_num[i]]]$tilde_mask)
     })
   }
   end_time <- Sys.time()
@@ -319,7 +320,9 @@ grid_search_cv <- function(
       dplyr::summarise(rel_err = mean(.data[["rel_err"]], na.rm = T), L_rank = mean(.data[["L_rank"]], na.rm = T), S_sparsity = mean(.data[["S_sparsity"]], na.rm = T), iterations = mean(.data[["iterations"]], na.rm = T), run_error_perc = paste0(round(100 * sum(!is.na(.data[["run_error"]])) / dplyr::n(), 2), "%"), .groups = "drop") %>%
       dplyr::arrange(.data[["rel_err"]])
   } else {
-    evals_summary <- pcp_evals %>% dplyr::select(!.data[["run_num"]]) %>% dplyr::arrange(.data[["rel_err"]])
+    evals_summary <- pcp_evals %>%
+      dplyr::select(!.data[["run_num"]]) %>%
+      dplyr::arrange(.data[["rel_err"]])
   }
   if (verbose) cat("\nMetrics calculations complete.")
   # 4. package results:
@@ -355,11 +358,11 @@ grid_search_cv <- function(
     for (p in param_names) params_summary <- c(params_summary, paste0("\t\t", p, ": {", paste(sort(unique(params[[p]])), collapse = ", "), "}"))
     README <- file(README_file)
     writeLines(c(
-      paste(rep('-', 80), collapse =""),
+      paste(rep("-", 80), collapse = ""),
       paste0("\nFile: ", README_file),
       paste0("Date & Time: ", Sys.time()),
       paste0("Description: README file for the gridsearch saved to ", RDS_file, "\n"),
-      paste(rep('-', 80), collapse =""),
+      paste(rep("-", 80), collapse = ""),
       paste0("\tGridsearch start time: ", start_time),
       paste0("\tGridsearch end time: ", end_time),
       paste0("\tPCP function used: ", deparse(pcp_fn)[1]),
@@ -370,7 +373,7 @@ grid_search_cv <- function(
       paste0("\tScale function used: ", deparse(scale_fn)[1]),
       paste0("\tParallelization strategy used: ", parallel_strategy),
       paste0("\tCores used: ", num_cores),
-      paste0("\tPercent of matrix corrupted for test set: ", round(perc_test*100, 3), "%"),
+      paste0("\tPercent of matrix corrupted for test set: ", round(perc_test * 100, 3), "%"),
       paste0("\tRuns per parameter setting: ", num_runs),
       paste0("\tMemory conserved?: ", conserve_memory),
       paste0("\tConstant parameters passed to PCP: ", paste(names(constant_params), collapse = ", "), "\n"),
@@ -412,7 +415,7 @@ eval_params <- function(settings, test_mat, pcp_model, test_mask) {
     test_mat[is.na(test_mat)] <- 0
     stats <- purrr::imap_dfr(.x = seq(1, length(pcp_model$L_list)), ~ data.frame(
       r = .y, settings,
-      rel_err = norm((test_mat - pcp_model$L_list[[.x]])*test_mask, "F") / norm(test_mat*test_mask, "F"),
+      rel_err = norm((test_mat - pcp_model$L_list[[.x]]) * test_mask, "F") / norm(test_mat * test_mask, "F"),
       L_rank = matrix_rank(pcp_model$L_list[[.x]], 1e-04),
       S_sparsity = sparsity(pcp_model$S_list[[.x]]),
       iterations = NA, run_error = NA
@@ -420,7 +423,7 @@ eval_params <- function(settings, test_mat, pcp_model, test_mask) {
   } else {
     test_mat[is.na(test_mat)] <- 0
     stats <- settings
-    stats$rel_err <- norm((test_mat - pcp_model$L)*test_mask, "F") / norm(test_mat*test_mask, "F")
+    stats$rel_err <- norm((test_mat - pcp_model$L) * test_mask, "F") / norm(test_mat * test_mask, "F")
     stats$L_rank <- matrix_rank(pcp_model$L, 1e-04)
     stats$S_sparsity <- sparsity(pcp_model$S)
     stats$iterations <- pcp_model$num_iter

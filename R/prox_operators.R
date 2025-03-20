@@ -19,7 +19,7 @@ prox_frobenius <- function(Z, c) {
   if (n <= c) {
     X <- matrix(0, nrow = nrow(Z), ncol = ncol(Z))
   } else {
-    X <- (1 - c/n) * Z
+    X <- (1 - c / n) * Z
   }
   X
 }

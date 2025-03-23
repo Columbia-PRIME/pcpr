@@ -4,14 +4,15 @@
 <url><loc>https://columbia-prime.github.io/pcpr/articles/index.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/articles/pcp-applied.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/articles/pcp-quickstart.html</loc></url>
+<url><loc>https://columbia-prime.github.io/pcpr/articles/theory-crash-course.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/authors.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/index.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/news/index.html</loc></url>
-<url><loc>https://columbia-prime.github.io/pcpr/reference/corrupt_mat_randomly.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/eval_params.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/get_pcp_defaults.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/grid_search_cv.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/hard_threshold.html</loc></url>
+<url><loc>https://columbia-prime.github.io/pcpr/reference/impute_matrix.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/index.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/loss_lod.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/matrix_rank.html</loc></url>
@@ -24,6 +25,8 @@
 <url><loc>https://columbia-prime.github.io/pcpr/reference/root_pcp.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/rrmc.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/sim_data.html</loc></url>
+<url><loc>https://columbia-prime.github.io/pcpr/reference/sim_lod.html</loc></url>
+<url><loc>https://columbia-prime.github.io/pcpr/reference/sim_na.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/sing.html</loc></url>
 <url><loc>https://columbia-prime.github.io/pcpr/reference/sparsity.html</loc></url>
 </urlset>

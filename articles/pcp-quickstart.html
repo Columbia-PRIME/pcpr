@@ -6,6 +6,12 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Quickstart: applying PCP to a simulated environmental mixture • pcpr</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -35,6 +41,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/pcp-applied.html">Air pollution source apportionment with PCP</a></li>
     <li><a class="dropdown-item" href="../articles/pcp-quickstart.html">Quickstart: applying PCP to a simulated environmental mixture</a></li>
+    <li><a class="dropdown-item" href="../articles/theory-crash-course.html">Theory crash course</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -64,8 +71,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Quickstart: applying PCP to a simulated environmental mixture</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Quickstart: applying PCP to a simulated environmental mixture</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/Columbia-PRIME/pcpr/blob/main/vignettes/pcp-quickstart.Rmd" class="external-link"><code>vignettes/pcp-quickstart.Rmd</code></a></small>
@@ -74,10 +80,6 @@
 
     
     
-<p>The R package <code>pcpr</code> implements Principal Component
-Pursuit (PCP), a robust dimensionality reduction technique, for pattern
-recognition tailored to environmental health data. The statistical
-methodology and computational details are provided in <a href="https://doi.org/10.1289/EHP10479" class="external-link">Gibson et al. (2022)</a>.</p>
 <p>In this vignette, we will see how to leverage the functions in
 <code>pcpr</code> to:</p>
 <ol style="list-style-type: decimal">
@@ -92,65 +94,51 @@ mixture model.</li>
 our current R session.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://columbia-prime.github.io/pcpr/">pcpr</a></span><span class="op">)</span></span></code></pre></div>
-<div class="section level2">
-<h2 id="pcp-modeling-overview">PCP modeling overview<a class="anchor" aria-label="anchor" href="#pcp-modeling-overview"></a>
-</h2>
-<p>PCP algorithms model an observed exposure matrix <span class="math inline">\(D\)</span> as the sum of three underlying
-ground-truth matrices:</p>
-<p><span class="math display">\[\underset{\text{mixture}}{D_{n \times
-p}} = \underset{\text{low-rank}}{L_0} + \underset{\text{sparse}}{S_0} +
-\underset{\text{noise}}{Z_0}\]</span></p>
-<p>a low-rank matrix <span class="math inline">\(L_0\)</span> encoding
-consistent patterns of exposure, a sparse matrix <span class="math inline">\(S_0\)</span> isolating unique or outlying exposure
-events (that cannot be explained by the consistent exposure patterns),
-and dense noise <span class="math inline">\(Z_0\)</span>. All of these
-matrices are of dimension <span class="math inline">\(n \times
-p\)</span>, where <span class="math inline">\(n\)</span> is the number
-of observations (e.g. study participants or measurement dates) and <span class="math inline">\(p\)</span> is the number of exposures
-(e.g. chemical and/or non-chemical stressors). Beyond this mixtures
-model, the main assumption made by PCP is that <span class="math inline">\(Z_0 \sim N(\mu, \sigma^2)\)</span> consists of
-i.i.d. Gaussian noise corrupting each entry of the overall exposure
-matrix <span class="math inline">\(D\)</span>.</p>
-<p>The models in <code>pcpr</code> seek to decompose an observed data
-matrix <code>D</code> into estimated low-rank and sparse components
-<code>L</code> and <code>S</code> for use in downstream environmental
-health analyses.</p>
-</div>
-<div class="section level2">
-<h2 id="extensions-for-environmental-health-data">Extensions for environmental health data<a class="anchor" aria-label="anchor" href="#extensions-for-environmental-health-data"></a>
-</h2>
-<p>The functions in <code>pcpr</code> are outfitted with three
-environmental health (EH)-specific extensions, making <code>pcpr</code>
-particularly powerful for EH research:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Missing value functionality:</strong> PCP is able to recover
-<code>NA</code> values in the observed mixture matrix, often
-outperforming traditional imputation techniques.</li>
-<li>
-<strong>Leveraging potential limit of detection (LOD)
-information:</strong> When equipped with LOD information, PCP treats any
-estimations of values known to be below the LOD as equally valid if
-their approximations fall between 0 and the LOD. PCP with LOD data often
-outperforms PCA imputed with <span class="math inline">\(\frac{LOD}{\sqrt{2}}\)</span>.</li>
-<li>
-<strong>Non-negativity constraint on the estimated <code>L</code>
-matrix:</strong> If desired, PCP can enforce values in the estimated
-low-rank matrix <code>L</code> to be <span class="math inline">\(\geq
-0\)</span>, better modeling real world mixtures data.</li>
-</ol>
-</div>
+<p>Let’s also write a quick helper function that will enable us to
+visualize the matrices we will be working with throughout this
+vignette:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span> <span class="co"># for the pipe %&gt;%</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span> <span class="co"># for plotting</span></span>
+<span></span>
+<span><span class="va">plot_matrix</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">D</span>, <span class="va">...</span>, <span class="va">lp</span> <span class="op">=</span> <span class="st">"none"</span>, <span class="va">title</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">D</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"R"</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span><span class="fu">tidyselect</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span><span class="op">)</span>, names_to <span class="op">=</span> <span class="st">"y"</span>, values_to <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">x</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">y</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_y_discrete</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="va">rev</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>na.value <span class="op">=</span> <span class="st">"white"</span>, <span class="va">...</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>      axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      axis.ticks.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      axis.text.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      axis.ticks.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      axis.title.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      axis.title.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      legend.position <span class="op">=</span> <span class="va">lp</span>,</span>
+<span>      plot.margin <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">margin</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>      aspect.ratio <span class="op">=</span> <span class="fl">1</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="va">title</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="simulating-data">Simulating data<a class="anchor" aria-label="anchor" href="#simulating-data"></a>
 </h2>
 <p>The <code><a href="../reference/sim_data.html">sim_data()</a></code> function lets users generate simple
 mixtures models for quick experimentation. Let’s use it to simulate a
-noisy environmental mixture comprised of 100 observations of 10
-chemicals, with three underlying chemical exposure patterns (or a rank
-<span class="math inline">\(r = 3\)</span>), extreme outlying exposure
-events along the diagonal of the matrix, and dense Gaussian noise
-corrupting all the measurements in the matrix:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+noisy environmental mixture <span class="math inline">\(D = L_0 + S_0 +
+Z_0\)</span> comprised of <span class="math inline">\(n = 100\)</span>
+observations of <span class="math inline">\(p = 10\)</span> chemicals,
+with three underlying chemical exposure patterns (or a rank <span class="math inline">\(r = 3\)</span>), extreme outlying exposure events
+along the diagonal of the matrix, and dense Gaussian noise corrupting
+all the measurements in the matrix:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_data.html">sim_data</a></span><span class="op">(</span></span>
 <span>  n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">10</span>, r <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  sparse_nonzero_idxs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1000</span>, <span class="fl">101</span><span class="op">)</span>,</span>
@@ -160,47 +148,72 @@ corrupting all the measurements in the matrix:</p>
 <span><span class="va">L_0</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">L</span></span>
 <span><span class="va">S_0</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">S</span></span>
 <span><span class="va">Z_0</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">Z</span></span></code></pre></div>
-<p>The rank of a matrix is the number of linearly independent columns or
-rows in the matrix governing the structure of the data. It can
-intuitively be thought of as the number of inherent latent patterns in
-the data. The <code><a href="../reference/matrix_rank.html">matrix_rank()</a></code> function estimates the rank of
-a given matrix by counting the number of nonzero singular values
-governing that matrix:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>Let’s get a sense of what these matrices look like. Remember in real
+world analyses, we only observe <span class="math inline">\(D\)</span>.
+The matrices <span class="math inline">\(L_0\)</span>, <span class="math inline">\(S_0\)</span>, and <span class="math inline">\(Z_0\)</span> are the ground truth, coming from
+some unobserved data generating mechanism:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">D</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-quickstart_files/figure-html/mat%20viz-1.png" width="700"></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">L_0</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-quickstart_files/figure-html/mat%20viz-2.png" width="700"></p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">S_0</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-quickstart_files/figure-html/mat%20viz-3.png" width="700"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">Z_0</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-quickstart_files/figure-html/mat%20viz-4.png" width="700"></p>
+<p>The <code><a href="../reference/matrix_rank.html">matrix_rank()</a></code> function estimates the rank of a given
+matrix by counting the number of nonzero singular values governing that
+matrix (with the help of a <code>thresh</code> parameter determining
+what is “practically zero”):</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/matrix_rank.html">matrix_rank</a></span><span class="op">(</span><span class="va">L_0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 3</span></span>
 <span><span class="fu"><a href="../reference/matrix_rank.html">matrix_rank</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 10</span></span></code></pre></div>
 <p>Here we can see <code>L_0</code> has 3 underlying patterns. This is
 obscured in the observed, full-rank mixture matrix <code>D</code>, since
-the <code>S_0</code> and <code>Z</code> components are corrupting the
+the <code>S_0</code> and <code>Z_0</code> components are corrupting the
 underlying structure provided by <code>L_0</code>.</p>
-<p>Because our mixtures data is often incomplete in practice, let’s
-further corrupt a random 5% of the values as missing <code>NA</code>
-with the <code><a href="../reference/corrupt_mat_randomly.html">corrupt_mat_randomly()</a></code> function:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">corrupted_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/corrupt_mat_randomly.html">corrupt_mat_randomly</a></span><span class="op">(</span><span class="va">D</span>, perc <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<p>Let’s simulate the chemicals (columns) of our data being subject to
+some limit of detection (LOD) with the <code><a href="../reference/sim_lod.html">sim_lod()</a></code> function.
+We will simulate the bottom 10th percentile of each column as being
+below LOD, and examine the LOD for each column:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lod_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_lod.html">sim_lod</a></span><span class="op">(</span><span class="va">D</span>, q <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
+<span><span class="va">lod</span> <span class="op">&lt;-</span> <span class="va">lod_info</span><span class="op">$</span><span class="va">lod</span></span>
+<span><span class="va">lod</span></span>
+<span><span class="co">#&gt;  [1] 0.2573431 0.5325583 0.2053927 0.2329695 0.1620019 0.3801870 0.6461348</span></span>
+<span><span class="co">#&gt;  [8] 0.1499115 0.5306228 0.6183821</span></span></code></pre></div>
+<p>Next, because our mixtures data is often incomplete in practice,
+let’s further simulate a random 5% of the values as missing
+<code>NA</code> with the <code><a href="../reference/sim_na.html">sim_na()</a></code> function:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">corrupted_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_na.html">sim_na</a></span><span class="op">(</span><span class="va">D</span>, perc <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="va">D_tilde</span> <span class="op">&lt;-</span> <span class="va">corrupted_data</span><span class="op">$</span><span class="va">D_tilde</span></span>
-<span><span class="va">D_tilde_imputed</span> <span class="op">&lt;-</span> <span class="va">D_tilde</span></span>
-<span><span class="va">D_tilde_imputed</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span></code></pre></div>
+<span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-quickstart_files/figure-html/corrupt%20mat%20randomly-1.png" width="700"></p>
 <p>The <code>D_tilde</code> matrix represents our observed, messy
-mixtures model, suffering from incomplete <code>NA</code> observations.
-In a moment we will run our PCP model on <code>D_tilde</code> directly.
-The <code>D_tilde_imputed</code> matrix imputes <code>NA</code> values
-with <code>0</code>, allowing us to call functions that do not support
-missing <code>NA</code> values.</p>
+mixtures model, suffering from incomplete <code>NA</code>
+observations.</p>
 </div>
 <div class="section level2">
-<h2 id="pcp-model-selection">PCP model selection<a class="anchor" aria-label="anchor" href="#pcp-model-selection"></a>
+<h2 id="model-selection">Model selection<a class="anchor" aria-label="anchor" href="#model-selection"></a>
 </h2>
 <p>There are two PCP algorithms shipped with <code>pcpr</code>: the
 convex <code><a href="../reference/root_pcp.html">root_pcp()</a></code> [<a href="https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html" class="external-link">Zhang
 et al. (2021)</a>] and non-convex <code><a href="../reference/rrmc.html">rrmc()</a></code> [<a href="https://proceedings.mlr.press/v70/cherapanamjeri17a.html" class="external-link">Cherapanamjeri
 et al. (2017)</a>]. To figure out which model would be best for our
 data, let’s inspect the singular values of our observed mixture using
-the <code><a href="../reference/sing.html">sing()</a></code> method:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">singular_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sing.html">sing</a></span><span class="op">(</span><span class="va">D_tilde_imputed</span><span class="op">)</span></span>
+the <code><a href="../reference/sing.html">sing()</a></code> method (<code><a href="../reference/sing.html">sing()</a></code> cannot accept
+missing values, so we will use <code><a href="../reference/impute_matrix.html">impute_matrix()</a></code> to impute
+<code>NA</code> values in <code>D_tilde</code> with their respective
+column means):</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">D_imputed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/impute_matrix.html">impute_matrix</a></span><span class="op">(</span><span class="va">D_tilde</span>, <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">D_tilde</span>, <span class="fl">2</span>, <span class="va">mean</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">singular_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sing.html">sing</a></span><span class="op">(</span><span class="va">D_imputed</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">singular_values</span>, type <span class="op">=</span> <span class="st">"b"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-quickstart_files/figure-html/sing-1.png" width="700"></p>
 <p><code><a href="../reference/rrmc.html">rrmc()</a></code> is best suited for data characterized by slowly
@@ -214,7 +227,7 @@ suitable. We will use <code><a href="../reference/rrmc.html">rrmc()</a></code>, 
 environmental health researchers will likely employ most frequently.</p>
 </div>
 <div class="section level2">
-<h2 id="tuning-pcp-parameters-via-grid-search">Tuning PCP parameters via grid search<a class="anchor" aria-label="anchor" href="#tuning-pcp-parameters-via-grid-search"></a>
+<h2 id="grid-search-for-parameter-tuning">Grid search for parameter tuning<a class="anchor" aria-label="anchor" href="#grid-search-for-parameter-tuning"></a>
 </h2>
 <p>To estimate the low-rank and sparse matrices, <code><a href="../reference/rrmc.html">rrmc()</a></code>
 needs to be given a maximum rank <code>r</code> and regularization
@@ -229,43 +242,49 @@ procedure to recover <code>L</code> and <code>S</code>, meaning it first
 constructs a rank <code>1</code> model and iteratively builds up to the
 specified rank <code>r</code> solution. As such, for our grid search
 with <code><a href="../reference/grid_search_cv.html">grid_search_cv()</a></code>, we pass <code>etas</code> as the
-<code>grid</code> argument we are searching and we send <code>r</code> =
-5 as a constant parameter common to all models in the search. Since
-<code>length(etas) = 6</code> and <code>r</code> = 5, we are grid
-searching through 30 different PCP models. The <code>num_runs</code>
-argument in <code><a href="../reference/grid_search_cv.html">grid_search_cv()</a></code> determines how many (random)
-tests should be performed for each unique model setting. By default,
+<code>grid</code> argument we are searching and we send <span class="math inline">\(r = 5\)</span> as a constant parameter common to
+all models in the search. Since <code>length(etas) = 6</code> and <span class="math inline">\(r = 5\)</span>, we are grid searching through 30
+different PCP models. The <code>num_runs</code> argument in
+<code><a href="../reference/grid_search_cv.html">grid_search_cv()</a></code> determines how many (random) tests should
+be performed for each unique model setting. By default,
 <code>num_runs = 100</code>, so our grid search tunes <code>r</code> and
 <code>eta</code> by measuring the performance of 300 different PCP
-models.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+models. We pass our simulated <code>lod</code> vector as a constant to
+the gridsearch, equipping each <code><a href="../reference/rrmc.html">rrmc()</a></code> run with the same LOD
+information. To keep this vignette small, we will also set
+<code>conserve_memory = TRUE</code> for the search, which simply
+discards metadata that is normally tracked throughout the grid
+search.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">eta_0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_pcp_defaults.html">get_pcp_defaults</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span><span class="op">$</span><span class="va">eta</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Default eta value: "</span>, <span class="va">eta_0</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Default eta value:  0.0447213595499958</span></span>
 <span><span class="va">etas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"eta"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span> <span class="op">*</span> <span class="va">eta_0</span>, <span class="va">eta_0</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">10</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid_search_cv.html">grid_search_cv</a></span><span class="op">(</span><span class="va">D_tilde</span>, pcp_fn <span class="op">=</span> <span class="va">rrmc</span>, grid <span class="op">=</span> <span class="va">etas</span>, r <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Initializing gridsearch...</span></span>
-<span><span class="co">#&gt; The completed gridsearch will NOT be saved to any files, but simply returned.</span></span>
-<span><span class="co">#&gt; Beginning parallel gridsearch using 4 cores and a multisession strategy...</span></span>
-<span><span class="co">#&gt; Start time: 2025-03-20 08:57:19.301076</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Gridsearch completed at time: 2025-03-20 08:58:21.022542</span></span>
-<span><span class="co">#&gt; Metrics calculations complete.</span></span>
+<span><span class="co"># could wrap this in a call to progressr::with_progress({ gs &lt;- ... })</span></span>
+<span><span class="va">gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid_search_cv.html">grid_search_cv</a></span><span class="op">(</span></span>
+<span>  <span class="va">D_tilde</span>, pcp_fn <span class="op">=</span> <span class="va">rrmc</span>,</span>
+<span>  grid <span class="op">=</span> <span class="va">etas</span>, r <span class="op">=</span> <span class="fl">5</span>, LOD <span class="op">=</span> <span class="va">lod</span>,</span>
+<span>  parallel_strategy <span class="op">=</span> <span class="st">"multisession"</span>,</span>
+<span>  num_workers <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">r_star</span> <span class="op">&lt;-</span> <span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">$</span><span class="va">r</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">eta_star</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">$</span><span class="va">eta</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 7</span></span></span>
-<span><span class="co">#&gt;     eta     r rel_err L_rank S_sparsity iterations run_error_perc</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.224     3   0.135   3          98.9        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 0.313     3   0.137   3          99.0        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 0.134     3   0.143   3          31.8        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 0.134     4   0.143   3.03       30.8        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 0.134     5   0.143   3.03       30.8        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 0.224     4   0.155   4          99.0        <span style="color: #BB0000;">NaN</span> 0%</span></span></code></pre></div>
+<span><span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 30 × 7</span></span></span>
+<span><span class="co">#&gt;      eta     r rel_err L_rank S_sparsity iterations run_error_perc</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 0.224     3   0.145   3         0.968        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 0.313     3   0.150   3         0.984        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 0.224     4   0.167   4         0.967        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 0.134     5   0.168   2.21      0.199        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 0.134     3   0.168   2.21      0.199        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 0.134     4   0.168   2.21      0.199        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 0.402     3   0.169   3         0.993        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 0.134     2   0.173   2         0.342        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 0.224     2   0.174   2         0.992        <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 0.402     2   0.182   2         1.00         <span style="color: #BB0000;">NaN</span> 0%            </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 20 more rows</span></span></span></code></pre>
 <p>Inspecting the <code>summary_stats</code> table from the output grid
-search provides the mean aggregated statistics for each of the 30
+search provides the mean-aggregated statistics for each of the 30
 distinct parameter settings we tested. The grid search correctly
 identified the rank 3 solution as the best (lowest relative error rate).
 The corresponding <code>eta</code> = 0.224.</p>
@@ -274,19 +293,34 @@ The corresponding <code>eta</code> = 0.224.</p>
 <h2 id="running-pcp">Running PCP<a class="anchor" aria-label="anchor" href="#running-pcp"></a>
 </h2>
 <p>Now we can run our PCP model:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pcp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rrmc.html">rrmc</a></span><span class="op">(</span><span class="va">D_tilde</span>, r <span class="op">=</span> <span class="va">r_star</span>, eta <span class="op">=</span> <span class="va">eta_star</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pcp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rrmc.html">rrmc</a></span><span class="op">(</span><span class="va">D_tilde</span>, r <span class="op">=</span> <span class="va">r_star</span>, eta <span class="op">=</span> <span class="va">eta_star</span>, LOD <span class="op">=</span> <span class="va">lod</span><span class="op">)</span></span></code></pre></div>
+<p>We can inspect the evolution of the objective function over the
+course of PCP’s optimization:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">objective</span>, type <span class="op">=</span> <span class="st">"l"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-quickstart_files/figure-html/obj-1.png" width="700"></p>
+<p>And the output <code>L</code> matrix:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">L</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-quickstart_files/figure-html/output%20L-1.png" width="700"></p>
 <p>Let’s briefly inspect PCP’s estimate of the sparse matrix
 <code>S</code>, and fix any values that are “practically” zero using the
 <code><a href="../reference/hard_threshold.html">hard_threshold()</a></code> function. The histogram below shows a
 majority of the entries in <code>S</code> are between -0.2 and 0.2, so
 we will call those values “practically” zero, and the rest true outlying
-exposure events.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+exposure events. We can then calculate the sparsity of <code>S</code>
+with <code><a href="../reference/sparsity.html">sparsity()</a></code>:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-quickstart_files/figure-html/sparse-1.png" width="700"></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hard_threshold.html">hard_threshold</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span>, thresh <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hard_threshold.html">hard_threshold</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span>, thresh <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
+<span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-quickstart_files/figure-html/sparse-2.png" width="700"></p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sparsity.html">sparsity</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.984</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="benchmarking-with-pca">Benchmarking with PCA<a class="anchor" aria-label="anchor" href="#benchmarking-with-pca"></a>
@@ -301,8 +335,8 @@ low-rank matrix. Normally, a researcher would need to determine
 <code>r</code> subjectively. We will give PCA an advantage by sharing
 PCP’s discovery from the above grid search that the solution should be
 of rank 3:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">L_pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/proj_rank_r.html">proj_rank_r</a></span><span class="op">(</span><span class="va">D_tilde_imputed</span>, r <span class="op">=</span> <span class="va">r_star</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">L_pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/proj_rank_r.html">proj_rank_r</a></span><span class="op">(</span><span class="va">D_imputed</span>, r <span class="op">=</span> <span class="va">r_star</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="evaluating-pcp-against-the-ground-truth">Evaluating PCP against the ground truth<a class="anchor" aria-label="anchor" href="#evaluating-pcp-against-the-ground-truth"></a>
@@ -311,21 +345,25 @@ of rank 3:</p>
 <code>S_0</code>. We will examine the relative error between our model’s
 estimates and the simulated ground truth matrices. We use the Frobenius
 norm to calculate the relative errors between the matrices:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Obs_rel_err"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">L_0</span> <span class="op">-</span> <span class="va">D_tilde_imputed</span>, <span class="st">"F"</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">L_0</span>, <span class="st">"F"</span><span class="op">)</span>,</span>
+<span>  <span class="st">"Obs_rel_err"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">L_0</span> <span class="op">-</span> <span class="va">D_imputed</span>, <span class="st">"F"</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">L_0</span>, <span class="st">"F"</span><span class="op">)</span>,</span>
 <span>  <span class="st">"PCA_L_rel_err"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">L_0</span> <span class="op">-</span> <span class="va">L_pca</span>, <span class="st">"F"</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">L_0</span>, <span class="st">"F"</span><span class="op">)</span>,</span>
 <span>  <span class="st">"PCP_L_rel_err"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">L_0</span> <span class="op">-</span> <span class="va">pcp_model</span><span class="op">$</span><span class="va">L</span>, <span class="st">"F"</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">L_0</span>, <span class="st">"F"</span><span class="op">)</span>,</span>
 <span>  <span class="st">"PCP_S_rel_err"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">S_0</span> <span class="op">-</span> <span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span>, <span class="st">"F"</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/norm.html" class="external-link">norm</a></span><span class="op">(</span><span class="va">S_0</span>, <span class="st">"F"</span><span class="op">)</span>,</span>
 <span>  <span class="st">"PCP_L_rank"</span> <span class="op">=</span> <span class="fu"><a href="../reference/matrix_rank.html">matrix_rank</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">L</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Obs_rel_err PCA_L_rel_err PCP_L_rel_err PCP_S_rel_err PCP_L_rank</span></span>
-<span><span class="co">#&gt; 1   0.2944351     0.2340244    0.03337159    0.05924514          3</span></span></code></pre></div>
+<span><span class="co">#&gt; 1   0.1496416    0.08674625    0.05215485     0.2798507          3</span></span></code></pre></div>
 <p>PCP outperformed PCA by quite a bit! PCP’s relative recovery error on
-the <code>L_0</code> matrix stood at only 3.34%, compared to an observed
-relative error of 29.44% and PCA’s relative error of 23.4%. PCP’s sparse
+the <code>L_0</code> matrix stood at only 5.22%, compared to an observed
+relative error of 14.96% and PCA’s relative error of 8.67%. PCP’s sparse
 matrix estimate was only off from the ground truth <code>S_0</code> by
-5.92%.</p>
+27.99%.</p>
+</div>
+<div class="section level2">
+<h2 id="after-pcp">After PCP<a class="anchor" aria-label="anchor" href="#after-pcp"></a>
+</h2>
 <p>We can now pair our estimated <code>L</code> matrix with any matrix
 factorization method of our choice (e.g. factor analysis or non-negative
 matrix factorization, NMF) to extract the latent chemical exposure

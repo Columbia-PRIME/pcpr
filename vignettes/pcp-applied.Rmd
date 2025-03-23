@@ -87,7 +87,8 @@ plotted in red are some (rough) lines of best fit:
 ```{r trends}
 queens %>%
   pivot_longer(
-    colnames(queens)[-1], names_to = "chem", values_to = "concentration"
+    colnames(queens)[-1],
+    names_to = "chem", values_to = "concentration"
   ) %>%
   filter(!is.na(concentration)) %>%
   ggplot(aes(x = Date, y = concentration)) +
@@ -154,7 +155,8 @@ Let's examine the distributions as they are in the `queens_small` dataset:
 ```{r distributions}
 queens_small %>%
   pivot_longer(
-    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
+    colnames(queens_small)[-1],
+    names_to = "chem", values_to = "concentration"
   ) %>%
   filter(!is.na(concentration)) %>%
   ggplot(aes(x = concentration)) +
@@ -180,7 +182,8 @@ queens_scaled$Date <- queens_small$Date
 
 queens_scaled %>%
   pivot_longer(
-    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
+    colnames(queens_small)[-1],
+    names_to = "chem", values_to = "concentration"
   ) %>%
   filter(!is.na(concentration)) %>%
   ggplot(aes(x = concentration)) +
@@ -243,14 +246,15 @@ like `rrmc()` to recover missing `NA` values using the low-rank structure presen
 ```{r gs, eval=FALSE, echo=TRUE}
 eta_0 <- get_pcp_defaults(D)$eta
 progressr::with_progress({
-gs <- grid_search_cv(
-  D, pcp_fn = rrmc,
-  grid = data.frame(eta = 10^seq(-1, 2, 1) * round(eta_0, 3)),
-  r = 8,
-  parallel_strategy = "multisession",
-  num_workers = 16,
-  verbose = FALSE
-)
+  gs <- grid_search_cv(
+    D,
+    pcp_fn = rrmc,
+    grid = data.frame(eta = 10^seq(-1, 2, 1) * round(eta_0, 3)),
+    r = 8,
+    parallel_strategy = "multisession",
+    num_workers = 16,
+    verbose = FALSE
+  )
 })
 r_star <- gs$summary_stats$r[1]
 eta_star <- round(gs$summary_stats$eta[1], 3)

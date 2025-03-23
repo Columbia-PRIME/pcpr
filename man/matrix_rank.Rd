@@ -7,7 +7,7 @@
 matrix_rank(D, thresh = NULL)
 }
 \arguments{
-\item{D}{The input data matrix.}
+\item{D}{The input data matrix (cannot have \code{NA} values).}
 
 \item{thresh}{(Optional) A double \eqn{> 0}, specifying the relative
 threshold by which "practically zero" is determined, used to calculate the

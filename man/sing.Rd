@@ -7,7 +7,7 @@
 sing(D)
 }
 \arguments{
-\item{D}{The input data matrix.}
+\item{D}{The input data matrix (cannot have \code{NA} values).}
 }
 \value{
 A numeric vector containing the singular values of \code{D}.

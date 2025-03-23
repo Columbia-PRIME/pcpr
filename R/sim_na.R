@@ -1,14 +1,14 @@
-#' Corrupt given matrix with random missingness
+#' Simulate random missingness in a given matrix
 #'
 #' @description
-#' `corrupt_mat_randomly()` corrupts a given data matrix `D` such that `perc`
+#' `sim_na()` corrupts a given data matrix `D` such that a random `perc`
 #' percent of its entries are set to be missing (set to `NA`). Used by
 #' [grid_search_cv()] in constructing test matrices for PCP models. Can be
 #' used for experimentation with PCP models.
 #'
 #' Note: only _observed_ values can be corrupted as `NA`. This means if a matrix
 #' `D` already has e.g. 20% of its values missing, then
-#' `corrupt_mat_randomly(D, perc = 0.2)` would result in a matrix with 40% of
+#' `sim_na(D, perc = 0.2)` would result in a matrix with 40% of
 #' its values as missing.
 #'
 #' Should e.g. `perc = 0.6` be passed as input when `D` only has e.g. 10% of its
@@ -16,8 +16,8 @@
 #' set to `NA`.
 #'
 #' @param D The input data matrix.
-#' @param perc A double `>= 0` specifying the percentage of entries in `D` to
-#'   corrupt as missing (`NA`).
+#' @param perc A double in the range `[0, 1]` specifying the percentage of
+#'   entries in `D` to corrupt as missing (`NA`).
 #' @param seed (Optional) An integer specifying the seed for the random
 #'   selection of entries in `D` to corrupt as missing (`NA`). By default,
 #'   `seed = 42`.
@@ -28,29 +28,32 @@
 #' * `tilde_mask`: A binary matrix of `dim(D)` specifying the locations of
 #'   corrupted entries (`1`) and uncorrupted entries (`0`).
 #'
-#' @seealso [grid_search_cv()], [sim_data()]
+#' @seealso [grid_search_cv()], [sim_lod()], [impute_matrix()], [sim_data()]
 #' @examples
 #' # Simple example corrupting 20% of a 5x5 matrix
 #' D <- matrix(1:25, 5, 5)
-#' corrupted_data <- corrupt_mat_randomly(D, perc = 0.2)
+#' corrupted_data <- sim_na(D, perc = 0.2)
 #' corrupted_data$D_tilde
 #' sum(is.na(corrupted_data$D_tilde)) / prod(dim(corrupted_data$D_tilde))
 #' # Now corrupting another 20% ontop of the original 20%
-#' double_corrupted <- corrupt_mat_randomly(corrupted_data$D_tilde, perc = 0.2)
+#' double_corrupted <- sim_na(corrupted_data$D_tilde, perc = 0.2)
 #' double_corrupted$D_tilde
 #' sum(is.na(double_corrupted$D_tilde)) / prod(dim(double_corrupted$D_tilde))
 #' # Corrupting the remaining entries by passing in a large value for perc
-#' all_corrupted <- corrupt_mat_randomly(double_corrupted$D_tilde, perc = 1)
+#' all_corrupted <- sim_na(double_corrupted$D_tilde, perc = 1)
 #' all_corrupted$D_tilde
 #' @export
-corrupt_mat_randomly <- function(D, perc, seed = 42) {
+sim_na <- function(D, perc, seed = 42) {
+  # Argument assertions
+  checkmate::assert_matrix(D)
+  checkmate::qassert(perc, rules = "N1[0,1]")
+  checkmate::qassert(seed, rules = "X1")
   # Calculate how many values need corrupting
   nvals_to_corrupt <- floor(perc * prod(dim(D)))
   D_vec <- as.vector(D)
   mask <- rep(0, length(D_vec))
   # Identify those values that can be corrupted
   pool <- which(!is.na(D_vec))
-  if (length(pool) == 0) stop('There is nothing in the input matrix "D" that can be corrupted as missing.')
   # Corrupt values
   if (nvals_to_corrupt > length(pool)) {
     corrupted <- pool

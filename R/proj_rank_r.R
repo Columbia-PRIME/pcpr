@@ -17,7 +17,7 @@
 #' Intuitively, `proj_rank_r()` can also be thought of as providing a PCA
 #' estimate of a rank-`r` matrix `L` from observed data `D`.
 #'
-#' @param D The input data matrix.
+#' @param D The input data matrix (cannot have `NA` values).
 #' @param r The rank that `D` should be projected/truncated to.
 #'
 #' @returns The best rank-`r` approximation to `D` via a truncated SVD.
@@ -44,7 +44,9 @@
 #' @export
 proj_rank_r <- function(D, r) {
   # Checking simple cases
-  if (ncol(D) < r || nrow(D) < r) stop("r > matrix rank")
+  checkmate::assert_matrix(D, any.missing = FALSE)
+  checkmate::qassert(r, rules = "X1[1,)")
+  checkmate::assert_true(r <= min(dim(D)))
   if (ncol(D) == r || nrow(D) == r) {
     return(D)
   }

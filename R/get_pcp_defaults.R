@@ -65,7 +65,7 @@
 #' # Examine the queens PM2.5 data
 #' queens
 #' # Get rid of the Date column
-#' D <- queens[, 2:ncol(queens)]
+#' D <- as.matrix(queens[, 2:ncol(queens)])
 #' # Get default PCP parameters
 #' default_params <- get_pcp_defaults(D)
 #' # Use default parameters to define parameter search space
@@ -82,6 +82,7 @@
 #'   [here](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)]
 #' @export
 get_pcp_defaults <- function(D) {
+  checkmate::assert_matrix(D)
   n <- nrow(D)
   p <- ncol(D)
   lambda <- 1 / sqrt(max(n, p))

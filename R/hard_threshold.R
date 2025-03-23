@@ -27,6 +27,8 @@
 #' S
 #' @export
 hard_threshold <- function(D, thresh) {
+  checkmate::assert_matrix(D)
+  checkmate::qassert(thresh, "N1[0,)")
   D[abs(D) < thresh] <- 0
   D
 }

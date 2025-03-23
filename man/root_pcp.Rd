@@ -20,12 +20,12 @@ converge much more quickly when \code{D} has been standardized in some way (e.g.
 scaling columns by their standard deviations, or column-wise min-max
 normalization).}
 
-\item{lambda, mu}{(Optional) A pair of doubles regularizing the recovery of
-the \code{L} and \code{S} estimates. \code{lambda} controls the sparsity of the output \code{S}
-matrix; larger values penalize non-zero entries in \code{S} more stringently,
-driving the recovery of sparser \code{S} matrices. \code{mu} adjusts the model's
-sensitivity to noise; larger values will penalize errors between the
-predicted model and the observed data more severely. It is highly
+\item{lambda, mu}{(Optional) A pair of doubles each in the range \verb{[0, Inf)}
+regularizing \code{S} and \code{L}. \code{lambda} controls the sparsity of the output
+\code{S} matrix; larger values penalize non-zero entries in \code{S} more
+stringently, driving the recovery of sparser \code{S} matrices. \code{mu} adjusts the
+model's sensitivity to noise; larger values will penalize errors between
+the predicted model and the observed data more severely. It is highly
 recommended the user tunes both of these parameters using
 \code{\link[=grid_search_cv]{grid_search_cv()}} for each unique data matrix \code{D}. By default, both
 \code{lambda} and \code{mu} are \code{NULL}, in which case the theoretically optimal

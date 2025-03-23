@@ -22,7 +22,8 @@ that are "practically zero".
 \code{sparsity()} estimates the percentage of entries in a given data matrix \code{D}
 whose values are "practically zero". If the absolute value of an entry is
 below a given threshold parameter \code{thresh}, then that value is determined
-to be "practically zero", increasing the estimated sparsity of \code{D}.
+to be "practically zero", increasing the estimated sparsity of \code{D}. \emph{Note
+that \code{NA} values are imputed as 0 before the sparsity calculation is made.}
 }
 \examples{
 sparsity(matrix(rep(c(1, 0), 8), 4, 4))

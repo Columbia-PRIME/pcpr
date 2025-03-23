@@ -15,7 +15,7 @@
 #' @seealso [prox_l1()], [prox_nuclear()]
 #' @keywords internal
 prox_frobenius <- function(Z, c) {
-  n <- norm(Z, "F")
+  n <- norm(Z, type = "F")
   if (n <= c) {
     X <- matrix(0, nrow = nrow(Z), ncol = ncol(Z))
   } else {

@@ -12,7 +12,7 @@
 #' \eqn{s \geq s_{max} \cdot thresh}, i.e. if it is greater than or equal to the
 #' maximum singular value in `D` scaled by a given threshold `thresh`.
 #'
-#' @param D The input data matrix.
+#' @param D The input data matrix (cannot have `NA` values).
 #' @param thresh (Optional) A double \eqn{> 0}, specifying the relative
 #'   threshold by which "practically zero" is determined, used to calculate the
 #'   rank of `D`. By default, `thresh = NULL`, in which case the threshold is
@@ -27,7 +27,9 @@
 #' matrix_rank(data$L)
 #' @export
 matrix_rank <- function(D, thresh = NULL) {
+  checkmate::assert_matrix(D, any.missing = FALSE)
   if (is.null(thresh)) thresh <- max(dim(D)) * .Machine$double.eps
+  checkmate::qassert(thresh, rules = "N1(0,)")
   singular_values <- svd(D)$d
   sum(singular_values >= max(singular_values) * thresh)
 }

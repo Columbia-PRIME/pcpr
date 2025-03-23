@@ -109,15 +109,16 @@
 #'   converge much more quickly when `D` has been standardized in some way (e.g.
 #'   scaling columns by their standard deviations, or column-wise min-max
 #'   normalization).
-#' @param r An integer specifying the maximum rank PCP model to return. All
-#'   models from rank `1` through `r` will be returned.
-#' @param eta (Optional) A double defining the ratio between the model's
-#'   sensitivity to sparse and dense noise. Larger values of `eta` will place a
-#'   greater emphasis on penalizing the non-zero entries in `S` over penalizing
-#'   dense noise `Z`, i.e. errors between the predicted and observed data
-#'   `Z = L + S - D`. It is recommended to tune `eta` using [grid_search_cv()]
-#'   for each unique data matrix `D`. By default, `eta = NULL`, in which case
-#'   `eta` is retrieved using [get_pcp_defaults()].
+#' @param r An integer `>= 1` specifying the maximum rank PCP model to return.
+#'   All models from rank `1` through `r` will be returned.
+#' @param eta (Optional) A double in the range `[0, Inf)` defining the ratio
+#'   between the model's sensitivity to sparse and dense noise.
+#'   Larger values of `eta` will place a greater emphasis on penalizing the
+#'   non-zero entries in `S` over penalizing dense noise `Z`, i.e. errors
+#'   between the predicted and observed data `Z = L + S - D`. It is recommended
+#'   to tune `eta` using [grid_search_cv()] for each unique data matrix `D`. By
+#'   default, `eta = NULL`, in which case `eta` is retrieved using
+#'   [get_pcp_defaults()].
 #' @param LOD (Optional) The limit of detection (LOD) data. Entries in `D` that
 #'   satisfy `D >= LOD` are understood to be above the LOD, otherwise those
 #'   entries are treated as below the LOD. `LOD` can be either:
@@ -197,14 +198,24 @@
 #'   11 (2022): 117008.
 #' @export
 rrmc <- function(D, r, eta = NULL, LOD = -Inf) {
-  # 1. Initialize variables:
+  # 1. Initialize variables, argument assertions:
   # 1a. Matrix dimensions:
+  checkmate::assert_matrix(D)
+  checkmate::qassert(r, rules = "X1[1,)")
+  checkmate::assert_true(r <= min(dim(D)))
   n <- nrow(D)
   p <- ncol(D)
   if (is.null(eta)) eta <- (1 / sqrt(max(n, p))) / (sqrt(min(n, p) / 2))
+  checkmate::qassert(eta, rules = "N1[0,)")
+  checkmate::qassert(LOD, rules = "n+")
+  if (checkmate::test_numeric(LOD, min.len = 2) && !checkmate::test_matrix(LOD)) {
+    checkmate::assert_true(ncol(D) == length(LOD))
+  }
+  if (checkmate::test_matrix(LOD)) {
+    checkmate::assert_true(all(dim(D) == dim(LOD)))
+  }
   # 1b. Process LOD input (convert LOD vector to matrix if needed, so it multiplies correctly):
-  if (any(class(LOD) == "list")) LOD <- unlist(LOD)
-  if (is.vector(LOD) && length(LOD) != 1) LOD <- matrix(LOD, n, p, TRUE)
+  if (is.vector(LOD) && length(LOD) != 1) LOD <- matrix(LOD, nrow = n, ncol = p, byrow = TRUE)
   # 1c. Omega = mask of observed values, for handling missingness later:
   Omega <- !is.na(D)
   D[!Omega] <- 0
@@ -212,7 +223,7 @@ rrmc <- function(D, r, eta = NULL, LOD = -Inf) {
   mask_above_LOD <- Omega & (D >= LOD)
   mask_below_LOD <- Omega & (D < LOD)
   # 1e. Hard-coded optimization parameters:
-  epsilon <- 1e-05 * norm(D, "F")
+  epsilon <- 1e-05 * norm(D, type = "F")
   temp <- svd(D)$d[1]
   t <- 10 * log(40 * r * n * temp / epsilon)
   zeta <- eta * temp
@@ -220,24 +231,24 @@ rrmc <- function(D, r, eta = NULL, LOD = -Inf) {
   L <- matrix(0, nrow = n, ncol = p)
   L_list <- list()
   S_list <- list()
-  objective <- vector("numeric", r * t)
+  objective <- vector("numeric", length = r * t)
   objective_index <- 1
   # 2. Iterative optimization procedure:
   for (k in 1:r) {
     for (i in 0:t) {
-      S <- hard_threshold(Omega * (D - L), zeta)
+      S <- hard_threshold(Omega * (D - L), thresh = zeta)
       D_hat <- L + S # approximation to the data
       # calculate the gradient of the LOD penalty:
       grad_LOD_penalty <- mask_above_LOD * (D_hat - D) + # observed and above LOD
         mask_below_LOD * (D_hat < 0) * D_hat + # observed, below LOD, less than 0
-        ifelse(mask_below_LOD, (D_hat > LOD) * (D_hat - LOD), 0) # observed, below LOD, current appx bigger than LOD
+        ifelse(mask_below_LOD, yes = (D_hat > LOD) * (D_hat - LOD), no = 0) # observed, below LOD, current appx bigger than LOD
       # gradient step:
       M_i <- L - (n * p / sum(Omega)) * grad_LOD_penalty
-      L <- proj_rank_r(M_i, k)
+      L <- proj_rank_r(M_i, r = k)
       temp <- svd(M_i)$d
       zeta <- eta * (temp[k + 1] + 0.5^(i - 2) * temp[k])
       # calculate objective function value:
-      objective[objective_index] <- norm(D - L - S, "F")^2 + eta * sum(S != 0)
+      objective[objective_index] <- norm(D - L - S, type = "F")^2 + eta * sum(S != 0)
       objective_index <- objective_index + 1
     }
     L_list[[k]] <- L

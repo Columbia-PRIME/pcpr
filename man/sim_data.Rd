@@ -2,7 +2,7 @@
 % Please edit documentation in R/sim_data.R
 \name{sim_data}
 \alias{sim_data}
-\title{Simulate simple mixtures data D = L + S + Z}
+\title{Simulate simple mixtures data}
 \usage{
 sim_data(
   n = 100,
@@ -20,13 +20,15 @@ number of \code{n} observations (rows) and \code{p} variables (columns). By defa
 
 \item{r}{(Optional) An integer specifying the rank of the simulated dataset's
 low-rank component. Intuitively, the number of latent patterns governing
-the simulated dataset. By default, \code{r} = 3.}
+the simulated dataset. Must be that \code{r} \verb{<= min(n, p)}.
+By default, \code{r} = 3.}
 
-\item{sparse_nonzero_idxs}{(Optional) An integer vector specifying the
+\item{sparse_nonzero_idxs}{(Optional) An integer vector with
+\code{length(sparse_nonzero_idxs) <= n * p} specifying the
 indices of the non-zero elements in the sparse component. By default,
 \code{sparse_nonzero_idxs = NULL}, in which case it is defined to be the
-vector \code{c(1, n * p)} (placing sparse noise in the very first and last
-entries of the simulated dataset).}
+vector \code{seq(1, n * p, n + 1)} (placing sparse noise along the diagonal
+of the simulated dataset).}
 
 \item{sigma}{(Optional) A double specifying the standard deviation of the
 dense (Gaussian) noise component \code{Z}. By default, \code{sigma = 0.05}.}
@@ -47,6 +49,19 @@ A list containing:
 \code{sim_data()} generates a simulated dataset \code{D = L + S + Z} for
 experimentation with Principal Component Pursuit (PCP) algorithms.
 }
+\details{
+The data is simulated as follows:
+
+\code{L <- matrix(runif(n * r), n, r) \%*\% matrix(runif(r * p), r, p)}
+
+\code{S <- matrix(0, n, p)}
+
+\code{S[sparse_nonzero_idxs] <- 1}
+
+\code{Z <- matrix(rnorm(n * p, sd = sigma), n, p)}
+
+\code{D <- L + S + Z}
+}
 \examples{
 # rank 3 example
 data <- sim_data()
@@ -58,5 +73,5 @@ matrix_rank(data$D)
 matrix_rank(data$L)
 }
 \seealso{
-\code{\link[=corrupt_mat_randomly]{corrupt_mat_randomly()}}
+\code{\link[=sim_na]{sim_na()}}, \code{\link[=sim_lod]{sim_lod()}}, \code{\link[=impute_matrix]{impute_matrix()}}
 }

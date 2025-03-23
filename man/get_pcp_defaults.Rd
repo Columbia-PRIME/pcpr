@@ -84,7 +84,7 @@ the errors between the predicted and observed data (the dense noise \code{Z}).
 # Examine the queens PM2.5 data
 queens
 # Get rid of the Date column
-D <- queens[, 2:ncol(queens)]
+D <- as.matrix(queens[, 2:ncol(queens)])
 # Get default PCP parameters
 default_params <- get_pcp_defaults(D)
 # Use default parameters to define parameter search space

@@ -7,7 +7,7 @@
 proj_rank_r(D, r)
 }
 \arguments{
-\item{D}{The input data matrix.}
+\item{D}{The input data matrix (cannot have \code{NA} values).}
 
 \item{r}{The rank that \code{D} should be projected/truncated to.}
 }

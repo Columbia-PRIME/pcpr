@@ -2,7 +2,7 @@
 title: "Air pollution source apportionment with PCP"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{pcp-applied}
+  %\VignetteIndexEntry{Air pollution source apportionment with PCP}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,6 +14,294 @@ knitr::opts_chunk$set(
 )
 ```
 
+In this vignette, we will see how to leverage the functions in `pcpr` to conduct
+an example air pollution source apportionment analysis. We will use PCP to apportion
+speciated PM$_{2.5}$ to its sources using the `queens` dataset that comes with the
+`pcpr` R package. The `queens` dataset consists of real chemical concentrations
+(in µg/m$^3$) of 26 species of PM$_{2.5}$ measured every three to six days from
+04/04/2001 through 12/30/2021 by an EPA AQS air monitor located in Queens, New York City.
+
+Let's load and attach all the packages we will need for our analysis into the current R session.
+We will also define a helper function `plot_matrix()` to visualize our data throughout.
+
 ```{r setup}
 library(pcpr)
+
+library(dplyr) # for manipulation of queens
+# library(forcats) # for reordering factors for better plotting
+library(GGally) # for the ggcorr fn
+library(ggplot2) # for plotting
+# library(lubridate) # for working with the Date column in queens
+library(magrittr) # for the pipe %>%
+# library(stringr) # simple string manipulation
+library(tidyr) # for pivoting queens for better plotting
+
+plot_matrix <- function(D, ..., lp = "none", title = NULL) {
+  D <- t(D)
+  if (is.null(colnames(D))) colnames(D) <- paste0("C", 1:ncol(D))
+  data.frame(D) %>%
+    dplyr::mutate(x = paste0("R", 1:nrow(.))) %>%
+    tidyr::pivot_longer(tidyselect::all_of(colnames(D)), names_to = "y", values_to = "value") %>%
+    dplyr::mutate(x = factor(x, levels = unique(x)), y = factor(y, levels = unique(y))) %>%
+    ggplot(aes(x = x, y = y, fill = value)) +
+    geom_raster() +
+    scale_y_discrete(limits = rev) +
+    coord_equal() +
+    scale_fill_viridis_c(na.value = "white", ...) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      legend.position = lp,
+      plot.margin = margin(0, 0, 0, 0),
+      aspect.ratio = 1
+    ) +
+    ggtitle(title)
+}
 ```
+
+## Preprocessing
+
+### Exploring the raw data
+
+We start by examining the raw `queens` data:
+
+```{r queens raw}
+queens
+```
+
+```{r plot queens}
+plot_matrix(queens %>% select(-Date))
+```
+
+Let's spend some time visualizing some of the trends of the raw dataset, to get
+a sense of what we're dealing with. We can start by plotting each of the
+measured chemical species as timeseries. Plotted in black are the raw observed
+PM$_{2.5}$ measurements (in µg/m$^3$) over time (04/04/2001 - 12/30/2021), and
+plotted in red are some (rough) lines of best fit: 
+
+```{r trends}
+queens %>%
+  pivot_longer(
+    colnames(queens)[-1], names_to = "chem", values_to = "concentration"
+  ) %>%
+  filter(!is.na(concentration)) %>%
+  ggplot(aes(x = Date, y = concentration)) +
+  geom_line() +
+  geom_smooth(color = "red", formula = "y ~ x", method = "loess", span = 0.05) +
+  facet_wrap(~chem, scales = "free_y") +
+  labs(x = "Date", y = "Concentration (µg/m^3)") +
+  theme_bw()
+```
+
+Some initial points to make note of, looking at the data:
+
+* The y-axis scale for each chemical's concentration differs widely (e.g., NH4 ranges from 0 to
+  9 µg/m$^3$, while Ti ranges from 0 to 0.04 µg/m$^3$). We will have to take this into account
+  during preprocessing.
+* Some chemical species record negative measurements (e.g., Al, Ba, Cd). As explained in the
+  EPA [AQS data documentation](https://aqs.epa.gov/aqsweb/documents/about_aqs_data.html#acceptable-values),
+  this is due to idiosyncrasies in the instruments used to collect the measurements. 
+* We can see strong seasonal trends in some species (e.g., NO3), as well as a reduction in
+  concentration over time in others (e.g., Ni).
+* Many species have prominent outliers, or extreme exposure events (e.g., Cr, Cu). Further,
+  some species have extreme exposure events following seasonal trends, e.g., K.
+* Elemental carbon (EC) and organic carbon (OC) are both missing measurements for the first
+  8 years of the dataset, likely because the air monitors for those two species were not
+  operational from 2001 - 2009. Handling such systematic missingness is out of scope for
+  this tutorial.
+
+Below we remove the all measurements made before 2015, yielding the `queens_small` dataset that we will use moving forward.
+We make this decision because we have prior knowledge that in the years leading up to 2015, gradually, many Midwestern coal-fired power
+plants closed, reducing the regional / secondary signal experienced in downwind Queens, NYC after 2015
+([Hopke et al. (2024)](https://doi.org/10.1016/j.envpol.2024.123708)).
+We are interested in looking at the trends in the data after this (soft) change.
+
+```{r dates}
+start_date <- "2015-01-01"
+queens_small <- queens %>% filter(Date >= as.Date(start_date))
+queens_small
+```
+
+Next, let's take a look at the correlation structure of our `queens_small` data:
+
+```{r raw correlation}
+queens_small %>%
+  select(-Date) %>%
+  as_tibble() %>%
+  ggcorr(., method = "pairwise.complete.obs", limits = FALSE, label = FALSE, size = 5)
+```
+
+The high dimensionality of our `queens_small` air pollution mixture matrix gives rise to this
+relatively complex correlation matrix. No strong patterns jump out right away here, although
+Na's correlation with Cl and Mg calls to mind sea salt from the Atlantic Ocean or perhaps road
+salt kicked up by traffic. We'd like to employ PCP in order to reduce the complexity of our data
+for more robust downstream analysis. Keep this correlation matrix in mind, since after applying
+PCP, we'll examine the correlation matrix of the recovered `L` matrix and compare.
+
+### Data standardization
+
+Before we are able to run PCP, we need to first preprocess our data for better numerical stability.
+Despite making minimal _assumptions_ of input data, PCP converges _in practice_ much more quickly when
+the data has been standardized in some way. The goal is to rescale the data so columns are of
+comparable scale _without meaningfully altering the original distributions of the columns._
+Let's examine the distributions as they are in the `queens_small` dataset:
+
+```{r distributions}
+queens_small %>%
+  pivot_longer(
+    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
+  ) %>%
+  filter(!is.na(concentration)) %>%
+  ggplot(aes(x = concentration)) +
+  geom_histogram(bins = 50) +
+  theme_bw() +
+  facet_wrap(~chem, scales = "free")
+```
+
+We have many choices for how we'd like to preprocess our data, e.g., standardize the data, min-max
+normalization, etc. Most of our data appears normal, log normal, or exponential. Here we choose to
+scale (but not center) each PM$_2.5$ species in our dataset (we also choose to set all negative
+measurements to 0 for better interpretability):
+
+```{r}
+queens_scaled <- queens_small %>% select(-Date)
+queens_scaled[queens_scaled < 0] <- 0
+
+queens_scaled <- queens_scaled %>%
+  scale(center = FALSE) %>%
+  as_tibble()
+
+queens_scaled$Date <- queens_small$Date
+
+queens_scaled %>%
+  pivot_longer(
+    colnames(queens_small)[-1], names_to = "chem", values_to = "concentration"
+  ) %>%
+  filter(!is.na(concentration)) %>%
+  ggplot(aes(x = concentration)) +
+  geom_histogram(bins = 50) +
+  theme_bw() +
+  facet_wrap(~chem, scales = "free")
+```
+
+## Principal component pursuit
+### Model selection
+
+There are two PCP algorithms shipped with `pcpr`: the convex `root_pcp()`
+[[Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/hash/f65854da4622c1f1ad4ffeb361d7703c-Abstract.html)]
+and non-convex `rrmc()` [[Cherapanamjeri et al. (2017)](https://proceedings.mlr.press/v70/cherapanamjeri17a.html)].
+
+`rrmc()` is best suited for data characterized by slowly decaying singular values,
+indicative of complex underlying patterns and a relatively large degree of noise.
+Most EH data can be described this way. `root_pcp()` is best for data characterized
+by rapidly decaying singular values, indicative of very well-defined latent patterns.
+
+To figure out which model would be best for our data, let's inspect the singular values
+of our observed mixture using the `sing()` method. While PCP can handle `NA` values,
+`sing()` cannot, so we quickly impute missing values with the corresponding column mean
+via the `impute_matrix()` function:
+
+```{r sing}
+D <- as.matrix(queens_scaled %>% select(-Date))
+D_imputed <- impute_matrix(D, apply(D, 2, mean, na.rm = TRUE))
+singular_values <- sing(D_imputed)
+plot(singular_values, type = "b")
+```
+
+These singular values slowly decay, indicating a relatively complex underlying low-rank structure
+obscured by a high degree of noise. As such, we will move forward with the `rrmc()` as our PCP model.
+
+### Grid search for parameter tuning
+
+To estimate the low-rank and sparse matrices `L` and `S`, `rrmc()` needs to be given a maximum rank
+to search up to `r` and regularization parameter `eta`. To determine the optimal values of `r` and `eta`,
+we will conduct a brief grid search using the `grid_search_cv()` function.
+
+Recall that `rrmc()` uses an incremental rank-based procedure in recovering `L` and `S`:
+First, a rank-$1$ model $(L^{(1)}, S^{(1)})$ is estimated. The rank-$1$ model is then used
+as an initialization point to construct a rank-$2$ model $(L^{(2)}, S^{(2)})$, and so on,
+until the desired rank-r model $(L^{(r)}, S^{(r)})$ is recovered. All models from ranks $1$
+through $r$ are returned by `rrmc()` in this way. As such, we can fix the rank `r` in our
+gridsearch to be the maximum rank we would like to search up to. Here we've chosen $r = 8$,
+since we do not expect more than 8 distinct sources to govern `queens` PM$_2.5$ data from
+2015-2021 (based on prior studies suggesting ~5 sources would perhaps be more reasonable).
+
+We also need to tune the `eta` parameter, ensuring we also cover the rough default value
+obtained via the `get_pcp_defaults()`. The `eta` parameter can be thought of as a dial
+controlling the interplay between the low-rank `L` and sparse `S` models. Larger values of
+`eta` will place a greater emphasis on penalizing the non-zero entries in `S` over penalizing
+the errors between the predicted and observed data (the dense noise $Z$).
+
+_(Note that this time we do not need to impute the data with chemical means, since we would
+like `rrmc()` to recover missing `NA` values using the low-rank structure present in the data.)_
+
+```{r gs, eval=FALSE, echo=TRUE}
+eta_0 <- get_pcp_defaults(D)$eta
+progressr::with_progress({
+gs <- grid_search_cv(
+  D, pcp_fn = rrmc,
+  grid = data.frame(eta = 10^seq(-1, 2, 1) * round(eta_0, 3)),
+  r = 8,
+  parallel_strategy = "multisession",
+  num_workers = 16,
+  verbose = FALSE
+)
+})
+r_star <- gs$summary_stats$r[1]
+eta_star <- round(gs$summary_stats$eta[1], 3)
+gs$summary_stats
+```
+
+```{r gs results, eval=TRUE, echo=FALSE}
+gs <- readRDS("applied-gs.rds")
+r_star <- gs$summary_stats$r[1]
+eta_star <- round(gs$summary_stats$eta[1], 3)
+gs$summary_stats
+```
+
+The results from the search suggest a rank `r gs$summary_stats$r[1]` solution with an `eta` of
+`r gs$summary_stats$eta[1]` is most optimal, with the lowest average relative recovery error on
+the held out test sets (`r round(gs$summary_stats$rel_err[1] * 100, 1)`% relative error). This solution yields a
+sparse matrix `S` with a sparsity of `r round(gs$summary_stats$S_sparsity[1] * 100, 1)`%, meaning
+`r 100 - round(gs$summary_stats$S_sparsity[1] * 100, 1)`% of values in the data were flagged as extreme,
+outlying exposure events. As such, we will use these parameters moving forward.
+
+### Running PCP
+
+Now we can finally run our PCP model!
+
+```{r pcp}
+pcp_model <- rrmc(D, r = r_star, eta = eta_star)
+L <- pcp_model$L
+S <- pcp_model$S
+```
+
+We can inspect the evolution of the objective function over the course of PCP's optimization:
+
+```{r obj}
+plot(pcp_model$objective, type = "l")
+```
+
+And the output `L` matrix:
+
+```{r output L}
+plot_matrix(L)
+matrix_rank(L)
+```
+
+Let's briefly inspect PCP's estimate of the sparse matrix `S` and the associated sparsity via `sparsity()`:
+
+```{r sparse}
+hist(S)
+plot_matrix(S)
+```
+
+We're now ready to finish the source apportionment with the estimated low-rank `L` matrix.
+
+## Source apportionment via PCP + NMF
+### Non-negative matrix factorization

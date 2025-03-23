@@ -33,22 +33,24 @@ reference:
 
 - title: Parameter tuning
   contents:
-  - grid_search_cv
   - get_pcp_defaults
+  - grid_search_cv
 
 - title: Matrix statistics
   contents:
-  - sing
   - matrix_rank
+  - sing
   - sparsity
 
 - title: Matrix manipulation
   contents:
   - hard_threshold
+  - impute_matrix
   - proj_rank_r
 
-- title: Data access
+- title: Data simulation, access
   contents:
   - queens
   - sim_data
-  - corrupt_mat_randomly
+  - sim_lod
+  - sim_na

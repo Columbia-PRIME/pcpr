@@ -12,16 +12,17 @@ converge much more quickly when \code{D} has been standardized in some way (e.g.
 scaling columns by their standard deviations, or column-wise min-max
 normalization).}
 
-\item{r}{An integer specifying the maximum rank PCP model to return. All
-models from rank \code{1} through \code{r} will be returned.}
+\item{r}{An integer \verb{>= 1} specifying the maximum rank PCP model to return.
+All models from rank \code{1} through \code{r} will be returned.}
 
-\item{eta}{(Optional) A double defining the ratio between the model's
-sensitivity to sparse and dense noise. Larger values of \code{eta} will place a
-greater emphasis on penalizing the non-zero entries in \code{S} over penalizing
-dense noise \code{Z}, i.e. errors between the predicted and observed data
-\code{Z = L + S - D}. It is recommended to tune \code{eta} using \code{\link[=grid_search_cv]{grid_search_cv()}}
-for each unique data matrix \code{D}. By default, \code{eta = NULL}, in which case
-\code{eta} is retrieved using \code{\link[=get_pcp_defaults]{get_pcp_defaults()}}.}
+\item{eta}{(Optional) A double in the range \verb{[0, Inf)} defining the ratio
+between the model's sensitivity to sparse and dense noise.
+Larger values of \code{eta} will place a greater emphasis on penalizing the
+non-zero entries in \code{S} over penalizing dense noise \code{Z}, i.e. errors
+between the predicted and observed data \code{Z = L + S - D}. It is recommended
+to tune \code{eta} using \code{\link[=grid_search_cv]{grid_search_cv()}} for each unique data matrix \code{D}. By
+default, \code{eta = NULL}, in which case \code{eta} is retrieved using
+\code{\link[=get_pcp_defaults]{get_pcp_defaults()}}.}
 
 \item{LOD}{(Optional) The limit of detection (LOD) data. Entries in \code{D} that
 satisfy \code{D >= LOD} are understood to be above the LOD, otherwise those

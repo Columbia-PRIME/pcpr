@@ -13,7 +13,7 @@
 #' well-defined low rank structure (rapidly decaying singular values),
 #' [root_pcp()] may offer a better model estimate.
 #'
-#' @param D The input data matrix.
+#' @param D The input data matrix (cannot have `NA` values).
 #'
 #' @returns A numeric vector containing the singular values of `D`.
 #' @examples
@@ -24,5 +24,6 @@
 #' @references "Singular value decomposition" [Wikipedia article](https://en.wikipedia.org/wiki/Singular_value_decomposition).
 #' @export
 sing <- function(D) {
+  checkmate::assert_matrix(D, any.missing = FALSE)
   svd(D)$d
 }

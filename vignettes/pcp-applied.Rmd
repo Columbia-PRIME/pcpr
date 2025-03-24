@@ -329,7 +329,8 @@ The new correlation matrix for the recovered `L` matrix is now:
 L_df <- data.frame(L)
 colnames(L_df) <- colnames(queens[, 2:ncol(queens)])
 ggcorr(
-  L_df, method = "pairwise.complete.obs",
+  L_df,
+  method = "pairwise.complete.obs",
   limits = FALSE, label = FALSE, size = 5
 )
 ```
@@ -407,7 +408,8 @@ nmf_mat <- L
 nmf_mat[nmf_mat < 0] <- 0
 
 res <- nmf(
-  nmf_mat, rank = L_rank,
+  nmf_mat,
+  rank = L_rank,
   method = "offset", nrun = 30,
   seed = 0, .opt = "vp16"
 )
@@ -594,7 +596,6 @@ nmf_sources %>%
     axis.text.y.left = element_text(size = 12)
   ) +
   ggtitle("Mean (std dev) Pattern Scores by Season")
-
 ```
 
 Scores across days of the week:
@@ -634,7 +635,7 @@ Scores for weekday vs. weekend:
 ```{r day type}
 nmf_sources %>%
   mutate(
-    DayType = if_else(DayofWeek %in% c('Mon', 'Tue', 'Wed', 'Thu', 'Fri'), 'Weekday', 'Weekend'),
+    DayType = if_else(DayofWeek %in% c("Mon", "Tue", "Wed", "Thu", "Fri"), "Weekday", "Weekend"),
     DayType = factor(DayType)
   ) %>%
   group_by(Pattern, DayType) %>%
@@ -669,7 +670,8 @@ Pattern correlations:
 
 ```{r nmf corr}
 ggcorr(
-  nmf_scores, method = c("pairwise.complete.obs", "pearson"),
+  nmf_scores,
+  method = c("pairwise.complete.obs", "pearson"),
   limits = FALSE, label = TRUE, label_size = 8,
   hjust = 0.8, size = 8
 )

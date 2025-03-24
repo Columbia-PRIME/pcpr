@@ -82,7 +82,7 @@
     
 <p>The R package <code>pcpr</code> implements Principal Component
 Pursuit (PCP), a robust dimensionality reduction technique, for pattern
-recognition tailored to environmental health data. The statistical
+recognition tailored to environmental health (EH) data. The statistical
 methodology and computational details are provided in <a href="https://doi.org/10.1289/EHP10479" class="external-link">Gibson et al. (2022)</a>.</p>
 <p>In this code-free vignette, we present a crash course in PCP’s
 theoretical background, so researchers can better navigate all of the
@@ -92,8 +92,7 @@ functionality offered in <code>pcpr</code>. We will touch upon:</p>
 <li>The low-rank and sparse matrices <code>L</code> and
 <code>S</code>
 </li>
-<li>The environmental health (EH)-specific extensions in
-<code>pcpr</code>
+<li>The EH-specific extensions in <code>pcpr</code>
 </li>
 <li>Convex and non-convex PCP</li>
 <li>PCP parameters <code>lambda</code>, <code>mu</code>, and
@@ -102,8 +101,8 @@ functionality offered in <code>pcpr</code>. We will touch upon:</p>
 <li>Tuning parameters with <code><a href="../reference/grid_search_cv.html">grid_search_cv()</a></code>
 </li>
 </ol>
-<p>We recommend researchers skim this crash course before reading the
-two code-heavy vignettes:</p>
+<p>We recommend users skim this crash course before reading the two
+code-heavy vignettes:</p>
 <ul>
 <li>
 <code><a href="../articles/pcp-quickstart.html">vignette("pcp-quickstart")</a></code>: applying PCP to a simulated
@@ -150,6 +149,14 @@ Intuitively, the rank directly corresponds to the (relatively few)
 number of underlying patterns governing the mixture. Here, “patterns”
 can refer to specific sources, profiles or behaviors leading to
 exposure, depending on the application.</p>
+<p>Contrary to closely related dimension reduction tools such as
+principal component analysis (PCA), PCP infers the rank <span class="math inline">\(r\)</span> from the observed data. In
+<code>pcpr</code>, this is done directly during optimization for convex
+PCP, and via grid search for non-convex PCP. As such, rather than
+require the researcher to choose the number of estimated patterns for
+use in subsequent health models, PCP allows the observed data to “speak
+for itself”, thereby removing potential points of subjectivity in model
+design.</p>
 <p>Notice that <span class="math inline">\(L \in \mathbb{R}^{n \times
 p}\)</span>, meaning it is still defined in terms of the original <span class="math inline">\(n\)</span>-many observations and <span class="math inline">\(p\)</span>-many environmental variables. Put
 differently, <span class="math inline">\(L\)</span> can be taken as a
@@ -158,10 +165,16 @@ unperturbed by outliers (captured in <span class="math inline">\(S\)</span>) or 
 term). In this way, the latent exposure patterns are <em>encoded</em> in
 <span class="math inline">\(L\)</span> rather than directly estimated.
 To <em>explicitly</em> obtain the exposure patterns from <span class="math inline">\(L\)</span>, PCP may then be paired with various
-matrix factorization methods (e.g., principal components analysis,
-factor analysis, or non-negative matrix factorization) that yield
-chemical loadings and individual scores for use in downstream health
-models.</p>
+matrix factorization methods (e.g., PCA, factor analysis, or
+non-negative matrix factorization) that yield chemical loadings and
+individual scores for use in downstream health models.</p>
+<p>This flexibility allows <span class="math inline">\(L\)</span> to
+adapt to mixture-specific assumptions. For example, if the assumption of
+orthogonal (i.e., independent) patterns is too strong, then instead of
+pairing <span class="math inline">\(L\)</span> with PCA, a more
+appropriate method such as factor analysis can be used. Alternatively,
+depending on the sample size and study design, <span class="math inline">\(L\)</span> may also be directly incorporated into
+regression models.</p>
 </div>
 <div class="section level2">
 <h2 id="the-sparse-matrix">The sparse matrix<a class="anchor" aria-label="anchor" href="#the-sparse-matrix"></a>
@@ -173,6 +186,17 @@ entries in <span class="math inline">\(S\)</span> are 0, with non-zero
 entries identifying such extreme exposure activity. The number, location
 (i.e., support), and value of non-zero entries in <span class="math inline">\(S\)</span> need not be a priori defined; PCP
 isolates these itself during optimization.</p>
+<p>By separating and retaining sparse exposure events, PCP boasts an
+enormous advantage over other current dimension reduction techniques.
+Despite being common phenomena in mixtures data, sparse outliers are
+typically removed from the exposure matrix prior to analysis. This is
+because PCA and other conventional dimension reduction approaches are
+unable to disentangle such unique events from the overall patterns of
+exposure: If included, even low fractions of outliers can deviate
+patterns identified by traditional methods away from the true
+distribution of the data, yielding inaccurate pattern estimations and
+high false positive rates of detected outliers. By decomposing a mixture
+into low-rank and sparse components <span class="math inline">\(L\)</span> and <span class="math inline">\(S\)</span>, PCP avoids such pitfalls.</p>
 </div>
 <div class="section level2">
 <h2 id="extensions-for-environmental-health-data">Extensions for environmental health data<a class="anchor" aria-label="anchor" href="#extensions-for-environmental-health-data"></a>
@@ -243,7 +267,7 @@ that these observations must be below <span class="math inline">\(LOD\)</span>. 
 <span class="math inline">\(LOD\)</span> are penalized as usual, using
 the Frobenius norm in the above objective function.</p>
 <p><a href="https://doi.org/10.1289/EHP10479" class="external-link">Gibson et al. (2022)</a>
-demonstrates that in experimental settings with up to 50% of the data
+demonstrate that in experimental settings with up to 50% of the data
 corrupted below the <span class="math inline">\(LOD\)</span>, PCP with
 the <span class="math inline">\(LOD\)</span> extension boasts superior
 accuracy of recovered <span class="math inline">\(L\)</span> models
@@ -267,10 +291,10 @@ questions surrounding their meaning and utility. Non-negative <span class="math 
 methods such as non-negative matrix factorization to extract
 non-negative patterns.</p>
 <p>Currently, the non-negativity constraint is only supported in the
-convex pcp function <code><a href="../reference/root_pcp.html">root_pcp()</a></code>, incorporated in the ADMM
+convex PCP function <code><a href="../reference/root_pcp.html">root_pcp()</a></code>, incorporated in the ADMM
 splitting technique via the introduction of an additional optimization
 variable and corresponding constraint. Future work will extend the
-constraint to the non-convex pcp method <code><a href="../reference/rrmc.html">rrmc()</a></code>.</p>
+constraint to the non-convex PCP method <code><a href="../reference/rrmc.html">rrmc()</a></code>.</p>
 </div>
 </div>
 <div class="section level2">
@@ -486,9 +510,10 @@ PCP parameter settings of <span class="math inline">\(\lambda\)</span>,
 <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\eta\)</span> for a given data matrix <span class="math inline">\(D\)</span>.</p>
 <p>The “default” values of <span class="math inline">\(\lambda\)</span>
 and <span class="math inline">\(\mu\)</span> offer <em>theoretical</em>
-guarantees of optimal estimation performance. Candès et al. (2011)
+guarantees of optimal estimation performance. <a href="https://doi.org/10.1145/1970392.1970395" class="external-link">Candès et al. (2011)</a>
 obtained the guarantee for <span class="math inline">\(\lambda\)</span>,
-while Zhang et al. (2021) obtained the result for <span class="math inline">\(\mu\)</span>. It has not yet been proven whether
+while <a href="https://proceedings.neurips.cc/paper/2021/file/f65854da4622c1f1ad4ffeb361d7703c-Paper.pdf" class="external-link">Zhang
+et al. (2021)</a> obtained the result for <span class="math inline">\(\mu\)</span>. It has not yet been proven whether
 or not <span class="math inline">\(\eta\)</span> enjoys similar
 properties.</p>
 <p>The theoretically optimal <span class="math inline">\(\lambda_*\)</span> is given by:</p>
@@ -546,6 +571,9 @@ with it).</li>
 <li>Performance statistics can then be calculated for each “run”, and
 then summarized across all runs using mean-aggregated statistics.</li>
 </ol>
+<p>In the <code><a href="../reference/grid_search_cv.html">grid_search_cv()</a></code> function, <span class="math inline">\(\xi\)</span> is referred to as
+<code>perc_test</code> (percent test), while <span class="math inline">\(K\)</span> is known as <code>num_runs</code>
+(number of runs).</p>
 </div>
 <div class="section level3">
 <h3 id="best-practices-for-xi-and-k">Best practices for <span class="math inline">\(\xi\)</span> and

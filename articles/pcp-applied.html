@@ -91,43 +91,32 @@ three to six days from 04/04/2001 through 12/30/2021 by an EPA AQS air
 monitor located in Queens, New York City.</p>
 <p>Let’s load and attach all the packages we will need for our analysis
 into the current R session. We will also define a helper function
-<code>plot_matrix()</code> to visualize our data throughout.</p>
+<code>plot_matrix()</code> to visualize our data as a heatmap.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://columbia-prime.github.io/pcpr/">pcpr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span> <span class="co"># for manipulation of queens</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'dplyr'</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:stats':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     filter, lag</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
-<span><span class="co"># library(forcats) # for reordering factors for better plotting</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggobi.github.io/ggally/" class="external-link">GGally</a></span><span class="op">)</span> <span class="co"># for the ggcorr fn</span></span>
-<span><span class="co">#&gt; Loading required package: ggplot2</span></span>
-<span><span class="co">#&gt; Registered S3 method overwritten by 'GGally':</span></span>
-<span><span class="co">#&gt;   method from   </span></span>
-<span><span class="co">#&gt;   +.gg   ggplot2</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span> <span class="co"># for plotting</span></span>
-<span><span class="co"># library(lubridate) # for working with the Date column in queens</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span> <span class="co"># for the pipe %&gt;%</span></span>
-<span><span class="co"># library(stringr) # simple string manipulation</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span> <span class="co"># for pivoting queens for better plotting</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'tidyr'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:magrittr':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     extract</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span> <span class="co"># for manipulation of queens</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggobi.github.io/ggally/" class="external-link">GGally</a></span><span class="op">)</span> <span class="co"># for the ggcorr fn</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span> <span class="co"># for plotting</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://lubridate.tidyverse.org" class="external-link">lubridate</a></span><span class="op">)</span> <span class="co"># for manipulating dates</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span> <span class="co"># for the pipe %&gt;%</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span> <span class="co"># for pivoting queens for better plotting</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plot_matrix</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">D</span>, <span class="va">...</span>, <span class="va">lp</span> <span class="op">=</span> <span class="st">"none"</span>, <span class="va">title</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">D</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"R"</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>    <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span><span class="fu">tidyselect</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span><span class="op">)</span>, names_to <span class="op">=</span> <span class="st">"y"</span>, values_to <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">x</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">y</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
+<span>      <span class="fu">tidyselect</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>      names_to <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>      values_to <span class="op">=</span> <span class="st">"value"</span></span>
+<span>    <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>      x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">x</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>      y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">y</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_y_discrete</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="va">rev</span><span class="op">)</span> <span class="op">+</span></span>
@@ -173,20 +162,22 @@ into the current R session. We will also define a helper function
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 18 more variables: Cr &lt;dbl&gt;, Cu &lt;dbl&gt;, EC &lt;dbl&gt;, Fe &lt;dbl&gt;, Pb &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   Mg &lt;dbl&gt;, Mn &lt;dbl&gt;, Ni &lt;dbl&gt;, OC &lt;dbl&gt;, K &lt;dbl&gt;, Se &lt;dbl&gt;, Si &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   Na &lt;dbl&gt;, S &lt;dbl&gt;, Ti &lt;dbl&gt;, NO3 &lt;dbl&gt;, V &lt;dbl&gt;, Zn &lt;dbl&gt;</span></span></span></code></pre></div>
+<p>Let’s visualize our data as a heatmap using the
+<code>plot_matrix()</code> function we wrote above:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">queens</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">Date</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">queens</span><span class="op">[</span>, <span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">queens</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-applied_files/figure-html/plot%20queens-1.png" width="700"></p>
-<p>Let’s spend some time visualizing some of the trends of the raw
-dataset, to get a sense of what we’re dealing with. We can start by
-plotting each of the measured chemical species as timeseries. Plotted in
-black are the raw observed PM<span class="math inline">\(_{2.5}\)</span>
-measurements (in µg/m<span class="math inline">\(^3\)</span>) over time
-(04/04/2001 - 12/30/2021), and plotted in red are some (rough) lines of
-best fit:</p>
+<p>Clearly the scale of each chemical differs widely. Let’s now
+visualize each of the measured chemical species as timeseries to get a
+better sense of what we’re dealing with. Plotted in black are the raw
+observed PM<span class="math inline">\(_{2.5}\)</span> measurements (in
+µg/m<span class="math inline">\(^3\)</span>) over time (04/04/2001 -
+12/30/2021), and plotted in red are some (rough) lines of best fit:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">queens</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">queens</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>, names_to <span class="op">=</span> <span class="st">"chem"</span>, values_to <span class="op">=</span> <span class="st">"concentration"</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">queens</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>    names_to <span class="op">=</span> <span class="st">"chem"</span>, values_to <span class="op">=</span> <span class="st">"concentration"</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">concentration</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Date</span>, y <span class="op">=</span> <span class="va">concentration</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -198,14 +189,15 @@ best fit:</p>
 <p><img src="pcp-applied_files/figure-html/trends-1.png" width="700"></p>
 <p>Some initial points to make note of, looking at the data:</p>
 <ul>
-<li>The y-axis scale for each chemical’s concentration differs widely
-(e.g., NH4 ranges from 0 to 9 µg/m<span class="math inline">\(^3\)</span>, while Ti ranges from 0 to 0.04
-µg/m<span class="math inline">\(^3\)</span>). We will have to take this
-into account during preprocessing.</li>
+<li>As we saw in the heatmap, the scale for each chemical’s measured
+concentration differs widely (e.g., NH4 ranges from 0 to 9 µg/m<span class="math inline">\(^3\)</span>, while Ti ranges from 0 to 0.04
+µg/m<span class="math inline">\(^3\)</span>). We will have to correct
+for this in a moment when we preprocess our data.</li>
 <li>Some chemical species record negative measurements (e.g., Al, Ba,
 Cd). As explained in the EPA <a href="https://aqs.epa.gov/aqsweb/documents/about_aqs_data.html#acceptable-values" class="external-link">AQS
 data documentation</a>, this is due to idiosyncrasies in the instruments
-used to collect the measurements.</li>
+used to collect the measurements. We will zero out negative measurements
+during preprocessing.</li>
 <li>We can see strong seasonal trends in some species (e.g., NO3), as
 well as a reduction in concentration over time in others (e.g.,
 Ni).</li>
@@ -247,20 +239,20 @@ after this (soft) change.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 17 more variables: Cu &lt;dbl&gt;, EC &lt;dbl&gt;, Fe &lt;dbl&gt;, Pb &lt;dbl&gt;, Mg &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   Mn &lt;dbl&gt;, Ni &lt;dbl&gt;, OC &lt;dbl&gt;, K &lt;dbl&gt;, Se &lt;dbl&gt;, Si &lt;dbl&gt;, Na &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   S &lt;dbl&gt;, Ti &lt;dbl&gt;, NO3 &lt;dbl&gt;, V &lt;dbl&gt;, Zn &lt;dbl&gt;</span></span></span></code></pre></div>
-<p>Next, let’s take a look at the correlation structure of our
+<p>Next, let’s take a look at the correlation structure of our raw
 <code>queens_small</code> data:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">queens_small</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">Date</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://ggobi.github.io/ggally/reference/ggcorr.html" class="external-link">ggcorr</a></span><span class="op">(</span><span class="va">.</span>, method <span class="op">=</span> <span class="st">"pairwise.complete.obs"</span>, limits <span class="op">=</span> <span class="cn">FALSE</span>, label <span class="op">=</span> <span class="cn">FALSE</span>, size <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggobi.github.io/ggally/reference/ggcorr.html" class="external-link">ggcorr</a></span><span class="op">(</span></span>
+<span>  <span class="va">queens_small</span><span class="op">[</span>, <span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">queens_small</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"pairwise.complete.obs"</span>,</span>
+<span>  limits <span class="op">=</span> <span class="cn">FALSE</span>, label <span class="op">=</span> <span class="cn">FALSE</span>, size <span class="op">=</span> <span class="fl">5</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-applied_files/figure-html/raw%20correlation-1.png" width="700"></p>
-<p>The high dimensionality of our <code>queens_small</code> air
-pollution mixture matrix gives rise to this relatively complex
-correlation matrix. No strong patterns jump out right away here,
-although Na’s correlation with Cl and Mg calls to mind sea salt from the
-Atlantic Ocean or perhaps road salt kicked up by traffic. We’d like to
-employ PCP in order to reduce the complexity of our data for more robust
+<p>The noisy measurements and high dimensionality of our
+<code>queens_small</code> air pollution mixture matrix gives rise to
+this relatively complex correlation matrix. No strong patterns jump out
+right away here. We’d like to employ PCP in order to reduce the
+complexity of our data - handling noise and outliers - for more robust
 downstream analysis. Keep this correlation matrix in mind, since after
 applying PCP, we’ll examine the correlation matrix of the recovered
 <code>L</code> matrix and compare.</p>
@@ -279,7 +271,8 @@ columns.</em> Let’s examine the distributions as they are in the
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">queens_small</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">queens_small</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>, names_to <span class="op">=</span> <span class="st">"chem"</span>, values_to <span class="op">=</span> <span class="st">"concentration"</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">queens_small</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>    names_to <span class="op">=</span> <span class="st">"chem"</span>, values_to <span class="op">=</span> <span class="st">"concentration"</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">concentration</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">concentration</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -305,14 +298,17 @@ better interpretability):</p>
 <span></span>
 <span><span class="va">queens_scaled</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">queens_small</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>, names_to <span class="op">=</span> <span class="st">"chem"</span>, values_to <span class="op">=</span> <span class="st">"concentration"</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">queens_small</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>    names_to <span class="op">=</span> <span class="st">"chem"</span>, values_to <span class="op">=</span> <span class="st">"concentration"</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">concentration</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">concentration</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">50</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">chem</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pcp-applied_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<p><img src="pcp-applied_files/figure-html/preprocessing-1.png" width="700"></p>
+<p>That’s all there is to our preprocessing! Now we can turn our
+attention to PCP.</p>
 </div>
 </div>
 <div class="section level2">
@@ -343,10 +339,10 @@ function:</p>
 <span><span class="va">singular_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sing.html">sing</a></span><span class="op">(</span><span class="va">D_imputed</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">singular_values</span>, type <span class="op">=</span> <span class="st">"b"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-applied_files/figure-html/sing-1.png" width="700"></p>
-<p>These singular values slowly decay, indicating a relatively complex
-underlying low-rank structure obscured by a high degree of noise. As
-such, we will move forward with the <code><a href="../reference/rrmc.html">rrmc()</a></code> as our PCP
-model.</p>
+<p>These singular values slowly decay, corroborating the relatively
+complex underlying low-rank structure obscured by a high degree of noise
+we saw in the correlation matrix earlier. As such, we will move forward
+with <code><a href="../reference/rrmc.html">rrmc()</a></code> as our PCP model.</p>
 </div>
 <div class="section level3">
 <h3 id="grid-search-for-parameter-tuning">Grid search for parameter tuning<a class="anchor" aria-label="anchor" href="#grid-search-for-parameter-tuning"></a>
@@ -377,22 +373,23 @@ thought of as a dial controlling the interplay between the low-rank
 <code>eta</code> will place a greater emphasis on penalizing the
 non-zero entries in <code>S</code> over penalizing the errors between
 the predicted and observed data (the dense noise <span class="math inline">\(Z\)</span>).</p>
-<p><em>(Note that this time we do not need to impute the data with
-chemical means, since we would like <code><a href="../reference/rrmc.html">rrmc()</a></code> to recover
-missing <code>NA</code> values using the low-rank structure present in
-the data.)</em></p>
+<p>Note that this time we do not need to impute the data with chemical
+means, since we would like <code><a href="../reference/rrmc.html">rrmc()</a></code> to recover missing
+<code>NA</code> values using the low-rank structure present in the
+data.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">eta_0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_pcp_defaults.html">get_pcp_defaults</a></span><span class="op">(</span><span class="va">D</span><span class="op">)</span><span class="op">$</span><span class="va">eta</span></span>
-<span><span class="fu">progressr</span><span class="fu">::</span><span class="fu"><a href="https://progressr.futureverse.org/reference/with_progress.html" class="external-link">with_progress</a></span><span class="op">(</span><span class="op">{</span></span>
+<span><span class="co"># to get progress bar, could wrap this</span></span>
+<span><span class="co"># in a call to progressr::with_progress({ gs &lt;- grid_search_cv(...) })</span></span>
 <span><span class="va">gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid_search_cv.html">grid_search_cv</a></span><span class="op">(</span></span>
-<span>  <span class="va">D</span>, pcp_fn <span class="op">=</span> <span class="va">rrmc</span>,</span>
+<span>  <span class="va">D</span>,</span>
+<span>  pcp_fn <span class="op">=</span> <span class="va">rrmc</span>,</span>
 <span>  grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>eta <span class="op">=</span> <span class="fl">10</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eta_0</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  r <span class="op">=</span> <span class="fl">8</span>,</span>
 <span>  parallel_strategy <span class="op">=</span> <span class="st">"multisession"</span>,</span>
 <span>  num_workers <span class="op">=</span> <span class="fl">16</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">r_star</span> <span class="op">&lt;-</span> <span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">$</span><span class="va">r</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">eta_star</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span><span class="op">$</span><span class="va">eta</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">gs</span><span class="op">$</span><span class="va">summary_stats</span></span></code></pre></div>
@@ -421,7 +418,7 @@ moving forward.</p>
 <div class="section level3">
 <h3 id="running-pcp">Running PCP<a class="anchor" aria-label="anchor" href="#running-pcp"></a>
 </h3>
-<p>Now we can finally run our PCP model!</p>
+<p>Now we can run our PCP model!</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pcp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rrmc.html">rrmc</a></span><span class="op">(</span><span class="va">D</span>, r <span class="op">=</span> <span class="va">r_star</span>, eta <span class="op">=</span> <span class="va">eta_star</span><span class="op">)</span></span>
 <span><span class="va">L</span> <span class="op">&lt;-</span> <span class="va">pcp_model</span><span class="op">$</span><span class="va">L</span></span>
@@ -431,33 +428,467 @@ course of PCP’s optimization:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">objective</span>, type <span class="op">=</span> <span class="st">"l"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-applied_files/figure-html/obj-1.png" width="700"></p>
+</div>
+<div class="section level3">
+<h3 id="the-recovered-l-matrix">The recovered L matrix<a class="anchor" aria-label="anchor" href="#the-recovered-l-matrix"></a>
+</h3>
 <p>And the output <code>L</code> matrix:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">L</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-applied_files/figure-html/output%20L-1.png" width="700"></p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/matrix_rank.html">matrix_rank</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">L_rank</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/matrix_rank.html">matrix_rank</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span></span>
+<span><span class="va">L_rank</span></span>
 <span><span class="co">#&gt; [1] 4</span></span></code></pre></div>
+<p>Recall the original correlation matrix for <code>queens_small</code>
+was:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggobi.github.io/ggally/reference/ggcorr.html" class="external-link">ggcorr</a></span><span class="op">(</span></span>
+<span>  <span class="va">queens_small</span><span class="op">[</span>, <span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">queens_small</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"pairwise.complete.obs"</span>,</span>
+<span>  limits <span class="op">=</span> <span class="cn">FALSE</span>, label <span class="op">=</span> <span class="cn">FALSE</span>, size <span class="op">=</span> <span class="fl">5</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/orig%20corr-1.png" width="700"></p>
+<p>The new correlation matrix for the recovered <code>L</code> matrix is
+now:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">L_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">L_df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">queens</span><span class="op">[</span>, <span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">queens</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggobi.github.io/ggally/reference/ggcorr.html" class="external-link">ggcorr</a></span><span class="op">(</span></span>
+<span>  <span class="va">L_df</span>, method <span class="op">=</span> <span class="st">"pairwise.complete.obs"</span>,</span>
+<span>  limits <span class="op">=</span> <span class="cn">FALSE</span>, label <span class="op">=</span> <span class="cn">FALSE</span>, size <span class="op">=</span> <span class="fl">5</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/new%20corr-1.png" width="700"></p>
+<p>As we can see, PCP successfully reduced the dimensionality of the
+data. The underlying correlation structure is now made much more
+explicit.</p>
+</div>
+<div class="section level3">
+<h3 id="the-recovered-s-matrix">The recovered S matrix<a class="anchor" aria-label="anchor" href="#the-recovered-s-matrix"></a>
+</h3>
 <p>Let’s briefly inspect PCP’s estimate of the sparse matrix
 <code>S</code> and the associated sparsity via
 <code><a href="../reference/sparsity.html">sparsity()</a></code>:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sparsity.html">sparsity</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.9903158</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-applied_files/figure-html/sparse-1.png" width="700"></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-applied_files/figure-html/sparse-2.png" width="700"></p>
-<p>We’re now ready to finish the source apportionment with the estimated
-low-rank <code>L</code> matrix.</p>
+<p>We can examine which chemicals have the largest number of outlying
+exposure events by calculating the sparsity of each column in
+<code>S</code>:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">S_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">S_df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">queens_small</span><span class="op">[</span>, <span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">queens_small</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">chems_w_most_extreme_events</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">S_df</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="../reference/sparsity.html">sparsity</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">chems_w_most_extreme_events</span></span>
+<span><span class="co">#&gt;        As         V        Se        Cd        Cr        Mn        Br        Ni </span></span>
+<span><span class="co">#&gt; 0.9463007 0.9570406 0.9630072 0.9832936 0.9856802 0.9868735 0.9892601 0.9904535 </span></span>
+<span><span class="co">#&gt;        Cu         K        Mg        Ba        Zn        EC         S        Ca </span></span>
+<span><span class="co">#&gt; 0.9928401 0.9928401 0.9940334 0.9952267 0.9952267 0.9964200 0.9964200 0.9976134 </span></span>
+<span><span class="co">#&gt;        Cl        Fe        Pb        OC        Ti        Al        Na       NH4 </span></span>
+<span><span class="co">#&gt; 0.9976134 0.9976134 0.9976134 0.9976134 0.9976134 0.9988067 0.9988067 1.0000000 </span></span>
+<span><span class="co">#&gt;        Si       NO3 </span></span>
+<span><span class="co">#&gt; 1.0000000 1.0000000</span></span></code></pre></div>
+<p>Here we can see ammonium (NH4), silicon (Si), and nitrate (NO3) have
+no extreme exposure events. Arsenic (As), vanadium (V), and selenium
+(Se) have the greatest number of outlying events. We can examine the
+extreme events for an individual chemical with:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">S_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">As</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Date <span class="op">=</span> <span class="va">queens_small</span><span class="op">$</span><span class="va">Date</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">As</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co">#&gt;          As       Date</span></span>
+<span><span class="co">#&gt; 1  2.364937 2015-02-17</span></span>
+<span><span class="co">#&gt; 2  3.534791 2015-03-10</span></span>
+<span><span class="co">#&gt; 3  3.599878 2015-05-24</span></span>
+<span><span class="co">#&gt; 4  2.334847 2015-06-11</span></span>
+<span><span class="co">#&gt; 5  2.413293 2015-06-26</span></span>
+<span><span class="co">#&gt; 6  2.376219 2015-07-08</span></span>
+<span><span class="co">#&gt; 7  2.422048 2015-07-17</span></span>
+<span><span class="co">#&gt; 8  2.382859 2015-07-20</span></span>
+<span><span class="co">#&gt; 9  2.376002 2015-08-16</span></span>
+<span><span class="co">#&gt; 10 2.416011 2015-09-27</span></span>
+<span><span class="co">#&gt; 11 2.439816 2015-10-03</span></span>
+<span><span class="co">#&gt; 12 2.435049 2015-11-11</span></span>
+<span><span class="co">#&gt; 13 3.638617 2015-11-20</span></span>
+<span><span class="co">#&gt; 14 4.826222 2015-12-05</span></span>
+<span><span class="co">#&gt; 15 4.903026 2015-12-26</span></span>
+<span><span class="co">#&gt; 16 2.415675 2016-02-18</span></span>
+<span><span class="co">#&gt; 17 3.645952 2016-02-27</span></span>
+<span><span class="co">#&gt; 18 2.473993 2016-03-01</span></span>
+<span><span class="co">#&gt; 19 5.981860 2016-03-07</span></span>
+<span><span class="co">#&gt; 20 2.424804 2016-03-22</span></span>
+<span><span class="co">#&gt; 21 2.466317 2016-04-09</span></span>
+<span><span class="co">#&gt; 22 6.090851 2016-04-12</span></span>
+<span><span class="co">#&gt; 23 4.905858 2016-05-24</span></span>
+<span><span class="co">#&gt; 24 4.840294 2016-05-27</span></span>
+<span><span class="co">#&gt; 25 4.870333 2016-06-02</span></span>
+<span><span class="co">#&gt; 26 7.353784 2016-07-23</span></span>
+<span><span class="co">#&gt; 27 3.669314 2016-07-26</span></span>
+<span><span class="co">#&gt; 28 7.359874 2016-08-07</span></span>
+<span><span class="co">#&gt; 29 2.424597 2016-08-16</span></span>
+<span><span class="co">#&gt; 30 4.864877 2016-09-09</span></span>
+<span><span class="co">#&gt; 31 2.439062 2016-09-15</span></span>
+<span><span class="co">#&gt; 32 4.901796 2016-11-20</span></span>
+<span><span class="co">#&gt; 33 3.566015 2017-01-16</span></span>
+<span><span class="co">#&gt; 34 2.446319 2017-06-15</span></span>
+<span><span class="co">#&gt; 35 3.672702 2017-06-27</span></span>
+<span><span class="co">#&gt; 36 2.451782 2017-09-19</span></span>
+<span><span class="co">#&gt; 37 4.832047 2017-12-15</span></span>
+<span><span class="co">#&gt; 38 6.088596 2018-02-16</span></span>
+<span><span class="co">#&gt; 39 3.655234 2018-03-03</span></span>
+<span><span class="co">#&gt; 40 2.413371 2018-03-27</span></span>
+<span><span class="co">#&gt; 41 3.647023 2018-04-08</span></span>
+<span><span class="co">#&gt; 42 6.171601 2018-06-25</span></span>
+<span><span class="co">#&gt; 43 7.254815 2018-07-01</span></span>
+<span><span class="co">#&gt; 44 3.644576 2018-08-12</span></span>
+<span><span class="co">#&gt; 45 6.069988 2018-08-27</span></span></code></pre></div>
+<p>Let’s check out another example, this time examining the sparse
+events isolated for potassium (K), associated with biomass burning and
+fireworks.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">S_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">K</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Date <span class="op">=</span> <span class="va">queens_small</span><span class="op">$</span><span class="va">Date</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">K</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           K       Date</span></span>
+<span><span class="co">#&gt; 1  9.427762 2015-07-05</span></span>
+<span><span class="co">#&gt; 2  3.064908 2017-06-03</span></span>
+<span><span class="co">#&gt; 3 12.804711 2018-07-04</span></span>
+<span><span class="co">#&gt; 4  5.698263 2020-06-20</span></span>
+<span><span class="co">#&gt; 5 14.986152 2020-07-05</span></span>
+<span><span class="co">#&gt; 6  4.566127 2021-02-24</span></span></code></pre></div>
+<p>PCP was able to pick up extreme potassium events around the July 4th
+holiday for each of the July 4th / 5th dates available in the dataset
+(recall that chemical concentrations are recorded in <code>queens</code>
+every three to six days, skipping measurements on July 4/5 some
+years).</p>
+<p>Other dimensionality reduction techniques such as PCA can be
+sensitive to outliers, requiring researchers to manually remove outlying
+events from their data. This introduces subjectivity into the data
+preprocessing pipeline, as the researcher must to define a criteria for
+removal, in turn making downstream results less replicable.</p>
+<p>We’re now ready to finish the source apportionment using the
+estimated low-rank <code>L</code> matrix.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="source-apportionment-via-pcp-nmf">Source apportionment via PCP + NMF<a class="anchor" aria-label="anchor" href="#source-apportionment-via-pcp-nmf"></a>
+<h2 id="pcp-and-nmf-for-source-apportionment">PCP and NMF for source apportionment<a class="anchor" aria-label="anchor" href="#pcp-and-nmf-for-source-apportionment"></a>
 </h2>
+<p>We will use Non-negative Matrix Factorization (NMF) to extract the
+patterns (loadings) and corresponding scores encoded in the
+<code>L</code> matrix. See <code><a href="https://rdrr.io/pkg/NMF/man/nmf.html" class="external-link">NMF::nmf()</a></code> for details.</p>
+<p>Since we determined <code>L</code> to be of rank 4 from PCP’s grid
+search, we no longer need to worry about what rank to use for our NMF
+step, nor do we need to manually remove outliers, since PCP autonomously
+isolated those into the sparse matrix <code>S</code>.</p>
 <div class="section level3">
 <h3 id="non-negative-matrix-factorization">Non-negative matrix factorization<a class="anchor" aria-label="anchor" href="#non-negative-matrix-factorization"></a>
 </h3>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://renozao.github.io/NMF/" class="external-link">NMF</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">nmf_mat</span> <span class="op">&lt;-</span> <span class="va">L</span></span>
+<span><span class="va">nmf_mat</span><span class="op">[</span><span class="va">nmf_mat</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/NMF/man/nmf.html" class="external-link">nmf</a></span><span class="op">(</span></span>
+<span>  <span class="va">nmf_mat</span>, rank <span class="op">=</span> <span class="va">L_rank</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"offset"</span>, nrun <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">0</span>, .opt <span class="op">=</span> <span class="st">"vp16"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">raw_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/NMF/man/basis-coef-methods.html" class="external-link">basis</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
+<span><span class="va">raw_loadings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="pcp-nmf-loadings">PCP-NMF Loadings<a class="anchor" aria-label="anchor" href="#pcp-nmf-loadings"></a>
+</h3>
+<p>Let’s inspect the loadings obtained from our PCP-NMF model:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">loadings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">raw_loadings</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">loadings</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">L_df</span><span class="op">)</span></span>
+<span><span class="va">loadings</span><span class="op">[[</span><span class="st">"Pattern"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Pattern"</span>, <span class="fl">1</span><span class="op">:</span><span class="va">L_rank</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">loadings</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span><span class="op">-</span><span class="va">Pattern</span>, names_to <span class="op">=</span> <span class="st">"Chemical"</span>, values_to <span class="op">=</span> <span class="st">"Loading"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Chemical</span>, y <span class="op">=</span> <span class="va">Loading</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_segment.html" class="external-link">geom_segment</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>yend <span class="op">=</span> <span class="fl">0</span>, xend <span class="op">=</span> <span class="va">Chemical</span><span class="op">)</span>, linewidth <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Pattern</span>, scales <span class="op">=</span> <span class="st">"free_x"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    strip.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span>,</span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    legend.position <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>    axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span>, size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>    strip.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_rect</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span>,</span>
+<span>    axis.title.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    axis.title.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, size <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"PCP-NMF Chemical Loadings"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/loadings-1.png" width="700"></p>
+<ul>
+<li>Pattern 1 appears to be linked to traffic and road-related sources,
+characterized by elements such as barium, calcium, and lead, indicating
+emissions from brake wear, tire wear, and construction activities</li>
+<li>Pattern 2 looks like crustal dust, marked by elements like aluminum,
+calcium, silicon, titanium, and iron, suggesting resuspension of natural
+materials from soil and rock.</li>
+<li>Pattern 3 is clearly salt, including sodium chloride and magnesium
+chloride.</li>
+<li>Pattern 4 represents a mix of regional/secondary sources and
+traffic/tailpipe emissions, characterized by sulfur, ammonium, nitrate,
+organic carbon, and zinc. This pattern lacks a clear regional signal and
+suggests contributions from both regional/secondary sources and tailpipe
+emissions.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="variance-explained">Variance Explained<a class="anchor" aria-label="anchor" href="#variance-explained"></a>
+</h3>
+<p>Let’s calculate the variance explained by each of the patterns using
+the pattern scores next. We will then reorder the patterns to appear
+according to their proportion of variance explained.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nmf_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">raw_scores</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">nmf_scores</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Traffic"</span>, <span class="st">"Crustal Dust"</span>, <span class="st">"Salt"</span>, <span class="st">"Regional/Secondary &amp; Tailpipe Emissions"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">days_of_the_week</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sun"</span>, <span class="st">"Mon"</span>, <span class="st">"Tue"</span>, <span class="st">"Wed"</span>, <span class="st">"Thu"</span>, <span class="st">"Fri"</span>, <span class="st">"Sat"</span><span class="op">)</span></span>
+<span><span class="va">nmf_sources</span> <span class="op">&lt;-</span> <span class="va">nmf_scores</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    Date <span class="op">=</span> <span class="va">queens_scaled</span><span class="op">$</span><span class="va">Date</span>,</span>
+<span>    DayofWeek <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://lubridate.tidyverse.org/reference/day.html" class="external-link">wday</a></span><span class="op">(</span><span class="va">Date</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    DayofWeek <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">DayofWeek</span>, levels <span class="op">=</span> <span class="va">days_of_the_week</span><span class="op">)</span>,</span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
+<span>    <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">Date</span>, <span class="va">DayofWeek</span><span class="op">)</span>,</span>
+<span>    names_to <span class="op">=</span> <span class="st">"Pattern"</span>,</span>
+<span>    values_to <span class="op">=</span> <span class="st">"Score"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">var_explained</span> <span class="op">&lt;-</span> <span class="va">nmf_sources</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">Pattern</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>patsum <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">Score</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>VarianceExplained <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="va">patsum</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">patsum</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">patsum</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">VarianceExplained</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>PatName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">Pattern</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"("</span>, <span class="va">VarianceExplained</span>, <span class="st">"% Var Exp)"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">var_explained</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">PatName</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 2</span></span></span>
+<span><span class="co">#&gt;   Pattern                                 VarianceExplained</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Regional/Secondary &amp; Tailpipe Emissions              34.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Traffic                                              30.6</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Crustal Dust                                         20.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Salt                                                 14.2</span></span>
+<span></span>
+<span><span class="va">nmf_sources</span> <span class="op">&lt;-</span> <span class="va">nmf_sources</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    Pattern <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span></span>
+<span>      <span class="va">Pattern</span>,</span>
+<span>      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">var_explained</span><span class="op">$</span><span class="va">Pattern</span><span class="op">)</span>,</span>
+<span>      labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">var_explained</span><span class="op">$</span><span class="va">PatName</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="loadings-replotted">Loadings replotted<a class="anchor" aria-label="anchor" href="#loadings-replotted"></a>
+</h3>
+<p>We can now replot the loadings with the proper pattern names:</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">loadings</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Pattern <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">nmf_scores</span><span class="op">)</span>,</span>
+<span>    levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">var_explained</span><span class="op">$</span><span class="va">Pattern</span><span class="op">)</span>,</span>
+<span>    labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">var_explained</span><span class="op">$</span><span class="va">PatName</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span><span class="op">-</span><span class="va">Pattern</span>, names_to <span class="op">=</span> <span class="st">"Chemical"</span>, values_to <span class="op">=</span> <span class="st">"Loading"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Chemical</span>, y <span class="op">=</span> <span class="va">Loading</span>, color <span class="op">=</span> <span class="va">Pattern</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_color_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_segment.html" class="external-link">geom_segment</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>yend <span class="op">=</span> <span class="fl">0</span>, xend <span class="op">=</span> <span class="va">Chemical</span><span class="op">)</span>, linewidth <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Pattern</span>, scales <span class="op">=</span> <span class="st">"free_x"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    strip.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span>,</span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    legend.position <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>    axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span>, size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>    strip.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_rect</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span>,</span>
+<span>    axis.title.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    axis.title.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, size <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"PCP-NMF Loadings"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/rename%20patterns-1.png" width="700"></p>
+</div>
+<div class="section level3">
+<h3 id="pcp-nmf-scores">PCP-NMF Scores<a class="anchor" aria-label="anchor" href="#pcp-nmf-scores"></a>
+</h3>
+<p>We can examine the scores over time:</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">yr_num</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://lubridate.tidyverse.org/reference/year.html" class="external-link">year</a></span><span class="op">(</span><span class="va">nmf_sources</span><span class="op">$</span><span class="va">Date</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">nmf_sources</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">Date</span>, <span class="va">Score</span>, color <span class="op">=</span> <span class="va">Pattern</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_color_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"loess"</span>, span <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Pattern</span>, scales <span class="op">=</span> <span class="st">"free"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">""</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Pattern Score"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    legend.position <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    axis.title.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span>,</span>
+<span>    axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">13</span><span class="op">)</span>,</span>
+<span>    axis.text.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>date_labels <span class="op">=</span> <span class="st">"%Y"</span>, date_breaks <span class="op">=</span> <span class="st">"1 year"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"PCP-NMF Scores over Time"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/NMF%20scores-1.png" width="700"></p>
+<p>The scores across the seasons (where “DJF” = Winter, “MAM” = Spring,
+“JJA” = Summer, and “SON” = Autumn)</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nmf_sources</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Season <span class="op">=</span> <span class="fu">metR</span><span class="fu">::</span><span class="fu"><a href="https://eliocamp.github.io/metR/reference/season.html" class="external-link">season</a></span><span class="op">(</span><span class="va">Date</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">Season</span>, <span class="va">Pattern</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    mean_score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">Score</span><span class="op">)</span>,</span>
+<span>    sd_score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">Score</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"keep"</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">Season</span>, <span class="va">mean_score</span>, color <span class="op">=</span> <span class="va">Pattern</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_color_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_errorbar</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">mean_score</span> <span class="op">-</span> <span class="va">sd_score</span>, ymax <span class="op">=</span> <span class="va">mean_score</span> <span class="op">+</span> <span class="va">sd_score</span><span class="op">)</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">0.25</span>, linewidth <span class="op">=</span> <span class="fl">1.5</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">""</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Pattern</span>, scales <span class="op">=</span> <span class="st">"free_x"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Factor Score"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    legend.position <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>    axis.title.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    axis.text.x.bottom <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">13</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span>,</span>
+<span>    strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">16</span><span class="op">)</span>,</span>
+<span>    axis.text.y.left <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Mean (std dev) Pattern Scores by Season"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/seasonal%20trends-1.png" width="700"></p>
+<p>Scores across days of the week:</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nmf_sources</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">Pattern</span>, <span class="va">DayofWeek</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    mean_score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">Score</span><span class="op">)</span>,</span>
+<span>    sd_score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">Score</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"keep"</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">DayofWeek</span>, <span class="va">mean_score</span>, color <span class="op">=</span> <span class="va">Pattern</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_color_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_errorbar</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">mean_score</span> <span class="op">-</span> <span class="va">sd_score</span>, ymax <span class="op">=</span> <span class="va">mean_score</span> <span class="op">+</span> <span class="va">sd_score</span><span class="op">)</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">0.25</span>, linewidth <span class="op">=</span> <span class="fl">1.5</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">""</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Pattern</span>, scales <span class="op">=</span> <span class="st">"free_x"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Factor Score"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    legend.position <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>    axis.title.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    axis.text.x.bottom <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">13</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span>,</span>
+<span>    strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">16</span><span class="op">)</span>,</span>
+<span>    axis.text.y.left <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Mean (std dev) Pattern Scores across Days of the Week"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/weekly%20trends-1.png" width="700"></p>
+<p>Scores for weekday vs. weekend:</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nmf_sources</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    DayType <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">DayofWeek</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Mon'</span>, <span class="st">'Tue'</span>, <span class="st">'Wed'</span>, <span class="st">'Thu'</span>, <span class="st">'Fri'</span><span class="op">)</span>, <span class="st">'Weekday'</span>, <span class="st">'Weekend'</span><span class="op">)</span>,</span>
+<span>    DayType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">DayType</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">Pattern</span>, <span class="va">DayType</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    mean_score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">Score</span><span class="op">)</span>,</span>
+<span>    sd_score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">Score</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"keep"</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">DayType</span>, <span class="va">mean_score</span>, color <span class="op">=</span> <span class="va">Pattern</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_color_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_errorbar</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">mean_score</span> <span class="op">-</span> <span class="va">sd_score</span>, ymax <span class="op">=</span> <span class="va">mean_score</span> <span class="op">+</span> <span class="va">sd_score</span><span class="op">)</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">0.25</span>, linewidth <span class="op">=</span> <span class="fl">1.5</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">""</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Pattern</span>, scales <span class="op">=</span> <span class="st">"free_x"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Factor Score"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    legend.position <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>    axis.title.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span>,</span>
+<span>    axis.text.x.bottom <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">13</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span>,</span>
+<span>    strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">16</span><span class="op">)</span>,</span>
+<span>    axis.text.y.left <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Mean (std dev) Pattern Scores Weekend vs. Weekday"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/day%20type-1.png" width="700"></p>
+<p>Pattern correlations:</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggobi.github.io/ggally/reference/ggcorr.html" class="external-link">ggcorr</a></span><span class="op">(</span></span>
+<span>  <span class="va">nmf_scores</span>, method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pairwise.complete.obs"</span>, <span class="st">"pearson"</span><span class="op">)</span>,</span>
+<span>  limits <span class="op">=</span> <span class="cn">FALSE</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, label_size <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>  hjust <span class="op">=</span> <span class="fl">0.8</span>, size <span class="op">=</span> <span class="fl">8</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="pcp-applied_files/figure-html/nmf%20corr-1.png" width="700"></p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
+</h2>
+<p>We paired PCP with NMF for the source apportionment of the
+<code>queens</code> dataset from 2015 - 2021. We identified four
+patterns</p>
+<p>The first identified pattern, accounting for 31% of the commonly
+shared variance of the low-rank matrix, is linked to traffic and
+road-related sources, characterized by elements such as barium, calcium,
+and lead, indicating emissions from brake wear, tire wear, and
+construction activities. The second identified pattern, representing 21%
+of the variance, is associated with crustal dust, marked by elements
+like aluminum, calcium, silicon, titanium, and iron, suggesting
+resuspension of natural materials from soil and rock. The third pattern,
+comprising 14% of the variance, is identified as salt, including sodium
+chloride and magnesium chloride. This pattern peaks in early spring,
+likely due to the accumulation of road salt over winter. The fourth
+pattern, accounting for 35% of the variance, represents a mix of
+regional/secondary sources and traffic/tailpipe emissions, characterized
+by sulfur, ammonium, nitrate, organic carbon, and zinc. This pattern
+lacks a clear regional signal and suggests contributions from both
+regional/secondary sources and tailpipe emissions.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

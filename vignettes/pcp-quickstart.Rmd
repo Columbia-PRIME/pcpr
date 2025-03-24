@@ -27,7 +27,7 @@ We start by loading and attaching the `pcpr` package to our current R session.
 library(pcpr)
 ```
 
-Let's also write a quick helper function that will enable us to visualize the matrices we will be working with throughout this vignette:
+Let's also write a quick helper function that will enable us to visualize the matrices we will be working with throughout this vignette as heatmaps:
 
 ```{r helper}
 library(magrittr) # for the pipe %>%
@@ -64,18 +64,14 @@ plot_matrix <- function(D, ..., lp = "none", title = NULL) {
 ## Simulating data
 
 The `sim_data()` function lets users generate simple mixtures models for
-quick experimentation. Let's use it to simulate a noisy environmental mixture $D = L_0 + S_0 + Z_0$
+quick experimentation. Let's use its default parameters to simulate a noisy environmental mixture $D = L_0 + S_0 + Z_0$
 comprised of $n = 100$ observations of $p = 10$ chemicals, with three underlying chemical
 exposure patterns (or a rank $r = 3$), extreme outlying exposure events along
 the diagonal of the matrix, and dense Gaussian noise corrupting all the
 measurements in the matrix:
 
 ```{r sim data}
-data <- sim_data(
-  n = 100, p = 10, r = 3,
-  sparse_nonzero_idxs = seq(1, 1000, 101),
-  sigma = 0.05
-)
+data <- sim_data()
 D <- data$D
 L_0 <- data$L
 S_0 <- data$S
@@ -112,21 +108,30 @@ each column:
 
 ```{r lod}
 lod_info <- sim_lod(D, q = 0.1)
+D_lod <- lod_info$D_tilde
 lod <- lod_info$lod
 lod
 ```
 
 Next, because our mixtures data is often incomplete in practice, let's further simulate a random 5% of
-the values as missing `NA` with the `sim_na()` function:
+the values as missing `NA` with the `sim_na()` function. Once our missing values are in place, we can
+finish simulating the LOD in the mixture by imputing values simulated < LOD to be the $LOD / \sqrt{2}$,
+a common imputation scheme for measurements < LOD:
 
 ```{r corrupt mat randomly}
-corrupted_data <- sim_na(D, perc = 0.05)
+corrupted_data <- sim_na(D_lod, perc = 0.05)
 D_tilde <- corrupted_data$D_tilde
+lod_root2 <- matrix(
+  lod / sqrt(2),
+  nrow = nrow(D_tilde),
+  ncol = ncol(D_tilde), byrow = TRUE
+)
+D_tilde[which(lod_info$tilde_mask == 1)] <- lod_root2[which(lod_info$tilde_mask == 1)]
 plot_matrix(D_tilde)
 ```
 
 The `D_tilde` matrix represents our observed, messy mixtures model, suffering from
-incomplete `NA` observations.
+incomplete `NA` observations and a chemical-specific LOD.
 
 ## Model selection
 
@@ -161,19 +166,6 @@ we will conduct a brief grid search using the `grid_search_cv()` function. In ou
 search below, we will examine all models from ranks 1 through 5 and all values of `eta`
 near the default, calculated with `get_pcp_defaults()`.
 
-The `rrmc()` approach to PCP uses an iterative rank-based procedure to recover `L` and
-`S`, meaning it first constructs a rank `1` model and iteratively builds up to the
-specified rank `r` solution. As such, for our grid search with `grid_search_cv()`, we
-pass `etas` as the `grid` argument we are searching and we send $r = 5$ as a constant
-parameter common to all models in the search. Since `length(etas) = 6` and $r = 5$, we
-are grid searching through 30 different PCP models. The `num_runs` argument in
-`grid_search_cv()` determines how many (random) tests should be performed for each unique
-model setting. By default, `num_runs = 100`, so our grid search tunes `r` and `eta` by
-measuring the performance of 300 different PCP models. We pass our simulated `lod` vector
-as a constant to the gridsearch, equipping each `rrmc()` run with the same LOD information.
-To keep this vignette small, we will also set `conserve_memory = TRUE` for the search, which
-simply discards metadata that is normally tracked throughout the grid search. 
-
 ```{r gs, eval = FALSE, echo = TRUE}
 eta_0 <- get_pcp_defaults(D_tilde)$eta
 etas <- data.frame("eta" = sort(c(0.1 * eta_0, eta_0 * seq(1, 10, 2))))
@@ -186,13 +178,24 @@ gs <- grid_search_cv(
   num_workers = 16,
   verbose = FALSE
 )
-r_star <- gs$summary_stats$r[1]
-eta_star <- round(gs$summary_stats$eta[1], 3)
-gs$summary_stats
 ```
 
+The `rrmc()` approach to PCP uses an iterative rank-based procedure to recover `L` and
+`S`, meaning it first constructs a rank `1` model and iteratively builds up to the
+specified rank `r` solution. As such, for the above grid search, we
+passed `etas` as the `grid` argument to search and sent $r = 5$ as a constant
+parameter common to all models in the search. Since `length(etas) = 6` and $r = 5$, we
+searched through 30 different PCP models. The `num_runs` argument determines how many (random)
+tests should be performed for each unique model setting. By default, `num_runs = 100`,
+so our grid search tuned `r` and `eta` by measuring the performance of 300 different PCP models.
+We passed the simulated `lod` vector as another constant to the grid search,
+equipping each `rrmc()` run with the same LOD information.
+
 ```{r real gs, eval = TRUE, echo = FALSE}
-gs <- readRDS("quickstart-gs.rds")
+gs <- readRDS("rds_files/quickstart-gs.rds")
+```
+
+```{r gs results}
 r_star <- gs$summary_stats$r[1]
 eta_star <- round(gs$summary_stats$eta[1], 3)
 gs$summary_stats
@@ -221,17 +224,18 @@ And the output `L` matrix:
 
 ```{r output L}
 plot_matrix(pcp_model$L)
+matrix_rank(pcp_model$L)
 ```
 
 Let's briefly inspect PCP's estimate of the sparse matrix `S`, and fix any values that
 are "practically" zero using the `hard_threshold()` function. The histogram below shows
-a majority of the entries in `S` are between -0.2 and 0.2, so we will call those values
+a majority of the entries in `S` are between -0.4 and 0.4, so we will call those values
 "practically" zero, and the rest true outlying exposure events. We can then calculate
 the sparsity of `S` with `sparsity()`:
 
 ```{r sparse}
 hist(pcp_model$S)
-pcp_model$S <- hard_threshold(pcp_model$S, thresh = 0.2)
+pcp_model$S <- hard_threshold(pcp_model$S, thresh = 0.4)
 plot_matrix(pcp_model$S)
 sparsity(pcp_model$S)
 ```
@@ -239,7 +243,7 @@ sparsity(pcp_model$S)
 ## Benchmarking with PCA
 
 Before evaluating our PCP model, let's see how well a more traditional method such as
-Principal Compoenents Analysis (PCA) can recover `L_0`, to provide a benchmark for
+Principal Component Analysis (PCA) can recover `L_0`, to provide a benchmark for
 comparison.
 
 The `proj_rank_r()` function (project matrix to rank `r`) approximates an input matrix
@@ -264,7 +268,8 @@ data.frame(
   "PCA_L_rel_err" = norm(L_0 - L_pca, "F") / norm(L_0, "F"),
   "PCP_L_rel_err" = norm(L_0 - pcp_model$L, "F") / norm(L_0, "F"),
   "PCP_S_rel_err" = norm(S_0 - pcp_model$S, "F") / norm(S_0, "F"),
-  "PCP_L_rank" = matrix_rank(pcp_model$L)
+  "PCP_L_rank" = matrix_rank(pcp_model$L),
+  "PCP_S_sparsity" = sparsity(pcp_model$S)
 )
 ```
 
@@ -279,7 +284,7 @@ PCP's sparse matrix estimate was only off from the ground truth `S_0` by
 ## After PCP
 
 We can now pair our estimated `L` matrix with any matrix factorization method of our
-choice (e.g. factor analysis or non-negative matrix factorization, NMF) to extract
+choice (e.g. PCA, factor analysis, or non-negative matrix factorization) to extract
 the latent chemical exposure patterns. These patterns, along with the isolated outlying
-exposure events in `S`, can then be incorporated with any outcomes of interest in
+exposure events in `S`, can then be analyzed with any outcomes of interest in
 downstream epidemiological analyses.

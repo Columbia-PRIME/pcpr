@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 The R package `pcpr` implements Principal Component Pursuit (PCP), a robust
 dimensionality reduction technique, for pattern recognition tailored to
-environmental health data. The statistical methodology and computational details
+environmental health (EH) data. The statistical methodology and computational details
 are provided in [Gibson et al. (2022)](https://doi.org/10.1289/EHP10479).
 
 In this code-free vignette, we present a crash course in PCP's theoretical background,
@@ -25,12 +25,12 @@ touch upon:
 
 1. PCP's modeling overview
 2. The low-rank and sparse matrices `L` and `S`
-3. The environmental health (EH)-specific extensions in `pcpr`
+3. The EH-specific extensions in `pcpr`
 4. Convex and non-convex PCP
 5. PCP parameters `lambda`, `mu`, and `eta`
 6. Tuning parameters with `grid_search_cv()`
 
-We recommend researchers skim this crash course before reading the two code-heavy vignettes:
+We recommend users skim this crash course before reading the two code-heavy vignettes:
 
 * `vignette("pcp-quickstart")`: applying PCP to a simulated environmental mixture
 * `vignette("pcp-applied")`: employing PCP for source apportionment of real-world PM2.5 data using the `queens` dataset
@@ -71,6 +71,12 @@ Intuitively, the rank directly corresponds to the (relatively few) number of
 underlying patterns governing the mixture. Here, "patterns" can refer to
 specific sources, profiles or behaviors leading to exposure, depending on the application.
 
+Contrary to closely related dimension reduction tools such as principal component analysis (PCA),
+PCP infers the rank $r$ from the observed data. In `pcpr`, this is done directly during optimization
+for convex PCP, and via grid search for non-convex PCP. As such, rather than require the researcher to choose
+the number of estimated patterns for use in subsequent health models, PCP allows the observed data to "speak for itself",
+thereby removing potential points of subjectivity in model design.
+
 Notice that $L \in \mathbb{R}^{n \times p}$, meaning it is
 still defined in terms of the original $n$-many observations and $p$-many environmental variables.
 Put differently, $L$ can be taken as a robust approximation to the true environmental mixture matrix,
@@ -78,9 +84,16 @@ unperturbed by outliers (captured in $S$) or noise
 (handled by PCP's noise term). In this way, the latent exposure patterns are
 _encoded_ in $L$ rather than directly estimated. To _explicitly_ obtain the
 exposure patterns from $L$, PCP may then be paired with various matrix
-factorization methods (e.g., principal components analysis, factor analysis, or
+factorization methods (e.g., PCA, factor analysis, or
 non-negative matrix factorization) that yield chemical loadings and individual
 scores for use in downstream health models.
+
+This flexibility allows $L$ to adapt to mixture-specific assumptions.
+For example, if the assumption of orthogonal (i.e., independent) patterns is too strong,
+then instead of pairing
+$L$ with PCA, a more appropriate method such as factor analysis can be used.
+Alternatively, depending on the sample size and study design, $L$ may also be
+directly incorporated into regression models.
 
 ## The sparse matrix
 
@@ -90,6 +103,17 @@ entries in $S$ are 0, with non-zero entries identifying such extreme
 exposure activity. The number, location (i.e., support), and value of non-zero
 entries in $S$ need not be a priori defined; PCP isolates these itself
 during optimization.
+
+By separating and retaining sparse exposure
+events, PCP boasts an enormous advantage over
+other current dimension reduction techniques. Despite being common phenomena in mixtures data,
+sparse outliers are typically removed from the exposure matrix prior to analysis.
+This is because PCA and other conventional dimension reduction approaches are unable to disentangle
+such unique events from the overall patterns of exposure:
+If included, even low fractions of outliers can deviate patterns
+identified by traditional methods away from the true distribution of the data, yielding
+inaccurate pattern estimations and high false positive rates of detected outliers. By decomposing
+a mixture into low-rank and sparse components $L$ and $S$, PCP avoids such pitfalls.
 
 ## Extensions for environmental health data
 
@@ -141,7 +165,7 @@ the $LOD$, because we have prior information that these observations must be bel
 Observations known to be above the $LOD$ are penalized as usual, using the Frobenius norm
 in the above objective function.
 
-[Gibson et al. (2022)](https://doi.org/10.1289/EHP10479) demonstrates that in experimental
+[Gibson et al. (2022)](https://doi.org/10.1289/EHP10479) demonstrate that in experimental
 settings with up to 50% of the data
 corrupted below the $LOD$, PCP with the $LOD$ extension boasts superior accuracy of recovered $L$
 models compared to PCA coupled with $\frac{LOD}{\sqrt{2}}$ imputation. PCP even outperforms PCA in
@@ -157,9 +181,9 @@ researchers from having to deal with negative observation values and questions s
 and utility. Non-negative $L$ models also allow for seamless use of methods such as non-negative matrix
 factorization to extract non-negative patterns. 
 
-Currently, the non-negativity constraint is only supported in the convex pcp function `root_pcp()`,
+Currently, the non-negativity constraint is only supported in the convex PCP function `root_pcp()`,
 incorporated in the ADMM splitting technique via the introduction of an additional optimization
-variable and corresponding constraint. Future work will extend the constraint to the non-convex pcp
+variable and corresponding constraint. Future work will extend the constraint to the non-convex PCP
 method `rrmc()`.
 
 ## Convex vs. non-convex PCP
@@ -300,7 +324,8 @@ The `get_pcp_defaults()` function calculates the "default" PCP parameter setting
 for a given data matrix $D$.
 
 The "default" values of $\lambda$ and $\mu$ offer _theoretical_ guarantees of optimal estimation performance.
-Candès et al. (2011) obtained the guarantee for $\lambda$, while Zhang et al. (2021) obtained the result for $\mu$.
+[Candès et al. (2011)](https://doi.org/10.1145/1970392.1970395) obtained the guarantee for $\lambda$, while
+[Zhang et al. (2021)](https://proceedings.neurips.cc/paper/2021/file/f65854da4622c1f1ad4ffeb361d7703c-Paper.pdf) obtained the result for $\mu$.
 It has not yet been proven whether or not $\eta$ enjoys similar properties.
 
 The theoretically optimal $\lambda_*$ is given by:
@@ -340,6 +365,9 @@ Each hyperparameter setting is cross-validated by:
    1 to $K$ associated with it).
 5. Performance statistics can then be calculated for each "run", and then summarized across all runs
    using mean-aggregated statistics.
+
+In the `grid_search_cv()` function, $\xi$ is referred to as `perc_test` (percent test), while
+$K$ is known as `num_runs` (number of runs).
 
 ### Best practices for $\xi$ and $K$
 Experimentally, this grid search procedure retrieves the best performing PCP parameter settings when

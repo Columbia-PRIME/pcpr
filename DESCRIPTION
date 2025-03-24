@@ -44,7 +44,8 @@ Suggests:
     GGally,
     ggplot2,
     knitr,
-    NMF,
+    lubridate,
+    metR,
     rmarkdown,
     tidyr
 VignetteBuilder: 

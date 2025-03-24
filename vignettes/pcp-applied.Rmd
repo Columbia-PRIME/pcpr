@@ -22,27 +22,33 @@ speciated PM$_{2.5}$ to its sources using the `queens` dataset that comes with t
 04/04/2001 through 12/30/2021 by an EPA AQS air monitor located in Queens, New York City.
 
 Let's load and attach all the packages we will need for our analysis into the current R session.
-We will also define a helper function `plot_matrix()` to visualize our data throughout.
+We will also define a helper function `plot_matrix()` to visualize our data as a heatmap.
 
 ```{r setup}
 library(pcpr)
-
-library(dplyr) # for manipulation of queens
-# library(forcats) # for reordering factors for better plotting
-library(GGally) # for the ggcorr fn
-library(ggplot2) # for plotting
-# library(lubridate) # for working with the Date column in queens
-library(magrittr) # for the pipe %>%
-# library(stringr) # simple string manipulation
-library(tidyr) # for pivoting queens for better plotting
+suppressPackageStartupMessages({
+  library(dplyr) # for manipulation of queens
+  library(GGally) # for the ggcorr fn
+  library(ggplot2) # for plotting
+  library(lubridate) # for manipulating dates
+  library(magrittr) # for the pipe %>%
+  library(tidyr) # for pivoting queens for better plotting
+})
 
 plot_matrix <- function(D, ..., lp = "none", title = NULL) {
   D <- t(D)
   if (is.null(colnames(D))) colnames(D) <- paste0("C", 1:ncol(D))
   data.frame(D) %>%
     dplyr::mutate(x = paste0("R", 1:nrow(.))) %>%
-    tidyr::pivot_longer(tidyselect::all_of(colnames(D)), names_to = "y", values_to = "value") %>%
-    dplyr::mutate(x = factor(x, levels = unique(x)), y = factor(y, levels = unique(y))) %>%
+    tidyr::pivot_longer(
+      tidyselect::all_of(colnames(D)),
+      names_to = "y",
+      values_to = "value"
+    ) %>%
+    dplyr::mutate(
+      x = factor(x, levels = unique(x)),
+      y = factor(y, levels = unique(y))
+    ) %>%
     ggplot(aes(x = x, y = y, fill = value)) +
     geom_raster() +
     scale_y_discrete(limits = rev) +
@@ -74,13 +80,15 @@ We start by examining the raw `queens` data:
 queens
 ```
 
+Let's visualize our data as a heatmap using the `plot_matrix()` function we wrote above:
+
 ```{r plot queens}
-plot_matrix(queens %>% select(-Date))
+plot_matrix(queens[, 2:ncol(queens)])
 ```
 
-Let's spend some time visualizing some of the trends of the raw dataset, to get
-a sense of what we're dealing with. We can start by plotting each of the
-measured chemical species as timeseries. Plotted in black are the raw observed
+Clearly the scale of each chemical differs widely.
+Let's now visualize each of the measured chemical species as timeseries to get a better sense
+of what we're dealing with. Plotted in black are the raw observed
 PM$_{2.5}$ measurements (in µg/m$^3$) over time (04/04/2001 - 12/30/2021), and
 plotted in red are some (rough) lines of best fit: 
 
@@ -101,12 +109,13 @@ queens %>%
 
 Some initial points to make note of, looking at the data:
 
-* The y-axis scale for each chemical's concentration differs widely (e.g., NH4 ranges from 0 to
-  9 µg/m$^3$, while Ti ranges from 0 to 0.04 µg/m$^3$). We will have to take this into account
-  during preprocessing.
+* As we saw in the heatmap, the scale for each chemical's measured concentration differs widely (e.g., NH4 ranges from 0 to
+  9 µg/m$^3$, while Ti ranges from 0 to 0.04 µg/m$^3$). We will have to correct for this in a moment
+  when we preprocess our data.
 * Some chemical species record negative measurements (e.g., Al, Ba, Cd). As explained in the
   EPA [AQS data documentation](https://aqs.epa.gov/aqsweb/documents/about_aqs_data.html#acceptable-values),
-  this is due to idiosyncrasies in the instruments used to collect the measurements. 
+  this is due to idiosyncrasies in the instruments used to collect the measurements. We will zero out
+  negative measurements during preprocessing.
 * We can see strong seasonal trends in some species (e.g., NO3), as well as a reduction in
   concentration over time in others (e.g., Ni).
 * Many species have prominent outliers, or extreme exposure events (e.g., Cr, Cu). Further,
@@ -128,19 +137,19 @@ queens_small <- queens %>% filter(Date >= as.Date(start_date))
 queens_small
 ```
 
-Next, let's take a look at the correlation structure of our `queens_small` data:
+Next, let's take a look at the correlation structure of our raw `queens_small` data:
 
 ```{r raw correlation}
-queens_small %>%
-  select(-Date) %>%
-  as_tibble() %>%
-  ggcorr(., method = "pairwise.complete.obs", limits = FALSE, label = FALSE, size = 5)
+ggcorr(
+  queens_small[, 2:ncol(queens_small)],
+  method = "pairwise.complete.obs",
+  limits = FALSE, label = FALSE, size = 5
+)
 ```
 
-The high dimensionality of our `queens_small` air pollution mixture matrix gives rise to this
-relatively complex correlation matrix. No strong patterns jump out right away here, although
-Na's correlation with Cl and Mg calls to mind sea salt from the Atlantic Ocean or perhaps road
-salt kicked up by traffic. We'd like to employ PCP in order to reduce the complexity of our data
+The noisy measurements and high dimensionality of our `queens_small` air pollution mixture matrix
+gives rise to this relatively complex correlation matrix. No strong patterns jump out right away here.
+We'd like to employ PCP in order to reduce the complexity of our data - handling noise and outliers -
 for more robust downstream analysis. Keep this correlation matrix in mind, since after applying
 PCP, we'll examine the correlation matrix of the recovered `L` matrix and compare.
 
@@ -170,7 +179,7 @@ normalization, etc. Most of our data appears normal, log normal, or exponential.
 scale (but not center) each PM$_2.5$ species in our dataset (we also choose to set all negative
 measurements to 0 for better interpretability):
 
-```{r}
+```{r preprocessing}
 queens_scaled <- queens_small %>% select(-Date)
 queens_scaled[queens_scaled < 0] <- 0
 
@@ -191,6 +200,8 @@ queens_scaled %>%
   theme_bw() +
   facet_wrap(~chem, scales = "free")
 ```
+
+That's all there is to our preprocessing! Now we can turn our attention to PCP.
 
 ## Principal component pursuit
 ### Model selection
@@ -216,8 +227,9 @@ singular_values <- sing(D_imputed)
 plot(singular_values, type = "b")
 ```
 
-These singular values slowly decay, indicating a relatively complex underlying low-rank structure
-obscured by a high degree of noise. As such, we will move forward with the `rrmc()` as our PCP model.
+These singular values slowly decay, corroborating the relatively complex underlying low-rank structure
+obscured by a high degree of noise we saw in the correlation matrix earlier.
+As such, we will move forward with `rrmc()` as our PCP model.
 
 ### Grid search for parameter tuning
 
@@ -240,29 +252,29 @@ controlling the interplay between the low-rank `L` and sparse `S` models. Larger
 `eta` will place a greater emphasis on penalizing the non-zero entries in `S` over penalizing
 the errors between the predicted and observed data (the dense noise $Z$).
 
-_(Note that this time we do not need to impute the data with chemical means, since we would
-like `rrmc()` to recover missing `NA` values using the low-rank structure present in the data.)_
+Note that this time we do not need to impute the data with chemical means, since we would
+like `rrmc()` to recover missing `NA` values using the low-rank structure present in the data.
 
 ```{r gs, eval=FALSE, echo=TRUE}
 eta_0 <- get_pcp_defaults(D)$eta
-progressr::with_progress({
-  gs <- grid_search_cv(
-    D,
-    pcp_fn = rrmc,
-    grid = data.frame(eta = 10^seq(-1, 2, 1) * round(eta_0, 3)),
-    r = 8,
-    parallel_strategy = "multisession",
-    num_workers = 16,
-    verbose = FALSE
-  )
-})
+# to get progress bar, could wrap this
+# in a call to progressr::with_progress({ gs <- grid_search_cv(...) })
+gs <- grid_search_cv(
+  D,
+  pcp_fn = rrmc,
+  grid = data.frame(eta = 10^seq(-1, 2, 1) * round(eta_0, 3)),
+  r = 8,
+  parallel_strategy = "multisession",
+  num_workers = 16,
+  verbose = FALSE
+)
 r_star <- gs$summary_stats$r[1]
 eta_star <- round(gs$summary_stats$eta[1], 3)
 gs$summary_stats
 ```
 
 ```{r gs results, eval=TRUE, echo=FALSE}
-gs <- readRDS("applied-gs.rds")
+gs <- readRDS("rds_files/applied-gs.rds")
 r_star <- gs$summary_stats$r[1]
 eta_star <- round(gs$summary_stats$eta[1], 3)
 gs$summary_stats
@@ -277,7 +289,7 @@ outlying exposure events. As such, we will use these parameters moving forward.
 
 ### Running PCP
 
-Now we can finally run our PCP model!
+Now we can run our PCP model!
 
 ```{r pcp}
 pcp_model <- rrmc(D, r = r_star, eta = eta_star)
@@ -291,21 +303,394 @@ We can inspect the evolution of the objective function over the course of PCP's 
 plot(pcp_model$objective, type = "l")
 ```
 
+### The recovered L matrix
+
 And the output `L` matrix:
 
 ```{r output L}
 plot_matrix(L)
-matrix_rank(L)
+L_rank <- matrix_rank(L)
+L_rank
 ```
+
+Recall the original correlation matrix for `queens_small` was:
+
+```{r orig corr}
+ggcorr(
+  queens_small[, 2:ncol(queens_small)],
+  method = "pairwise.complete.obs",
+  limits = FALSE, label = FALSE, size = 5
+)
+```
+
+The new correlation matrix for the recovered `L` matrix is now:
+
+```{r new corr}
+L_df <- data.frame(L)
+colnames(L_df) <- colnames(queens[, 2:ncol(queens)])
+ggcorr(
+  L_df, method = "pairwise.complete.obs",
+  limits = FALSE, label = FALSE, size = 5
+)
+```
+
+As we can see, PCP successfully reduced the dimensionality of the data. The underlying correlation structure
+is now made much more explicit.
+
+### The recovered S matrix
 
 Let's briefly inspect PCP's estimate of the sparse matrix `S` and the associated sparsity via `sparsity()`:
 
 ```{r sparse}
+sparsity(S)
 hist(S)
 plot_matrix(S)
 ```
 
-We're now ready to finish the source apportionment with the estimated low-rank `L` matrix.
+We can examine which chemicals have the largest number of outlying exposure events by calculating
+the sparsity of each column in `S`:
 
-## Source apportionment via PCP + NMF
+```{r sparse by col}
+S_df <- data.frame(S)
+colnames(S_df) <- colnames(queens_small[, 2:ncol(queens_small)])
+chems_w_most_extreme_events <- sort(apply(S_df, 2, function(x) sparsity(as.matrix(x))))
+chems_w_most_extreme_events
+```
+
+Here we can see ammonium (NH4), silicon (Si), and nitrate (NO3) have no extreme exposure events.
+Arsenic (As), vanadium (V), and selenium (Se) have the greatest number of outlying events.
+We can examine the extreme events for an individual chemical with:
+
+```{r As sparse events}
+S_df %>%
+  select(As) %>%
+  mutate(Date = queens_small$Date) %>%
+  filter(As > 0)
+```
+
+Let's check out another example, this time examining the sparse events isolated for potassium (K), associated with biomass burning and fireworks.
+
+```{r K sparse events}
+S_df %>%
+  select(K) %>%
+  mutate(Date = queens_small$Date) %>%
+  filter(K > 0)
+```
+
+PCP was able to pick up extreme potassium events around the July 4th holiday 
+for each of the July 4th / 5th dates available in the dataset (recall that chemical
+concentrations are recorded in `queens` every three to six days, skipping 
+measurements on July 4/5 some years).
+
+Other dimensionality reduction techniques
+such as PCA can be sensitive to outliers, requiring researchers to manually remove
+outlying events from their data. This introduces subjectivity into the data preprocessing
+pipeline, as the researcher must to define a criteria for removal, in turn making downstream
+results less replicable.
+
+We're now ready to finish the source apportionment using the estimated low-rank `L` matrix.
+
+## PCP and NMF for source apportionment
+
+We will use Non-negative Matrix Factorization (NMF) to extract the patterns (loadings) and
+corresponding scores encoded in the `L` matrix. See `NMF::nmf()` for details.
+
+Since we determined `L` to be of rank `r L_rank` from PCP's grid search, we no longer need to
+worry about what rank to use for our NMF step, nor do we need to manually remove outliers, since
+PCP autonomously isolated those into the sparse matrix `S`.
+
 ### Non-negative matrix factorization
+```{r NMF, eval=FALSE, echo=TRUE}
+library(NMF)
+
+nmf_mat <- L
+nmf_mat[nmf_mat < 0] <- 0
+
+res <- nmf(
+  nmf_mat, rank = L_rank,
+  method = "offset", nrun = 30,
+  seed = 0, .opt = "vp16"
+)
+
+raw_scores <- basis(res)
+raw_loadings <- coef(res)
+```
+
+```{r load NMF, eval=TRUE, echo=FALSE}
+raw_scores <- readRDS("rds_files/applied-nmf-raw-scores-W.rds")
+raw_loadings <- readRDS("rds_files/applied-nmf-raw-loadings-H.rds")
+```
+
+### PCP-NMF Loadings
+
+Let's inspect the loadings obtained from our PCP-NMF model:
+
+```{r loadings}
+loadings <- data.frame(raw_loadings)
+colnames(loadings) <- colnames(L_df)
+loadings[["Pattern"]] <- paste("Pattern", 1:L_rank)
+
+loadings %>%
+  pivot_longer(-Pattern, names_to = "Chemical", values_to = "Loading") %>%
+  ggplot(aes(x = Chemical, y = Loading)) +
+  geom_point(size = 3) +
+  geom_segment(aes(yend = 0, xend = Chemical), linewidth = 1.5) +
+  facet_wrap(~Pattern, scales = "free_x") +
+  theme_bw() +
+  theme(
+    strip.text.x = element_text(size = 14),
+    title = element_text(size = 18),
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    strip.background = element_rect(fill = "white"),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  ) +
+  geom_hline(yintercept = 0, size = 0.2) +
+  ggtitle("PCP-NMF Chemical Loadings")
+```
+
+* Pattern 1 appears to be linked to traffic and road-related sources,
+  characterized by elements such as barium, calcium, and lead, indicating emissions
+  from brake wear, tire wear, and construction activities
+* Pattern 2 looks like crustal dust, marked by elements like aluminum, calcium, silicon,
+  titanium, and iron, suggesting resuspension of natural materials from soil and rock.
+* Pattern 3 is clearly salt, including sodium chloride and magnesium
+  chloride.
+* Pattern 4 represents a mix of regional/secondary sources and traffic/tailpipe emissions,
+  characterized by sulfur, ammonium, nitrate, organic carbon, and zinc. This pattern
+  lacks a clear regional signal and suggests contributions from both
+  regional/secondary sources and tailpipe emissions. 
+
+### Variance Explained
+
+Let's calculate the variance explained by each of the patterns using the pattern scores next.
+We will then reorder the patterns to appear according to their proportion of variance explained.
+
+```{r var exp}
+nmf_scores <- data.frame(raw_scores)
+colnames(nmf_scores) <- c(
+  "Traffic", "Crustal Dust", "Salt", "Regional/Secondary & Tailpipe Emissions"
+)
+days_of_the_week <- c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+nmf_sources <- nmf_scores %>%
+  mutate(
+    Date = queens_scaled$Date,
+    DayofWeek = as.character(wday(Date, label = TRUE)),
+    DayofWeek = factor(DayofWeek, levels = days_of_the_week),
+  ) %>%
+  pivot_longer(
+    -c(Date, DayofWeek),
+    names_to = "Pattern",
+    values_to = "Score"
+  )
+
+var_explained <- nmf_sources %>%
+  group_by(Pattern) %>%
+  summarize(patsum = sum(Score)) %>%
+  mutate(VarianceExplained = round(100 * patsum / sum(patsum), 1)) %>%
+  select(-patsum) %>%
+  arrange(desc(VarianceExplained)) %>%
+  mutate(PatName = paste(Pattern, paste0("(", VarianceExplained, "% Var Exp)")))
+
+var_explained %>% select(-PatName)
+
+nmf_sources <- nmf_sources %>%
+  mutate(
+    Pattern = factor(
+      Pattern,
+      levels = as.character(var_explained$Pattern),
+      labels = as.character(var_explained$PatName)
+    )
+  )
+```
+
+### Loadings replotted
+
+We can now replot the loadings with the proper pattern names:
+
+```{r rename patterns}
+loadings %>%
+  mutate(Pattern = factor(
+    colnames(nmf_scores),
+    levels = as.character(var_explained$Pattern),
+    labels = as.character(var_explained$PatName)
+  )) %>%
+  pivot_longer(-Pattern, names_to = "Chemical", values_to = "Loading") %>%
+  ggplot(aes(x = Chemical, y = Loading, color = Pattern)) +
+  scale_color_brewer(palette = "Set1") +
+  geom_point(size = 3) +
+  geom_segment(aes(yend = 0, xend = Chemical), linewidth = 1.5) +
+  facet_wrap(~Pattern, scales = "free_x") +
+  theme_bw() +
+  theme(
+    strip.text.x = element_text(size = 14),
+    title = element_text(size = 18),
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    strip.background = element_rect(fill = "white"),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  ) +
+  geom_hline(yintercept = 0, size = 0.2) +
+  ggtitle("PCP-NMF Loadings")
+```
+
+### PCP-NMF Scores
+
+We can examine the scores over time:
+
+```{r NMF scores}
+yr_num <- length(unique(year(nmf_sources$Date)))
+
+ggplot(nmf_sources, aes(Date, Score, color = Pattern)) +
+  scale_color_brewer(palette = "Set1") +
+  geom_smooth(method = "loess", span = 0.05) +
+  facet_wrap(~Pattern, scales = "free", ncol = 1) +
+  xlab("") +
+  ylab("Pattern Score") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    title = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    strip.text = element_text(size = 14),
+    axis.text.x = element_text(size = 13),
+    axis.text.y = element_text(size = 11)
+  ) +
+  scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
+  ggtitle("PCP-NMF Scores over Time")
+```
+
+The scores across the seasons (where "DJF" = Winter, "MAM" = Spring,
+"JJA" = Summer, and "SON" = Autumn)
+
+```{r seasonal trends}
+nmf_sources %>%
+  mutate(Season = metR::season(Date)) %>%
+  group_by(Season, Pattern) %>%
+  summarise(
+    mean_score = mean(Score),
+    sd_score = sd(Score),
+    .groups = "keep"
+  ) %>%
+  ggplot(aes(Season, mean_score, color = Pattern)) +
+  scale_color_brewer(palette = "Set1") +
+  geom_point(size = 6) +
+  geom_errorbar(
+    aes(ymin = mean_score - sd_score, ymax = mean_score + sd_score),
+    width = 0.25, linewidth = 1.5
+  ) +
+  xlab("") +
+  facet_wrap(~Pattern, scales = "free_x", ncol = 1) +
+  ylab("Factor Score") +
+  theme_bw() +
+  theme(
+    title = element_text(size = 18),
+    legend.position = "none",
+    axis.title.y = element_text(size = 18),
+    axis.text.x.bottom = element_text(size = 13, color = "black"),
+    strip.text = element_text(size = 16),
+    axis.text.y.left = element_text(size = 12)
+  ) +
+  ggtitle("Mean (std dev) Pattern Scores by Season")
+
+```
+
+Scores across days of the week:
+
+```{r weekly trends}
+nmf_sources %>%
+  group_by(Pattern, DayofWeek) %>%
+  summarize(
+    mean_score = mean(Score),
+    sd_score = sd(Score),
+    .groups = "keep"
+  ) %>%
+  ggplot(aes(DayofWeek, mean_score, color = Pattern)) +
+  scale_color_brewer(palette = "Set1") +
+  geom_point(size = 6) +
+  geom_errorbar(
+    aes(ymin = mean_score - sd_score, ymax = mean_score + sd_score),
+    width = 0.25, linewidth = 1.5
+  ) +
+  xlab("") +
+  facet_wrap(~Pattern, scales = "free_x", ncol = 1) +
+  ylab("Factor Score") +
+  theme_bw() +
+  theme(
+    title = element_text(size = 18),
+    legend.position = "none",
+    axis.title.y = element_text(size = 18),
+    axis.text.x.bottom = element_text(size = 13, color = "black"),
+    strip.text = element_text(size = 16),
+    axis.text.y.left = element_text(size = 12)
+  ) +
+  ggtitle("Mean (std dev) Pattern Scores across Days of the Week")
+```
+
+Scores for weekday vs. weekend:
+
+```{r day type}
+nmf_sources %>%
+  mutate(
+    DayType = if_else(DayofWeek %in% c('Mon', 'Tue', 'Wed', 'Thu', 'Fri'), 'Weekday', 'Weekend'),
+    DayType = factor(DayType)
+  ) %>%
+  group_by(Pattern, DayType) %>%
+  summarize(
+    mean_score = mean(Score),
+    sd_score = sd(Score),
+    .groups = "keep"
+  ) %>%
+  ggplot(aes(DayType, mean_score, color = Pattern)) +
+  scale_color_brewer(palette = "Set1") +
+  geom_point(size = 6) +
+  geom_errorbar(
+    aes(ymin = mean_score - sd_score, ymax = mean_score + sd_score),
+    width = 0.25, linewidth = 1.5
+  ) +
+  xlab("") +
+  facet_wrap(~Pattern, scales = "free_x", ncol = 1) +
+  ylab("Factor Score") +
+  theme_bw() +
+  theme(
+    title = element_text(size = 18),
+    legend.position = "none",
+    axis.title.y = element_text(size = 18),
+    axis.text.x.bottom = element_text(size = 13, color = "black"),
+    strip.text = element_text(size = 16),
+    axis.text.y.left = element_text(size = 12)
+  ) +
+  ggtitle("Mean (std dev) Pattern Scores Weekend vs. Weekday")
+```
+
+Pattern correlations:
+
+```{r nmf corr}
+ggcorr(
+  nmf_scores, method = c("pairwise.complete.obs", "pearson"),
+  limits = FALSE, label = TRUE, label_size = 8,
+  hjust = 0.8, size = 8
+)
+```
+
+## Conclusion
+
+We paired PCP with NMF for the source apportionment of the `queens` dataset from
+2015 - 2021. We identified four patterns 
+
+The first identified pattern, accounting for 31% of the commonly shared variance
+of the low-rank matrix, is linked to traffic and road-related sources,
+characterized by elements such as barium, calcium, and lead, indicating emissions
+from brake wear, tire wear, and construction activities. The second identified
+pattern, representing 21% of the variance, is associated with crustal dust,
+marked by elements like aluminum, calcium, silicon, titanium, and iron, suggesting
+resuspension of natural materials from soil and rock. The third pattern, comprising
+14% of the variance, is identified as salt, including sodium chloride and magnesium
+chloride. This pattern peaks in early spring, likely due to the accumulation of
+road salt over winter. The fourth pattern, accounting for 35% of the variance,
+represents a mix of regional/secondary sources and traffic/tailpipe emissions,
+characterized by sulfur, ammonium, nitrate, organic carbon, and zinc. This pattern
+lacks a clear regional signal and suggests contributions from both
+regional/secondary sources and tailpipe emissions. 

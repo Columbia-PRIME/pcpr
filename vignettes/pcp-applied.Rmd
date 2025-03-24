@@ -331,7 +331,8 @@ The new correlation matrix for the recovered `L` matrix is now:
 L_df <- data.frame(L)
 colnames(L_df) <- colnames(queens[, 2:ncol(queens)])
 ggcorr(
-  L_df, method = "pairwise.complete.obs",
+  L_df,
+  method = "pairwise.complete.obs",
   limits = FALSE, label = FALSE, size = 5
 )
 ```
@@ -395,7 +396,8 @@ nmf_mat <- L
 nmf_mat[nmf_mat < 0] <- 0
 
 res <- nmf(
-  nmf_mat, rank = L_rank,
+  nmf_mat,
+  rank = L_rank,
   method = "offset", nrun = 30,
   seed = 0, .opt = "vp16"
 )
@@ -444,7 +446,7 @@ loadings %>%
 * Pattern 2 looks like crustal dust, marked by elements like aluminum (Al), calcium (Ca), silicon (Si),
   titanium (Ti), and iron (Fe), suggesting resuspension of natural materials from soil and rock.
 * Pattern 3 is clearly salt, including sodium chloride (NaCl) and magnesium
-  chloride (MgCl).
+  chloride (MgCl2).
 * Pattern 4 represents a mix of regional/secondary sources and traffic/tailpipe emissions,
   characterized by sulfur (S), ammonium (NH4), nitrate (NO3), organic carbon (OC), and zinc (Zn). This pattern
   lacks a clear regional signal and suggests contributions from both

@@ -51,7 +51,8 @@ these matrices are of dimension $n \times p$, where $n$ is the number of
 observations (e.g. study participants or measurement dates) and $p$ is the
 number of exposures (e.g. chemical and/or non-chemical stressors). Beyond this
 mixtures model, the main assumption made by PCP is that
-$Z_0 \sim N(\mu, \sigma^2)$ consists of i.i.d. Gaussian noise
+$Z_0 \sim N(\mu, \sigma^2)$ consists of independently and identically
+distributed (i.i.d.) Gaussian noise
 corrupting each entry of the overall exposure matrix $D$.
 
 The models in `pcpr` seek to decompose an observed data matrix $D$ into estimated
@@ -145,7 +146,7 @@ regarding the quality of recovered missing observations:
 2. The fewer observations there are in $D$, the harder it is to accurately
    reconstruct $L$ (therefore estimation of _both_ unobserved _and_ observed
    measurements in $L$ degrades); and
-3. Greater proportions of missingness in $D$ artifically drive up the
+3. Greater proportions of missingness in $D$ artificially drive up the
    sparsity of the estimated $S$ matrix. This is because it is not possible
    to recover a sparse event in $S$ when the corresponding entry in $D$ is
    unobserved. By definition, sparse events in $S$ cannot be explained by
@@ -202,12 +203,16 @@ relative differences:
 | Supports missing values?            | _Yes_                   | _Yes_                  |
 | Supports LOD penalty?               | _Yes_                   | _Yes_                  |
 | Supports non-negativity constraint? | _Yes_                   | _No_                   |
-| Rank determination?                 | _Autonomous_            | _User-defined_         |
+| Rank determination?                 | _Autonomous_            | _User-defined_*        |
 | Sparse event identification?        | _Autonomous_            | _Autonomous_           |
 | Optimization approach?              | _ADMM_                  | _Iterative rank-based_ |
 
+*`rrmc()` can be paired with the cross-validated `grid_search_cv()` function
+for autonomous rank determination.
+
 Convex PCP via `root_pcp()` is best for data characterized
-by rapidly decaying singular values, indicative of very well-defined latent patterns.
+by rapidly decaying singular values (e.g. image and video data),
+indicative of very well-defined latent patterns.
 
 Non-convex PCP with `rrmc()` is best suited for data characterized by slowly decaying singular values,
 indicative of complex underlying patterns and a relatively large degree of noise. Most EH data can be
@@ -228,7 +233,7 @@ Moreover, convex PCP approaches are best suited to instances in which the target
 low-rank matrix $L_0$ can be accurately modelled as low-rank (i.e. $L_0$ is
 governed by only a few very well-defined patterns). This is often the case with
 image and video data (characterized by rapidly decaying singular values), but
-not common for EH data. EH data is typically is only approximately low-rank
+not common for EH data. EH data is typically only approximately low-rank
 (characterized by complex patterns and slowly decaying singular values).
 
 The convex model available in `pcpr` is `root_pcp()`. For a comprehensive
@@ -260,8 +265,12 @@ provide this flexibility by allowing the user to interrogate the data at
 different ranks.
 
 The drawback here is that non-convex algorithms can no longer determine the rank
-best describing the data autonomously, instead requiring the researcher to
-subjectively specify the rank $r$ as in PCA. One of the more glaring trade-offs made
+best describing the data on their own, instead requiring the researcher to
+subjectively specify the rank $r$ as in PCA. However, by pairing non-convex PCP algorithms
+with the cross-validation routine implemented in the `grid_search_cv()` function,
+the optimal rank can be determined semi-autonomously; the researcher need only define
+a rank _search space_ from which the _optimal rank will be identified via grid search_.
+One of the more glaring trade-offs made
 by non-convex methods for this improved run-time and flexibility is weaker
 theoretical promises; specifically, non-convex PCP runs the risk of finding
 spurious _local_ optima, rather than the _global_ optimum guaranteed by their
@@ -383,7 +392,7 @@ $\xi$ is relatively low, e.g. $\xi = 0.05$, or 5%, and $K$ is relatively high, e
   set is obtained each run, providing balanced coverage of $D$. Viewed another way, the smaller $K$ is, the more
   the results are susceptible to overfitting to the relatively few selected test sets.
 
-### Interpretaion of results
+### Interpretation of results
 
 Once the grid search of has been conducted, the optimal hyperparameters can be chosen by examining the output
 statistics `summary_stats`. Below are a few suggestions for how to interpret the `summary_stats` table:

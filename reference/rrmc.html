@@ -11,9 +11,9 @@ The L matrix encodes latent patterns that govern the observed data.
 The S matrix captures any extreme events in the data unexplained by the
 underlying patterns in L.
 rrmc()'s incremental rank-based strategy first estimates a rank-1 model
-\((L^(1), S^(1))\), before using the rank-1 model as the initialization
-point to then construct a rank-2 model \((L^(2), S^(2))\), and so on,
-until the desired rank-r model \((L^(r), S^(r))\) is recovered. All
+\((L^{(1)}, S^{(1)})\), before using the rank-1 model as the initialization
+point to then construct a rank-2 model \((L^{(2)}, S^{(2)})\), and so on,
+until the desired rank-r model \((L^{(r)}, S^{(r)})\) is recovered. All
 models from ranks 1 through r are returned by rrmc() in this way.
 Experimentally, the rrmc() approach to PCP has best been able to handle
 those datasets that are governed by complex underlying patterns characterized
@@ -39,9 +39,9 @@ The L matrix encodes latent patterns that govern the observed data.
 The S matrix captures any extreme events in the data unexplained by the
 underlying patterns in L.
 rrmc()'s incremental rank-based strategy first estimates a rank-1 model
-\((L^(1), S^(1))\), before using the rank-1 model as the initialization
-point to then construct a rank-2 model \((L^(2), S^(2))\), and so on,
-until the desired rank-r model \((L^(r), S^(r))\) is recovered. All
+\((L^{(1)}, S^{(1)})\), before using the rank-1 model as the initialization
+point to then construct a rank-2 model \((L^{(2)}, S^{(2)})\), and so on,
+until the desired rank-r model \((L^{(r)}, S^{(r)})\) is recovered. All
 models from ranks 1 through r are returned by rrmc() in this way.
 Experimentally, the rrmc() approach to PCP has best been able to handle
 those datasets that are governed by complex underlying patterns characterized
@@ -113,9 +113,9 @@ The <code>L</code> matrix encodes latent patterns that govern the observed data.
 The <code>S</code> matrix captures any extreme events in the data unexplained by the
 underlying patterns in <code>L</code>.</p>
 <p><code>rrmc()</code>'s incremental rank-based strategy first estimates a rank-<code>1</code> model
-\((L^(1), S^(1))\), before using the rank-<code>1</code> model as the initialization
-point to then construct a rank-<code>2</code> model \((L^(2), S^(2))\), and so on,
-until the desired rank-<code>r</code> model \((L^(r), S^(r))\) is recovered. All
+\((L^{(1)}, S^{(1)})\), before using the rank-<code>1</code> model as the initialization
+point to then construct a rank-<code>2</code> model \((L^{(2)}, S^{(2)})\), and so on,
+until the desired rank-<code>r</code> model \((L^{(r)}, S^{(r)})\) is recovered. All
 models from ranks <code>1</code> through <code>r</code> are returned by <code>rrmc()</code> in this way.</p>
 <p>Experimentally, the <code>rrmc()</code> approach to PCP has best been able to handle
 those datasets that are governed by complex underlying patterns characterized
@@ -297,7 +297,7 @@ environmental mixtures." Environmental Health Perspectives 130, no.
 <span class="r-in"><span><span class="co"># First we will simulate a simple dataset with the sim_data() function.</span></span></span>
 <span class="r-in"><span><span class="co"># The dataset will be a 100x10 matrix comprised of:</span></span></span>
 <span class="r-in"><span><span class="co"># 1. A rank-3 component as the ground truth L matrix;</span></span></span>
-<span class="r-in"><span><span class="co"># 2. A ground truth sparse component S w/outliers in 1st &amp; last entries; and</span></span></span>
+<span class="r-in"><span><span class="co"># 2. A ground truth sparse component S w/outliers along the diagonal; and</span></span></span>
 <span class="r-in"><span><span class="co"># 3. A dense Gaussian noise component</span></span></span>
 <span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="sim_data.html">sim_data</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Normally we would conduct grid search to tune eta. But, to keep the example</span></span></span>

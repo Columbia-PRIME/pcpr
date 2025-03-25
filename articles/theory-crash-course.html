@@ -83,7 +83,8 @@
 <p>The R package <code>pcpr</code> implements Principal Component
 Pursuit (PCP), a robust dimensionality reduction technique, for pattern
 recognition tailored to environmental health (EH) data. The statistical
-methodology and computational details are provided in <a href="https://doi.org/10.1289/EHP10479" class="external-link">Gibson et al. (2022)</a>.</p>
+methodology and computational details are provided in Gibson et
+al. (2022).</p>
 <p>In this code-free vignette, we present a crash course in PCP’s
 theoretical background, so researchers can better navigate all of the
 functionality offered in <code>pcpr</code>. We will touch upon:</p>
@@ -266,18 +267,14 @@ heavily penalized: less so than when <span class="math inline">\(&lt;
 that these observations must be below <span class="math inline">\(LOD\)</span>. Observations known to be above the
 <span class="math inline">\(LOD\)</span> are penalized as usual, using
 the Frobenius norm in the above objective function.</p>
-<p><a href="https://doi.org/10.1289/EHP10479" class="external-link">Gibson et al. (2022)</a>
-demonstrate that in experimental settings with up to 50% of the data
-corrupted below the <span class="math inline">\(LOD\)</span>, PCP with
-the <span class="math inline">\(LOD\)</span> extension boasts superior
-accuracy of recovered <span class="math inline">\(L\)</span> models
-compared to PCA coupled with <span class="math inline">\(\frac{LOD}{\sqrt{2}}\)</span> imputation. PCP even
-outperforms PCA in low-noise scenarios with as much as 75% of the data
-corrupted below the <span class="math inline">\(LOD\)</span>. The few
-situations in which PCA bettered PCP were those pathological cases in
-which <span class="math inline">\(D\)</span> was characterized by
-extreme noise and huge proportions (i.e., 75%) of observations falling
-below the <span class="math inline">\(LOD\)</span>.</p>
+<p>Gibson et al. (2022) demonstrate that in experimental settings with
+up to 50% of the data corrupted below the <span class="math inline">\(LOD\)</span>, PCP with the <span class="math inline">\(LOD\)</span> extension boasts superior accuracy of
+recovered <span class="math inline">\(L\)</span> models compared to PCA
+coupled with <span class="math inline">\(\frac{LOD}{\sqrt{2}}\)</span>
+imputation. PCP even outperforms PCA in low-noise scenarios with as much
+as 75% of the data corrupted below the <span class="math inline">\(LOD\)</span>. The few situations in which PCA
+bettered PCP were those pathological cases in which <span class="math inline">\(D\)</span> was characterized by extreme noise and
+huge proportions (i.e., 75%) of observations falling below the <span class="math inline">\(LOD\)</span>.</p>
 </div>
 <div class="section level3">
 <h3 id="non-negativity-constraint-on-the-estimated-l-matrix">Non-negativity constraint on the estimated <code>L</code>
@@ -413,8 +410,8 @@ models <span class="math inline">\(L\)</span> and <span class="math inline">\(S\
 observed data <span class="math inline">\(D\)</span>. The objective is
 not smooth nor differentiable, however it is convex and separable. As
 such, it is optimized using the Alternating Direction Method of
-Multipliers (ADMM) algorithm <a href="http://dx.doi.org/10.1561/2200000016" class="external-link">Boyd et al. (2011)</a>, <a href="https://doi.org/10.1080/10556788.2019.1683553" class="external-link">Gao et
-al. (2020)</a>.</p>
+Multipliers (ADMM) algorithm (Boyd et al. (2011)), (Gao et
+al. (2020)).</p>
 </div>
 <div class="section level3">
 <h3 id="non-convex-pcp">Non-convex PCP<a class="anchor" aria-label="anchor" href="#non-convex-pcp"></a>
@@ -510,10 +507,9 @@ PCP parameter settings of <span class="math inline">\(\lambda\)</span>,
 <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\eta\)</span> for a given data matrix <span class="math inline">\(D\)</span>.</p>
 <p>The “default” values of <span class="math inline">\(\lambda\)</span>
 and <span class="math inline">\(\mu\)</span> offer <em>theoretical</em>
-guarantees of optimal estimation performance. <a href="https://doi.org/10.1145/1970392.1970395" class="external-link">Candès et al. (2011)</a>
+guarantees of optimal estimation performance. Candès et al. (2011)
 obtained the guarantee for <span class="math inline">\(\lambda\)</span>,
-while <a href="https://proceedings.neurips.cc/paper/2021/file/f65854da4622c1f1ad4ffeb361d7703c-Paper.pdf" class="external-link">Zhang
-et al. (2021)</a> obtained the result for <span class="math inline">\(\mu\)</span>. It has not yet been proven whether
+while Zhang et al. (2021) obtained the result for <span class="math inline">\(\mu\)</span>. It has not yet been proven whether
 or not <span class="math inline">\(\eta\)</span> enjoys similar
 properties.</p>
 <p>The theoretically optimal <span class="math inline">\(\lambda_*\)</span> is given by:</p>
@@ -668,6 +664,31 @@ environmental mixture</li>
 apportionment of real-world PM2.5 data using the <code>queens</code>
 dataset</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Gibson, Elizabeth A., Junhui Zhang, Jingkai Yan, Lawrence Chillrud,
+Jaime Benavides, Yanelli Nunez, Julie B. Herbstman, Jeff Goldsmith, John
+Wright, and Marianthi-Anna Kioumourtzoglou. “Principal component pursuit
+for pattern identification in environmental mixtures.” Environmental
+Health Perspectives 130, no. 11 (2022): 117008.</p>
+<p>Zhang, Junhui, Jingkai Yan, and John Wright. “Square root principal
+component pursuit: tuning-free noisy robust matrix recovery.” Advances
+in Neural Information Processing Systems 34 (2021): 29464-29475.</p>
+<p>Boyd, Stephen, Neal Parikh, Eric Chu, Borja Peleato, and Jonathan
+Eckstein. “Distributed optimization and statistical learning via the
+alternating direction method of multipliers.” Foundations and Trends in
+Machine learning 3, no. 1 (2011): 1-122.</p>
+<p>Gao, Wenbo, Donald Goldfarb, and Frank E. Curtis. “ADMM for
+multiaffine constrained optimization.” Optimization Methods and Software
+35, no. 2 (2020): 257-303.</p>
+<p>Cherapanamjeri, Yeshwanth, Kartik Gupta, and Prateek Jain. “Nearly
+optimal robust matrix completion.” International Conference on Machine
+Learning. PMLR, 2017.</p>
+<p>Candès, Emmanuel J., Xiaodong Li, Yi Ma, and John Wright. “Robust
+principal component analysis?.” Journal of the ACM (JACM) 58, no. 3
+(2011): 1-37.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

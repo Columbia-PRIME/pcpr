@@ -88,7 +88,7 @@ corresponds to the imputation value for each entry in <code>D</code>.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">####------------Imputation with a scalar------------####</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#### ------------Imputation with a scalar------------####</span></span></span>
 <span class="r-in"><span><span class="co"># simulate a small 5x5 mixture</span></span></span>
 <span class="r-in"><span><span class="va">D</span> <span class="op">&lt;-</span> <span class="fu"><a href="sim_data.html">sim_data</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">5</span><span class="op">)</span><span class="op">$</span><span class="va">D</span></span></span>
 <span class="r-in"><span><span class="co"># corrupt the mixture with 40% missing observations</span></span></span>
@@ -117,7 +117,7 @@ corresponds to the imputation value for each entry in <code>D</code>.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4,] -1.0000000  1.054244  1.029697  1.4755161  1.138653</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [5,] -1.0000000 -1.000000 -1.000000  0.6210926 -1.000000</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">####------------Imputation with a vector------------####</span></span></span>
+<span class="r-in"><span><span class="co">#### ------------Imputation with a vector------------####</span></span></span>
 <span class="r-in"><span><span class="co"># impute missing values with the column-mean</span></span></span>
 <span class="r-in"><span><span class="fu">impute_matrix</span><span class="op">(</span><span class="va">D_tilde</span>, <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">D_tilde</span>, <span class="fl">2</span>, <span class="va">mean</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           [,1]     [,2]     [,3]      [,4]     [,5]</span>
@@ -135,7 +135,7 @@ corresponds to the imputation value for each entry in <code>D</code>.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4,] 0.3776991 1.054244 1.029697 1.4755161 1.138653</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [5,] 0.3776991 1.047751 1.029697 0.6210926 1.058204</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">####------------Imputation with a matrix------------####</span></span></span>
+<span class="r-in"><span><span class="co">#### ------------Imputation with a matrix------------####</span></span></span>
 <span class="r-in"><span><span class="co"># impute missing values with random Gaussian noise</span></span></span>
 <span class="r-in"><span><span class="va">noise</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/prod.html" class="external-link">prod</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">impute_matrix</span><span class="op">(</span><span class="va">D_tilde</span>, <span class="va">noise</span><span class="op">)</span></span></span>
@@ -146,7 +146,7 @@ corresponds to the imputation value for each entry in <code>D</code>.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4,]  1.30486965  1.0542439  1.029697 1.4755161  1.1386529</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [5,]  2.28664539 -0.2842529 -1.781308 0.6210926  0.7048373</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">####------------Imputation with LOD/sqrt(2)------------####</span></span></span>
+<span class="r-in"><span><span class="co">#### ------------Imputation with LOD/sqrt(2)------------####</span></span></span>
 <span class="r-in"><span><span class="va">D</span> <span class="op">&lt;-</span> <span class="fu"><a href="sim_data.html">sim_data</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">5</span><span class="op">)</span><span class="op">$</span><span class="va">D</span></span></span>
 <span class="r-in"><span><span class="va">lod_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="sim_lod.html">sim_lod</a></span><span class="op">(</span><span class="va">D</span>, q <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">D_tilde</span> <span class="op">&lt;-</span> <span class="va">lod_info</span><span class="op">$</span><span class="va">D_tilde</span></span></span>

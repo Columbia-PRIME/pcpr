@@ -63,7 +63,7 @@ optimization)."><meta property="og:image" content="https://columbia-prime.github
 matrix <code>D</code>, making <code>D</code> sparser: elements of <code>D</code> whose absolute value are less
 than a given threshold <code>thresh</code> are set to 0, i.e. \(D[|D| &lt; thresh] = 0\).</p>
 <p>This is used in the non-convex PCP function <code><a href="rrmc.html">rrmc()</a></code> to provide a non-convex
-replacement for the <code><a href="prox_l1.html">prox_l1()</a></code> method used in the convex PCP function
+replacement for the <code>prox_l1()</code> method used in the convex PCP function
 <code><a href="root_pcp.html">root_pcp()</a></code>. It is used to iteratively model the sparse <code>S</code> matrix with the
 help of an adaptive threshold (<code>thresh</code> changes over the course of
 optimization).</p>
@@ -91,10 +91,6 @@ optimization).</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The hard-thresholded matrix.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="prox_l1.html">prox_l1()</a></code></p></div>
     </div>
 
     <div class="section level2">

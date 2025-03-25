@@ -17,8 +17,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><script src="deps/MathJax-3.2.2/tex-chtml.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Principal Component Pursuit for Environmental Epidemiology">
-<meta name="description" content="Implementation of the pattern recognition technique Principal Component Pursuit tailored to environmental health data, as described in Gibson et al. (2022) &lt;doi:10.1289/EHP10479&gt;.">
-<meta property="og:description" content="Implementation of the pattern recognition technique Principal Component Pursuit tailored to environmental health data, as described in Gibson et al. (2022) &lt;doi:10.1289/EHP10479&gt;.">
+<meta name="description" content="Implementation of the pattern recognition technique Principal Component Pursuit tailored to environmental health data, as described in Gibson et al (2022) &lt;doi:10.1289/EHP10479&gt;.">
+<meta property="og:description" content="Implementation of the pattern recognition technique Principal Component Pursuit tailored to environmental health data, as described in Gibson et al (2022) &lt;doi:10.1289/EHP10479&gt;.">
 <meta property="og:image" content="https://columbia-prime.github.io/pcpr/logo.png">
 </head>
 <body>
@@ -76,27 +76,31 @@
 </h1>
 </div>
 <!-- badges: start -->
+<!-- [![CRAN status](https://www.r-pkg.org/badges/version/pcpr)](https://cran.r-project.org/package=pcpr) -->
 
-<p>The R package <code>pcpr</code> implements Principal Component Pursuit (PCP), a robust dimensionality reduction technique, for pattern recognition tailored to environmental health data. The statistical methodology and computational details are provided in <a href="https://doi.org/10.1289/EHP10479" class="external-link">Gibson et al. (2022)</a>.</p>
+<p>The R package <code>pcpr</code> implements Principal Component Pursuit (PCP), a robust dimensionality reduction technique, for pattern recognition tailored to environmental health data. The statistical methodology and computational details are provided in Gibson et al. (2022).</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of pcpr from GitHub with:</p>
+<p>You can install the latest official CRAN release of <code>pcpr</code> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pcpr"</span><span class="op">)</span></span></code></pre></div>
+<p>The development version of <code>pcpr</code> can be installed from GitHub with:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Columbia-PRIME/pcpr"</span><span class="op">)</span></span></code></pre></div>
 <p><code>pcpr</code> can then be loaded and attached in your current R session as usual with</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://columbia-prime.github.io/pcpr/">pcpr</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="getting-help">Getting help<a class="anchor" aria-label="anchor" href="#getting-help"></a>
 </h2>
-<p>Extensive documentation is available on our pkgdown <a href="https://columbia-prime.github.io/pcpr/">website</a> and offline within R. You can see the <code>pcpr</code> reference manual in R with:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>Extensive documentation is available on our pkgdown <a href="https://columbia-prime.github.io/pcpr/reference/index.html">website</a> and offline within R. You can see the <code>pcpr</code> reference manual in R with:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"pcpr"</span><span class="op">)</span></span></code></pre></div>
 <p>A number of vignettes are available from within R. They can be browsed using:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"pcpr"</span><span class="op">)</span></span></code></pre></div>
 <p>We recommend reading the vignettes in the following order:</p>
 <ol style="list-style-type: decimal">
@@ -116,9 +120,8 @@
 <h2 id="modeling-overview">Modeling overview<a class="anchor" aria-label="anchor" href="#modeling-overview"></a>
 </h2>
 <p>PCP algorithms model an observed exposure matrix <span class="math inline">\(D\)</span> as the sum of three underlying ground-truth matrices:</p>
-<figure><img src="reference/figures/README-pcp-model-1.jpeg" alt="A PCP mixtures model visualized"><figcaption aria-hidden="true">
-A PCP mixtures model visualized
-</figcaption></figure><p>a low-rank matrix <span class="math inline">\(L_0\)</span> encoding consistent patterns of exposure, a sparse matrix <span class="math inline">\(S_0\)</span> isolating unique or outlying exposure events (that cannot be explained by the consistent exposure patterns), and dense noise <span class="math inline">\(Z_0\)</span>.</p>
+<p><img src="reference/figures/README-pcp-model-1.jpeg"></p>
+<p>a low-rank matrix <span class="math inline">\(L_0\)</span> encoding consistent patterns of exposure, a sparse matrix <span class="math inline">\(S_0\)</span> isolating unique or outlying exposure events (that cannot be explained by the consistent exposure patterns), and dense noise <span class="math inline">\(Z_0\)</span>.</p>
 <p>The models in <code>pcpr</code> seek to decompose an observed data matrix <code>D</code> into estimated low-rank and sparse components <code>L</code> and <code>S</code> for use in downstream environmental health analyses. The functions in <code>pcpr</code> are outfitted with three environmental health (EH)-specific extensions making <code>pcpr</code> particularly powerful for EH research:</p>
 <ol style="list-style-type: decimal">
 <li>Missing value functionality</li>
@@ -131,12 +134,9 @@ A PCP mixtures model visualized
 </h2>
 <p>The methods in <code>pcpr</code> have already been applied in many environmental health studies. Several are listed below:</p>
 <ul>
-<li>
-<a href="https://doi.org/10.1097/EE9.0000000000000243" class="external-link">Tao et al. (2023)</a> apply PCP to investigate the association between source-specific fine particulate matter and myocardial infarction hospitalizations in NYC.</li>
-<li>
-<a href="https://doi.org/10.1021/acs.est.3c10314" class="external-link">Wu et al. (2024)</a> employ PCP for exposome profiling of environmental pollutants in seminal plasma, uncovering novel associations with semen parameters.</li>
-<li>
-<a href="https://doi.org/10.1016/j.envint.2024.108526" class="external-link">Benavides et al. (2024)</a> use PCP to develop a Community Severity Index in NYC, measuring the barrier effect of road infrastructure and traffic in cities.</li>
+<li>Tao et al. (2023) apply PCP to investigate the association between source-specific fine particulate matter and myocardial infarction hospitalizations in NYC.</li>
+<li>Wu et al. (2024) employ PCP for exposome profiling of environmental pollutants in seminal plasma, uncovering novel associations with semen parameters.</li>
+<li>Benavides et al. (2024) use PCP to develop a Community Severity Index in NYC, measuring the barrier effect of road infrastructure and traffic in cities.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -144,21 +144,21 @@ A PCP mixtures model visualized
 </h2>
 <p>Please cite use of <code>pcpr</code> with:</p>
 <p>Chillrud L, Benavides J, Gibson E, Zhang J, Yan J, Wright J, Goldsmith J, Kioumourtzoglou M (2025). pcpr: Principal Component Pursuit for Environmental Epidemiology. R package version 1.0.0, <a href="https://columbia-prime.github.io/pcpr/" class="uri">https://columbia-prime.github.io/pcpr/</a>, <a href="https://github.com/Columbia-PRIME/pcpr" class="external-link uri">https://github.com/Columbia-PRIME/pcpr</a>.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  title <span class="ot">=</span> {pcpr<span class="sc">:</span> Principal Component Pursuit <span class="cf">for</span> Environmental Epidemiology},</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  author <span class="ot">=</span> {Lawrence G. Chillrud and Jaime Benavides and Elizabeth A. Gibson and Junhui Zhang and Jingkai Yan and John N. Wright and Jeff Goldsmith and Marianthi<span class="sc">-</span>Anna Kioumourtzoglou},</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>},</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  note <span class="ot">=</span> {R package version <span class="dv">1</span>.<span class="fl">0.0</span>, https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>Columbia<span class="sc">-</span>PRIME<span class="sc">/</span>pcpr},</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>columbia<span class="sc">-</span>prime.github.io<span class="sc">/</span>pcpr<span class="sc">/</span>},</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>}</span></code></pre></div>
-<p>Please also cite <a href="https://doi.org/10.1289/EHP10479" class="external-link">Gibson et al. (2022)</a>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  title <span class="ot">=</span> {pcpr<span class="sc">:</span> Principal Component Pursuit <span class="cf">for</span> Environmental Epidemiology},</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  author <span class="ot">=</span> {Lawrence G. Chillrud and Jaime Benavides and Elizabeth A. Gibson and Junhui Zhang and Jingkai Yan and John N. Wright and Jeff Goldsmith and Marianthi<span class="sc">-</span>Anna Kioumourtzoglou},</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>},</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  note <span class="ot">=</span> {R package version <span class="dv">1</span>.<span class="fl">0.0</span>, https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>Columbia<span class="sc">-</span>PRIME<span class="sc">/</span>pcpr},</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>columbia<span class="sc">-</span>prime.github.io<span class="sc">/</span>pcpr<span class="sc">/</span>},</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>}</span></code></pre></div>
+<p>Please also cite Gibson et al. (2022).</p>
 <p>This work was supported by NIEHS PRIME R01 ES028805.</p>
-<p>Special thanks to <a href="https://www.sophiecalhoun.com/" class="external-link">Sophie Calhoun</a> for designing <code>pcpr</code>’s logo!</p>
+<p>Special thanks to Sophie Calhoun for designing <code>pcpr</code>’s logo!</p>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simulate an environmental mixture</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sim_data.html">sim_data</a></span><span class="op">(</span></span>
 <span>  n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">10</span>, r <span class="op">=</span> <span class="fl">3</span>,</span>
@@ -208,10 +208,10 @@ A PCP mixtures model visualized
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Gibson, Elizabeth A., Junhui Zhang, Jingkai Yan, Lawrence Chillrud, Jaime Benavides, Yanelli Nunez, Julie B. Herbstman, Jeff Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou. “Principal component pursuit for pattern identification in environmental mixtures.” Environmental Health Perspectives 130, no. 11 (2022): 117008. [available <a href="https://doi.org/10.1289/EHP10479" class="external-link">here</a>]</p>
-<p>Tao, Rachel H., Lawrence G. Chillrud, Yanelli Nunez, Sebastian T. Rowland, Amelia K. Boehme, Jingkai Yan, Jeff Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou. “Applying principal component pursuit to investigate the association between source-specific fine particulate matter and myocardial infarction hospitalizations in New York City.” Environmental Epidemiology 7 (2), (2023). [available <a href="https://doi.org/10.1097/EE9.0000000000000243" class="external-link">here</a>]</p>
-<p>Wu, Haotian, Vrinda Kalia, Katherine E. Manz, Lawrence Chillrud, Nathalie Hoffmann Dishon, Gabriela L. Jackson, Christian K. Dye, Raoul Orvieto, Adva Aizer, Hagai Levine, Marianthi-Anna Kioumourtzoglou, Kurt D. Pennell, Andrea A. Baccarelli, and Ronit Machtinger. “Exposome Profiling of Environmental Pollutants in Seminal Plasma and Novel Associations with Semen Parameters.” Environmental Science &amp; Technology, 58 (31), (2024): 13594-13604. [available <a href="https://doi.org/10.1021/acs.est.3c10314" class="external-link">here</a>]</p>
-<p>Benavides, Jaime, Sabah Usmani, Vijay Kumar, and Marianthi-Anna Kioumourtzoglou. “Development of a community severance index for urban areas in the United States: A case study in New York City.” Environment International, 185, (2024): 108526. [available <a href="https://doi.org/10.1016/j.envint.2024.108526" class="external-link">here</a>]</p>
+<p>Gibson, Elizabeth A., Junhui Zhang, Jingkai Yan, Lawrence Chillrud, Jaime Benavides, Yanelli Nunez, Julie B. Herbstman, Jeff Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou. “Principal component pursuit for pattern identification in environmental mixtures.” Environmental Health Perspectives 130, no. 11 (2022): 117008.</p>
+<p>Tao, Rachel H., Lawrence G. Chillrud, Yanelli Nunez, Sebastian T. Rowland, Amelia K. Boehme, Jingkai Yan, Jeff Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou. “Applying principal component pursuit to investigate the association between source-specific fine particulate matter and myocardial infarction hospitalizations in New York City.” Environmental Epidemiology 7 (2), (2023).</p>
+<p>Wu, Haotian, Vrinda Kalia, Katherine E. Manz, Lawrence Chillrud, Nathalie Hoffmann Dishon, Gabriela L. Jackson, Christian K. Dye, Raoul Orvieto, Adva Aizer, Hagai Levine, Marianthi-Anna Kioumourtzoglou, Kurt D. Pennell, Andrea A. Baccarelli, and Ronit Machtinger. “Exposome Profiling of Environmental Pollutants in Seminal Plasma and Novel Associations with Semen Parameters.” Environmental Science &amp; Technology, 58 (31), (2024): 13594-13604.</p>
+<p>Benavides, Jaime, Sabah Usmani, Vijay Kumar, and Marianthi-Anna Kioumourtzoglou. “Development of a community severance index for urban areas in the United States: A case study in New York City.” Environment International, 185, (2024): 108526.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -266,7 +266,6 @@ A PCP mixtures model visualized
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://cran.r-project.org/package=pcpr" class="external-link"><img src="https://www.r-pkg.org/badges/version/pcpr" alt="CRAN status"></a></li>
 <li><a href="https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 <li><a href="https://www.gnu.org/licenses/gpl-3.0" class="external-link"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a></li>
 <li><a href="https://cranlogs.r-pkg.org/badges/grand-total/pcpr" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/pcpr" alt="Total Downloads"></a></li>

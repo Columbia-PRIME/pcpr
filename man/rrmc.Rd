@@ -80,9 +80,9 @@ The \code{S} matrix captures any extreme events in the data unexplained by the
 underlying patterns in \code{L}.
 
 \code{rrmc()}'s incremental rank-based strategy first estimates a rank-\code{1} model
-\eqn{(L^(1), S^(1))}, before using the rank-\code{1} model as the initialization
-point to then construct a rank-\code{2} model \eqn{(L^(2), S^(2))}, and so on,
-until the desired rank-\code{r} model \eqn{(L^(r), S^(r))} is recovered. All
+\eqn{(L^{(1)}, S^{(1)})}, before using the rank-\code{1} model as the initialization
+point to then construct a rank-\code{2} model \eqn{(L^{(2)}, S^{(2)})}, and so on,
+until the desired rank-\code{r} model \eqn{(L^{(r)}, S^{(r)})} is recovered. All
 models from ranks \code{1} through \code{r} are returned by \code{rrmc()} in this way.
 
 Experimentally, the \code{rrmc()} approach to PCP has best been able to handle
@@ -185,7 +185,7 @@ huge proportions (i.e., 75\%) of observations falling below the LOD.
 # First we will simulate a simple dataset with the sim_data() function.
 # The dataset will be a 100x10 matrix comprised of:
 # 1. A rank-3 component as the ground truth L matrix;
-# 2. A ground truth sparse component S w/outliers in 1st & last entries; and
+# 2. A ground truth sparse component S w/outliers along the diagonal; and
 # 3. A dense Gaussian noise component
 data <- sim_data()
 # Normally we would conduct grid search to tune eta. But, to keep the example

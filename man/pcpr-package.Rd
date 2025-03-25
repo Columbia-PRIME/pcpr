@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Implementation of the pattern recognition technique Principal Component Pursuit tailored to environmental health data, as described in Gibson et al. (2022) \doi{10.1289/EHP10479}.
+Implementation of the pattern recognition technique Principal Component Pursuit tailored to environmental health data, as described in Gibson et al (2022) \doi{10.1289/EHP10479}.
 }
 \seealso{
 Useful links:

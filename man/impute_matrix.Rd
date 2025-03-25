@@ -30,7 +30,7 @@ The imputed matrix.
 given \code{imputation_scheme}.
 }
 \examples{
-####------------Imputation with a scalar------------####
+#### ------------Imputation with a scalar------------####
 # simulate a small 5x5 mixture
 D <- sim_data(5, 5)$D
 # corrupt the mixture with 40\% missing observations
@@ -41,18 +41,18 @@ impute_matrix(D_tilde, 0)
 # impute missing values with -1
 impute_matrix(D_tilde, -1)
 
-####------------Imputation with a vector------------####
+#### ------------Imputation with a vector------------####
 # impute missing values with the column-mean
 impute_matrix(D_tilde, apply(D_tilde, 2, mean, na.rm = TRUE))
 # impute missing values with the column-min
 impute_matrix(D_tilde, apply(D_tilde, 2, min, na.rm = TRUE))
 
-####------------Imputation with a matrix------------####
+#### ------------Imputation with a matrix------------####
 # impute missing values with random Gaussian noise
 noise <- matrix(rnorm(prod(dim(D_tilde))), nrow(D_tilde), ncol(D_tilde))
 impute_matrix(D_tilde, noise)
 
-####------------Imputation with LOD/sqrt(2)------------####
+#### ------------Imputation with LOD/sqrt(2)------------####
 D <- sim_data(5, 5)$D
 lod_info <- sim_lod(D, q = 0.2)
 D_tilde <- lod_info$D_tilde

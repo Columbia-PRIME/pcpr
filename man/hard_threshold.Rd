@@ -22,7 +22,7 @@ matrix \code{D}, making \code{D} sparser: elements of \code{D} whose absolute va
 than a given threshold \code{thresh} are set to 0, i.e. \eqn{D[|D| < thresh] = 0}.
 
 This is used in the non-convex PCP function \code{\link[=rrmc]{rrmc()}} to provide a non-convex
-replacement for the \code{\link[=prox_l1]{prox_l1()}} method used in the convex PCP function
+replacement for the \code{prox_l1()} method used in the convex PCP function
 \code{\link[=root_pcp]{root_pcp()}}. It is used to iteratively model the sparse \code{S} matrix with the
 help of an adaptive threshold (\code{thresh} changes over the course of
 optimization).
@@ -33,7 +33,4 @@ D <- matrix(rnorm(25), 5, 5)
 S <- hard_threshold(D, thresh = 1)
 D
 S
-}
-\seealso{
-\code{\link[=prox_l1]{prox_l1()}}
 }

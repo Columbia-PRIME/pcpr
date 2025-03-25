@@ -16,11 +16,11 @@
 #' @param D The input data matrix (cannot have `NA` values).
 #'
 #' @returns A numeric vector containing the singular values of `D`.
+#'
+#' @seealso [matrix_rank()]
 #' @examples
 #' data <- sim_data()
 #' sing(data$D)
-#' # could plot the singular values for visual inspection with e.g.
-#' # plot(sing(data$D), type = 'b')
 #' @references "Singular value decomposition" [Wikipedia article](https://en.wikipedia.org/wiki/Singular_value_decomposition).
 #' @export
 sing <- function(D) {

@@ -15,9 +15,9 @@
 #' underlying patterns in `L`.
 #'
 #' `rrmc()`'s incremental rank-based strategy first estimates a rank-`1` model
-#' \eqn{(L^(1), S^(1))}, before using the rank-`1` model as the initialization
-#' point to then construct a rank-`2` model \eqn{(L^(2), S^(2))}, and so on,
-#' until the desired rank-`r` model \eqn{(L^(r), S^(r))} is recovered. All
+#' \eqn{(L^{(1)}, S^{(1)})}, before using the rank-`1` model as the initialization
+#' point to then construct a rank-`2` model \eqn{(L^{(2)}, S^{(2)})}, and so on,
+#' until the desired rank-`r` model \eqn{(L^{(r)}, S^{(r)})} is recovered. All
 #' models from ranks `1` through `r` are returned by `rrmc()` in this way.
 #'
 #' Experimentally, the `rrmc()` approach to PCP has best been able to handle
@@ -161,7 +161,7 @@
 #' # First we will simulate a simple dataset with the sim_data() function.
 #' # The dataset will be a 100x10 matrix comprised of:
 #' # 1. A rank-3 component as the ground truth L matrix;
-#' # 2. A ground truth sparse component S w/outliers in 1st & last entries; and
+#' # 2. A ground truth sparse component S w/outliers along the diagonal; and
 #' # 3. A dense Gaussian noise component
 #' data <- sim_data()
 #' # Normally we would conduct grid search to tune eta. But, to keep the example

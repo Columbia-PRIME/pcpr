@@ -5,8 +5,8 @@
 
 <!-- badges: start -->
 
-[![CRAN
-status](https://www.r-pkg.org/badges/version/pcpr)](https://cran.r-project.org/package=pcpr)
+<!-- [![CRAN status](https://www.r-pkg.org/badges/version/pcpr)](https://cran.r-project.org/package=pcpr) -->
+
 [![R-CMD-check](https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml)
 [![License: GPL
 v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
@@ -17,12 +17,17 @@ Downloads](https://cranlogs.r-pkg.org/badges/grand-total/pcpr)](https://cranlogs
 The R package `pcpr` implements Principal Component Pursuit (PCP), a
 robust dimensionality reduction technique, for pattern recognition
 tailored to environmental health data. The statistical methodology and
-computational details are provided in [Gibson et
-al. (2022)](https://doi.org/10.1289/EHP10479).
+computational details are provided in Gibson et al. (2022).
 
 ## Installation
 
-You can install the development version of pcpr from GitHub with:
+You can install the latest official CRAN release of `pcpr` with:
+
+``` r
+install.packages("pcpr")
+```
+
+The development version of `pcpr` can be installed from GitHub with:
 
 ``` r
 # install.packages("pak")
@@ -39,8 +44,8 @@ library(pcpr)
 ## Getting help
 
 Extensive documentation is available on our pkgdown
-[website](https://columbia-prime.github.io/pcpr/) and offline within R.
-You can see the `pcpr` reference manual in R with:
+[website](https://columbia-prime.github.io/pcpr/reference/index.html)
+and offline within R. You can see the `pcpr` reference manual in R with:
 
 ``` r
 help("pcpr")
@@ -72,12 +77,7 @@ GitHub](https://github.com/Columbia-PRIME/pcpr/issues).
 PCP algorithms model an observed exposure matrix $D$ as the sum of three
 underlying ground-truth matrices:
 
-<figure>
-<img src="man/figures/README-pcp-model-1.jpeg"
-alt="A PCP mixtures model visualized" />
-<figcaption aria-hidden="true">A PCP mixtures model
-visualized</figcaption>
-</figure>
+![](man/figures/README-pcp-model-1.jpeg)
 
 a low-rank matrix $L_0$ encoding consistent patterns of exposure, a
 sparse matrix $S_0$ isolating unique or outlying exposure events (that
@@ -99,16 +99,15 @@ making `pcpr` particularly powerful for EH research:
 The methods in `pcpr` have already been applied in many environmental
 health studies. Several are listed below:
 
-- [Tao et al. (2023)](https://doi.org/10.1097/EE9.0000000000000243)
-  apply PCP to investigate the association between source-specific fine
-  particulate matter and myocardial infarction hospitalizations in NYC.
-- [Wu et al. (2024)](https://doi.org/10.1021/acs.est.3c10314) employ PCP
-  for exposome profiling of environmental pollutants in seminal plasma,
-  uncovering novel associations with semen parameters.
-- [Benavides et
-  al. (2024)](https://doi.org/10.1016/j.envint.2024.108526) use PCP to
-  develop a Community Severity Index in NYC, measuring the barrier
-  effect of road infrastructure and traffic in cities.
+- Tao et al. (2023) apply PCP to investigate the association between
+  source-specific fine particulate matter and myocardial infarction
+  hospitalizations in NYC.
+- Wu et al. (2024) employ PCP for exposome profiling of environmental
+  pollutants in seminal plasma, uncovering novel associations with semen
+  parameters.
+- Benavides et al. (2024) use PCP to develop a Community Severity Index
+  in NYC, measuring the barrier effect of road infrastructure and
+  traffic in cities.
 
 ## Acknowledgements
 
@@ -128,13 +127,11 @@ Environmental Epidemiology. R package version 1.0.0,
       url = {https://columbia-prime.github.io/pcpr/},
     }
 
-Please also cite [Gibson et
-al. (2022)](https://doi.org/10.1289/EHP10479).
+Please also cite Gibson et al. (2022).
 
 This work was supported by NIEHS PRIME R01 ES028805.
 
-Special thanks to [Sophie Calhoun](https://www.sophiecalhoun.com/) for
-designing `pcpr`’s logo!
+Special thanks to Sophie Calhoun for designing `pcpr`’s logo!
 
 ## Usage
 
@@ -192,16 +189,14 @@ Gibson, Elizabeth A., Junhui Zhang, Jingkai Yan, Lawrence Chillrud,
 Jaime Benavides, Yanelli Nunez, Julie B. Herbstman, Jeff Goldsmith, John
 Wright, and Marianthi-Anna Kioumourtzoglou. “Principal component pursuit
 for pattern identification in environmental mixtures.” Environmental
-Health Perspectives 130, no. 11 (2022): 117008. \[available
-[here](https://doi.org/10.1289/EHP10479)\]
+Health Perspectives 130, no. 11 (2022): 117008.
 
 Tao, Rachel H., Lawrence G. Chillrud, Yanelli Nunez, Sebastian T.
 Rowland, Amelia K. Boehme, Jingkai Yan, Jeff Goldsmith, John Wright, and
 Marianthi-Anna Kioumourtzoglou. “Applying principal component pursuit to
 investigate the association between source-specific fine particulate
 matter and myocardial infarction hospitalizations in New York City.”
-Environmental Epidemiology 7 (2), (2023). \[available
-[here](https://doi.org/10.1097/EE9.0000000000000243)\]
+Environmental Epidemiology 7 (2), (2023).
 
 Wu, Haotian, Vrinda Kalia, Katherine E. Manz, Lawrence Chillrud,
 Nathalie Hoffmann Dishon, Gabriela L. Jackson, Christian K. Dye, Raoul
@@ -209,11 +204,9 @@ Orvieto, Adva Aizer, Hagai Levine, Marianthi-Anna Kioumourtzoglou, Kurt
 D. Pennell, Andrea A. Baccarelli, and Ronit Machtinger. “Exposome
 Profiling of Environmental Pollutants in Seminal Plasma and Novel
 Associations with Semen Parameters.” Environmental Science & Technology,
-58 (31), (2024): 13594-13604. \[available
-[here](https://doi.org/10.1021/acs.est.3c10314)\]
+58 (31), (2024): 13594-13604.
 
 Benavides, Jaime, Sabah Usmani, Vijay Kumar, and Marianthi-Anna
 Kioumourtzoglou. “Development of a community severance index for urban
 areas in the United States: A case study in New York City.” Environment
-International, 185, (2024): 108526. \[available
-[here](https://doi.org/10.1016/j.envint.2024.108526)\]
+International, 185, (2024): 108526.

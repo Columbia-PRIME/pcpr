@@ -174,7 +174,7 @@
 #' # 1. A rank-2 component as the ground truth L matrix;
 #' # 2. A ground truth sparse component S w/outliers along the diagonal; and
 #' # 3. A dense Gaussian noise component
-#' data <- sim_data(r = 2, sparse_nonzero_idxs = seq(1, 1000, 101), sigma = 0.1)
+#' data <- sim_data(r = 2, sigma = 0.1)
 #' # Normally we would conduct grid search to tune lambda and mu. But, to keep
 #' # the example short, we will just use best parameters found in the below grid
 #' # search example:
@@ -341,6 +341,7 @@ root_pcp <- function(D, lambda = NULL, mu = NULL, LOD = -Inf, non_negative = TRU
 #'
 #' @seealso [root_pcp()]
 #' @keywords internal
+#' @noRd
 loss_lod <- function(D, X, LOD) {
   X_lod <- (X - D) * (D >= 0) +
     (X - LOD) * ((D < 0) & (X > LOD)) +

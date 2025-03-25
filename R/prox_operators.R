@@ -12,8 +12,8 @@
 #'
 #' @returns The thresholded error/noise matrix.
 #'
-#' @seealso [prox_l1()], [prox_nuclear()]
 #' @keywords internal
+#' @noRd
 prox_frobenius <- function(Z, c) {
   n <- norm(Z, type = "F")
   if (n <= c) {
@@ -38,8 +38,8 @@ prox_frobenius <- function(Z, c) {
 #'
 #' @returns The thresholded sparse matrix.
 #'
-#' @seealso [hard_threshold()], [prox_frobenius()], [prox_nuclear()]
 #' @keywords internal
+#' @noRd
 prox_l1 <- function(S, c) {
   sign(S) * pmax(abs(S) - c, 0)
 }
@@ -62,8 +62,8 @@ prox_l1 <- function(S, c) {
 #' * `X_nuclear_norm`: The sum of the absolute values of the thresholded
 #'   singular values (used in objective function).
 #'
-#' @seealso [proj_rank_r()], [prox_frobenius()], [prox_l1()]
 #' @keywords internal
+#' @noRd
 prox_nuclear <- function(L, c) {
   USV <- svd(L)
   s <- sign(USV$d) * pmax(abs(USV$d) - c, 0)

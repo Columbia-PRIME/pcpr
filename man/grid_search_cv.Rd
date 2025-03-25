@@ -234,9 +234,21 @@ parameter setting will have an estimated sparsity lower than 5\%.
 # First we will simulate a simple dataset with the sim_data() function.
 # The dataset will be a 100x10 matrix comprised of:
 # 1. A rank-3 component as the ground truth L matrix;
-# 2. A ground truth sparse component S w/outliers in 1st & last entries; and
+# 2. A ground truth sparse component S w/outliers along the diagonal; and
 # 3. A dense Gaussian noise component
 data <- sim_data()
+#### -------Tiny grid search-------####
+# Here is a tiny grid search just to test the function.
+# In practice we would recommend a larger grid search.
+gs <- grid_search_cv(
+  data$D,
+  rrmc,
+  data.frame("eta" = 0.3),
+  r = 3,
+  num_runs = 2
+)
+gs$summary_stats
+#### -------Small grid search-------####
 # Normally we would conduct grid search to tune eta. But, to keep the example
 # short, we will just use best parameters from the below grid search example:
 \dontrun{

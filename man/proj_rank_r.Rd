@@ -26,7 +26,7 @@ and \code{D} is the input matrix.
 
 \code{proj_rank_r()} is used to iteratively model the low-rank \code{L} matrix in the
 non-convex PCP function \code{\link[=rrmc]{rrmc()}}, providing a non-convex replacement for the
-\code{\link[=prox_nuclear]{prox_nuclear()}} method used in the convex PCP function \code{\link[=root_pcp]{root_pcp()}}.
+\code{prox_nuclear()} method used in the convex PCP function \code{\link[=root_pcp]{root_pcp()}}.
 
 Intuitively, \code{proj_rank_r()} can also be thought of as providing a PCA
 estimate of a rank-\code{r} matrix \code{L} from observed data \code{D}.
@@ -51,5 +51,5 @@ data.frame(
 )
 }
 \seealso{
-\code{\link[=prox_nuclear]{prox_nuclear()}}
+\code{\link[=rrmc]{rrmc()}}
 }

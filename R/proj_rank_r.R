@@ -12,7 +12,7 @@
 #'
 #' `proj_rank_r()` is used to iteratively model the low-rank `L` matrix in the
 #' non-convex PCP function [rrmc()], providing a non-convex replacement for the
-#' [prox_nuclear()] method used in the convex PCP function [root_pcp()].
+#' `prox_nuclear()` method used in the convex PCP function [root_pcp()].
 #'
 #' Intuitively, `proj_rank_r()` can also be thought of as providing a PCA
 #' estimate of a rank-`r` matrix `L` from observed data `D`.
@@ -22,7 +22,7 @@
 #'
 #' @returns The best rank-`r` approximation to `D` via a truncated SVD.
 #'
-#' @seealso [prox_nuclear()]
+#' @seealso [rrmc()]
 #' @examples
 #' # Simulating a simple dataset D with the sim_data() function.
 #' # The dataset will be a 10x5 matrix comprised of:

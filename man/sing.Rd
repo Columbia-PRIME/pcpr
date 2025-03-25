@@ -28,9 +28,10 @@ well-defined low rank structure (rapidly decaying singular values),
 \examples{
 data <- sim_data()
 sing(data$D)
-# could plot the singular values for visual inspection with e.g.
-# plot(sing(data$D), type = 'b')
 }
 \references{
 "Singular value decomposition" \href{https://en.wikipedia.org/wiki/Singular_value_decomposition}{Wikipedia article}.
+}
+\seealso{
+\code{\link[=matrix_rank]{matrix_rank()}}
 }

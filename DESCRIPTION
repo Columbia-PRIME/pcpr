@@ -22,7 +22,7 @@ Authors@R: c(
   )
 Description: Implementation of the pattern recognition technique Principal
     Component Pursuit tailored to environmental health data, as described
-    in Gibson et al. (2022) <doi:10.1289/EHP10479>.
+    in Gibson et al (2022) <doi:10.1289/EHP10479>.
 License: GPL (>= 3)
 URL: https://columbia-prime.github.io/pcpr/,
     https://github.com/Columbia-PRIME/pcpr

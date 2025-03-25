@@ -6,7 +6,7 @@
 #' than a given threshold `thresh` are set to 0, i.e. \eqn{D[|D| < thresh] = 0}.
 #'
 #' This is used in the non-convex PCP function [rrmc()] to provide a non-convex
-#' replacement for the [prox_l1()] method used in the convex PCP function
+#' replacement for the `prox_l1()` method used in the convex PCP function
 #' [root_pcp()]. It is used to iteratively model the sparse `S` matrix with the
 #' help of an adaptive threshold (`thresh` changes over the course of
 #' optimization).
@@ -18,7 +18,6 @@
 #'
 #' @returns The hard-thresholded matrix.
 #'
-#' @seealso [prox_l1()]
 #' @examples
 #' set.seed(42)
 #' D <- matrix(rnorm(25), 5, 5)

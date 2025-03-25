@@ -33,7 +33,7 @@ touch upon:
 We recommend users skim this crash course before reading the two code-heavy vignettes:
 
 * `vignette("pcp-quickstart")`: applying PCP to a simulated environmental mixture
-* `vignette("pcp-applied")`: employing PCP for source apportionment of real-world PM2.5 data using the `queens` dataset
+* `vignette("pcp-applied")`: employing PCP for source apportionment of real-world PM2.5 air pollution concentration data using the `queens` dataset
 
 ## PCP modeling overview
 
@@ -419,7 +419,7 @@ statistics `summary_stats`. Below are a few suggestions for how to interpret the
 To see how to apply all of the above in `pcpr`, we recommend reading:
 
 * `vignette("pcp-quickstart")`: applying PCP to a simulated environmental mixture
-* `vignette("pcp-applied")`: employing PCP for source apportionment of real-world PM2.5 data using the `queens` dataset
+* `vignette("pcp-applied")`: employing PCP for source apportionment of real-world PM2.5 air pollution concentration data using the `queens` dataset
 
 ## References
 

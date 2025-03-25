@@ -69,7 +69,7 @@ We recommend reading the vignettes in the following order:
     PCP](https://columbia-prime.github.io/pcpr/articles/pcp-applied.html),
     or if directly in R: `vignette("pcp-applied")`
 
-Have a bug to report or quesion to ask? [Open an issue on our
+Have a bug to report or question to ask? [Open an issue on our
 GitHub](https://github.com/Columbia-PRIME/pcpr/issues).
 
 ## Modeling overview

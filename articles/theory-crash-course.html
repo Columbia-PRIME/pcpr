@@ -128,8 +128,8 @@ p\)</span>, where <span class="math inline">\(n\)</span> is the number
 of observations (e.g. study participants or measurement dates) and <span class="math inline">\(p\)</span> is the number of exposures
 (e.g. chemical and/or non-chemical stressors). Beyond this mixtures
 model, the main assumption made by PCP is that <span class="math inline">\(Z_0 \sim N(\mu, \sigma^2)\)</span> consists of
-i.i.d. Gaussian noise corrupting each entry of the overall exposure
-matrix <span class="math inline">\(D\)</span>.</p>
+independently and identically distributed (i.i.d.) Gaussian noise
+corrupting each entry of the overall exposure matrix <span class="math inline">\(D\)</span>.</p>
 <p>The models in <code>pcpr</code> seek to decompose an observed data
 matrix <span class="math inline">\(D\)</span> into estimated low-rank
 and sparse components <span class="math inline">\(L\)</span> and <span class="math inline">\(S\)</span> for use in downstream environmental
@@ -238,7 +238,7 @@ mind regarding the quality of recovered missing observations:</p>
 <li>The fewer observations there are in <span class="math inline">\(D\)</span>, the harder it is to accurately
 reconstruct <span class="math inline">\(L\)</span> (therefore estimation
 of <em>both</em> unobserved <em>and</em> observed measurements in <span class="math inline">\(L\)</span> degrades); and</li>
-<li>Greater proportions of missingness in <span class="math inline">\(D\)</span> artifically drive up the sparsity of
+<li>Greater proportions of missingness in <span class="math inline">\(D\)</span> artificially drive up the sparsity of
 the estimated <span class="math inline">\(S\)</span> matrix. This is
 because it is not possible to recover a sparse event in <span class="math inline">\(S\)</span> when the corresponding entry in <span class="math inline">\(D\)</span> is unobserved. By definition, sparse
 events in <span class="math inline">\(S\)</span> cannot be explained by
@@ -352,7 +352,8 @@ relative differences:</p>
 <tr class="even">
 <td>Rank determination?</td>
 <td><em>Autonomous</em></td>
-<td><em>User-defined</em></td>
+<td>
+<em>User-defined</em>*</td>
 </tr>
 <tr class="odd">
 <td>Sparse event identification?</td>
@@ -366,9 +367,12 @@ relative differences:</p>
 </tr>
 </tbody>
 </table>
+<p>*<code><a href="../reference/rrmc.html">rrmc()</a></code> can be paired with the cross-validated
+<code><a href="../reference/grid_search_cv.html">grid_search_cv()</a></code> function for autonomous rank
+determination.</p>
 <p>Convex PCP via <code><a href="../reference/root_pcp.html">root_pcp()</a></code> is best for data characterized
-by rapidly decaying singular values, indicative of very well-defined
-latent patterns.</p>
+by rapidly decaying singular values (e.g. image and video data),
+indicative of very well-defined latent patterns.</p>
 <p>Non-convex PCP with <code><a href="../reference/rrmc.html">rrmc()</a></code> is best suited for data
 characterized by slowly decaying singular values, indicative of complex
 underlying patterns and a relatively large degree of noise. Most EH data
@@ -390,7 +394,7 @@ which the target low-rank matrix <span class="math inline">\(L_0\)</span> can be
 low-rank (i.e. <span class="math inline">\(L_0\)</span> is governed by
 only a few very well-defined patterns). This is often the case with
 image and video data (characterized by rapidly decaying singular
-values), but not common for EH data. EH data is typically is only
+values), but not common for EH data. EH data is typically only
 approximately low-rank (characterized by complex patterns and slowly
 decaying singular values).</p>
 <p>The convex model available in <code>pcpr</code> is
@@ -425,17 +429,21 @@ suited to handling EH data. Non-convex formulations provide this
 flexibility by allowing the user to interrogate the data at different
 ranks.</p>
 <p>The drawback here is that non-convex algorithms can no longer
-determine the rank best describing the data autonomously, instead
-requiring the researcher to subjectively specify the rank <span class="math inline">\(r\)</span> as in PCA. One of the more glaring
-trade-offs made by non-convex methods for this improved run-time and
-flexibility is weaker theoretical promises; specifically, non-convex PCP
-runs the risk of finding spurious <em>local</em> optima, rather than the
-<em>global</em> optimum guaranteed by their convex siblings. Having said
-that, theory has been developed guaranteeing equivalent performance
-between non-convex implementations and closely related convex
-formulations under certain conditions. These advancements provide strong
-motivation for non-convex frameworks despite their weaker theoretical
-promises.</p>
+determine the rank best describing the data on their own, instead
+requiring the researcher to subjectively specify the rank <span class="math inline">\(r\)</span> as in PCA. However, by pairing
+non-convex PCP algorithms with the cross-validation routine implemented
+in the <code><a href="../reference/grid_search_cv.html">grid_search_cv()</a></code> function, the optimal rank can be
+determined semi-autonomously; the researcher need only define a rank
+<em>search space</em> from which the <em>optimal rank will be identified
+via grid search</em>. One of the more glaring trade-offs made by
+non-convex methods for this improved run-time and flexibility is weaker
+theoretical promises; specifically, non-convex PCP runs the risk of
+finding spurious <em>local</em> optima, rather than the <em>global</em>
+optimum guaranteed by their convex siblings. Having said that, theory
+has been developed guaranteeing equivalent performance between
+non-convex implementations and closely related convex formulations under
+certain conditions. These advancements provide strong motivation for
+non-convex frameworks despite their weaker theoretical promises.</p>
 <p>The non-convex model available in <code>pcpr</code> is
 <code><a href="../reference/rrmc.html">rrmc()</a></code>. We refer readers to <a href="https://proceedings.mlr.press/v70/cherapanamjeri17a.html" class="external-link">Cherapanamjeri
 et al. (2017)</a> for an in depth look at the mathematical details.</p>
@@ -598,7 +606,7 @@ relatively few selected test sets.</li>
 </ul>
 </div>
 <div class="section level3">
-<h3 id="interpretaion-of-results">Interpretaion of results<a class="anchor" aria-label="anchor" href="#interpretaion-of-results"></a>
+<h3 id="interpretation-of-results">Interpretation of results<a class="anchor" aria-label="anchor" href="#interpretation-of-results"></a>
 </h3>
 <p>Once the grid search of has been conducted, the optimal
 hyperparameters can be chosen by examining the output statistics

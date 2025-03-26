@@ -188,16 +188,8 @@ huge proportions (i.e., 75\%) of observations falling below the LOD.
 # 2. A ground truth sparse component S w/outliers along the diagonal; and
 # 3. A dense Gaussian noise component
 data <- sim_data()
-# Normally we would conduct grid search to tune eta. But, to keep the example
-# short, we will just use best parameters from the below grid search example:
-\dontrun{
-eta_0 <- get_pcp_defaults(data$D)$eta
-eta_grid <- data.frame("eta" = sort(c(0.1 * eta_0, eta_0 * seq(1, 10, 2))), "r" = 7)
-gs <- grid_search_cv(data$D, rrmc, eta_grid)
-dplyr::arrange(gs$summary_stats, rel_err)
-}
-# The gs found the best rank to be 3, and the best eta to be 0.3 or 0.4, so
-# we will split the difference and use an eta of 0.35
+# Best practice is to conduct a grid search with grid_search_cv() function,
+# but we skip that here for brevity.
 pcp_model <- rrmc(data$D, r = 3, eta = 0.35)
 data.frame(
   "Observed_relative_error" = norm(data$L - data$D, "F") / norm(data$L, "F"),
@@ -205,11 +197,6 @@ data.frame(
   "PCP_L_error" = norm(data$L - pcp_model$L, "F") / norm(data$L, "F"),
   "PCP_S_error" = norm(data$S - pcp_model$S, "F") / norm(data$S, "F")
 )
-# Results:
-# The grid search correctly found the rank (3) of the ground truth L matrix!
-# PCP outperformed PCA in it's recovery of the L matrix (even though we let
-# PCA "cheat" by telling PCA it was looking for a rank 3 solution)!
-# PCP successfully isolated the outlying event in S!
 }
 \references{
 Cherapanamjeri, Yeshwanth, Kartik Gupta, and Prateek Jain.

@@ -136,6 +136,11 @@ Special thanks to Sophie Calhoun for designing `pcpr`’s logo!
 ## Usage
 
 ``` r
+# In the below example, we simulate a simple mixtures model and run PCP,
+# comparing it's performance to that of PCA. For an in depth example with
+# simulated data, see vignette("pcp-quickstart"). For more realistic
+# PCP usage, check out vignette("pcp-applied").
+
 # Simulate an environmental mixture
 data <- sim_data(
   n = 100, p = 10, r = 3,
@@ -149,11 +154,21 @@ Z_0 <- data$Z # Ground truth noise matrix
 
 # Simulate a limit of detection for each chemical in mixture
 lod_info <- sim_lod(D, q = 0.1)
+D_lod <- lod_info$D_tilde
 lod <- lod_info$lod
 
 # Simulate missing observations
-corrupted_data <- sim_na(D, perc = 0.05)
+corrupted_data <- sim_na(D_lod, perc = 0.05)
 D_tilde <- corrupted_data$D_tilde
+
+# Finish simulating LOD by imputing values < LOD with LOD/sqrt(2)
+lod_root2 <- matrix(
+  lod / sqrt(2),
+  nrow = nrow(D_tilde),
+  ncol = ncol(D_tilde), byrow = TRUE
+)
+lod_idxs <- which(lod_info$tilde_mask == 1)
+D_tilde[lod_idxs] <- lod_root2[lod_idxs]
 
 # Run grid search to obtain optimal r, eta parameters
 # (Not shown here to save space, see vignette("pcp-quickstart")
@@ -163,6 +178,9 @@ eta_star <- 0.224
 
 # Run non-convex PCP to estimate L, S from D_tilde
 pcp_model <- rrmc(D_tilde, r = r_star, eta = eta_star, LOD = lod)
+
+# Clean up sparse matrix
+pcp_model$S <- hard_threshold(pcp_model$S, thresh = 0.4)
 
 # Benchmark with PCA's attempt at recovering L
 D_imputed <- impute_matrix(D_tilde, apply(D_tilde, 2, mean, na.rm = TRUE))
@@ -178,9 +196,9 @@ data.frame(
   "PCP_S_sparsity" = sparsity(pcp_model$S)
 )
 #>   Obs_rel_err PCA_L_rel_err PCP_L_rel_err PCP_S_rel_err PCP_L_rank
-#> 1   0.1496416    0.08674625    0.05215485     0.3600219          3
+#> 1   0.1440249    0.08096932    0.05847706      0.232115          3
 #>   PCP_S_sparsity
-#> 1          0.964
+#> 1          0.989
 ```
 
 ## References

@@ -126,7 +126,8 @@ lod_root2 <- matrix(
   nrow = nrow(D_tilde),
   ncol = ncol(D_tilde), byrow = TRUE
 )
-D_tilde[which(lod_info$tilde_mask == 1)] <- lod_root2[which(lod_info$tilde_mask == 1)]
+lod_idxs <- which(lod_info$tilde_mask == 1)
+D_tilde[lod_idxs] <- lod_root2[lod_idxs]
 plot_matrix(D_tilde)
 ```
 
@@ -154,9 +155,11 @@ indicative of complex underlying patterns and a relatively large degree of noise
 Most EH data can be described this way. `root_pcp()` is best for data characterized
 by rapidly decaying singular values, indicative of very well-defined latent patterns.
 
-For a simple example like the above, both PCP models are perfectly suitable. 
+The singular values plotted above decay quickly from the first to the second, but very gradually
+from the second onward. For this simple simulated dataset, both PCP models are perfectly suitable.
 We will use `rrmc()`, as this is the model environmental health researchers will
-likely employ most frequently.
+likely employ most frequently. The `vignette("pcp-applied")` contains an exemplary
+mixtures matrix singular value plot with slowly decaying singular values.
 
 ## Grid search for parameter tuning
 
@@ -188,7 +191,7 @@ passed `etas` as the `grid` argument to search and sent $r = 5$ as a constant
 parameter common to all models in the search. Since `length(etas) = 6` and $r = 5$, we
 searched through 30 different PCP models. The `num_runs` argument determines how many (random)
 tests should be performed for each unique model setting. By default, `num_runs = 100`,
-so our grid search tuned `r` and `eta` by measuring the performance of 300 different PCP models.
+so our grid search tuned `r` and `eta` by measuring the performance of 3000 different PCP models.
 We passed the simulated `lod` vector as another constant to the grid search,
 equipping each `rrmc()` run with the same LOD information.
 
@@ -205,7 +208,13 @@ gs$summary_stats
 Inspecting the `summary_stats` table from the output grid search provides the mean-aggregated
 statistics for each of the 30 distinct parameter settings we tested.
 The grid search correctly identified the rank `r r_star` solution as the best
-(lowest relative error rate). The corresponding `eta` = `r eta_star`.
+(lowest relative error `rel_err` rate). The corresponding `eta` = `r eta_star`. The top three parameter
+settings also seem to have reasonable `S_sparsity` levels as well (all are above `0.95`). The next three
+parameter settings seem to under-regularize the sparse `S` matrix by quite a bit, as 80% of entries are non-zero.
+We will take the top parameters identified by the grid search in this instance. Had the very top parameters
+yielded a sparsity of e.g. `0.7`, we likely then would have preferred the second set of parameters with sparisities in the
+`0.9`s. This decision would have been grounded in prior assumptions about the amount of outliers to expect in the mixtuere.
+For more on the interpreation of grid search results, consult the documentation for the `grid_search_cv()` function.
 
 ## Running PCP
 
@@ -286,6 +295,8 @@ PCP's sparse matrix estimate was only off from the ground truth `S_0` by
 
 We can now pair our estimated `L` matrix with any matrix factorization method of our
 choice (e.g. PCA, factor analysis, or non-negative matrix factorization) to extract
-the latent chemical exposure patterns. These patterns, along with the isolated outlying
+the latent chemical exposure patterns (an example of what this looks like is
+in `vignette("pcp-applied")`, where non-negative matrix factorization is used to extract
+patterns from PCP's `L` matrix). These patterns, along with the isolated outlying
 exposure events in `S`, can then be analyzed with any outcomes of interest in
 downstream epidemiological analyses.

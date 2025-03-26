@@ -238,39 +238,17 @@ parameter setting will have an estimated sparsity lower than 5\%.
 # 3. A dense Gaussian noise component
 data <- sim_data()
 #### -------Tiny grid search-------####
-# Here is a tiny grid search just to test the function.
+# Here is a tiny grid search just to test the function quickly.
 # In practice we would recommend a larger grid search.
+# For examples of larger searches, see the vignettes.
 gs <- grid_search_cv(
   data$D,
   rrmc,
-  data.frame("eta" = 0.3),
+  data.frame("eta" = 0.35),
   r = 3,
   num_runs = 2
 )
 gs$summary_stats
-#### -------Small grid search-------####
-# Normally we would conduct grid search to tune eta. But, to keep the example
-# short, we will just use best parameters from the below grid search example:
-\dontrun{
-eta_0 <- get_pcp_defaults(data$D)$eta
-eta_grid <- data.frame("eta" = sort(c(0.1 * eta_0, eta_0 * seq(1, 10, 2))), "r" = 7)
-gs <- grid_search_cv(data$D, rrmc, eta_grid)
-gs$summary_stats
-}
-# The gs found the best rank to be 3, and the best eta to be 0.3 or 0.4, so
-# we will split the difference and use an eta of 0.35
-pcp_model <- rrmc(data$D, r = 3, eta = 0.35)
-data.frame(
-  "Observed_relative_error" = norm(data$L - data$D, "F") / norm(data$L, "F"),
-  "PCA_error" = norm(data$L - proj_rank_r(data$D, r = 3), "F") / norm(data$L, "F"),
-  "PCP_L_error" = norm(data$L - pcp_model$L, "F") / norm(data$L, "F"),
-  "PCP_S_error" = norm(data$S - pcp_model$S, "F") / norm(data$S, "F")
-)
-# Results:
-# The grid search correctly found the rank (3) of the ground truth L matrix!
-# PCP outperformed PCA in it's recovery of the L matrix (even though we let
-# PCA "cheat" by telling PCA it was looking for a rank 3 solution)!
-# PCP successfully isolated the outlying event in S!
 }
 \seealso{
 \code{\link[=sim_na]{sim_na()}}, \code{\link[=sparsity]{sparsity()}}, \code{\link[=matrix_rank]{matrix_rank()}}, \code{\link[=get_pcp_defaults]{get_pcp_defaults()}}

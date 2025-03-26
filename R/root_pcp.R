@@ -175,20 +175,8 @@
 #' # 2. A ground truth sparse component S w/outliers along the diagonal; and
 #' # 3. A dense Gaussian noise component
 #' data <- sim_data(r = 2, sigma = 0.1)
-#' # Normally we would conduct grid search to tune lambda and mu. But, to keep
-#' # the example short, we will just use best parameters found in the below grid
-#' # search example:
-#' \dontrun{
-#' lambda_0 <- get_pcp_defaults(data$D)$lambda
-#' mu_0 <- get_pcp_defaults(data$D)$mu
-#' lambdas <- lambda_0 + seq(-0.05, 0.2, 0.025)
-#' mus <- mu_0 + seq(-1, 1, 0.3)
-#' params <- expand.grid(lambdas, mus)
-#' names(params) <- c("lambda", "mu")
-#' gs <- grid_search_cv(data$D, root_pcp, params)
-#' dplyr::arrange(gs$summary_stats, rel_err)
-#' }
-#' # The gs found the best parameters to be lambda = 0.225 and mu = 3.04
+#' # Best practice is to conduct a grid search with grid_search_cv() function,
+#' # but we skip that here for brevity.
 #' pcp_model <- root_pcp(data$D, lambda = 0.225, mu = 3.04)
 #' data.frame(
 #'   "Estimated_L_rank" = matrix_rank(pcp_model$L, 5e-2),
@@ -197,11 +185,6 @@
 #'   "PCP_L_error" = norm(data$L - pcp_model$L, "F") / norm(data$L, "F"),
 #'   "PCP_S_error" = norm(data$S - pcp_model$S, "F") / norm(data$S, "F")
 #' )
-#' # Results:
-#' # PCP found a rank 2 solution!
-#' # PCP outperformed PCA in it's recovery of the L matrix (even though we let
-#' # PCA "cheat" by telling PCA it was looking for a rank 2 solution)!
-#' # PCP successfully isolated the outlying events in S!
 #' @references Zhang, Junhui, Jingkai Yan, and John Wright.
 #'   "Square root principal component pursuit: tuning-free noisy robust matrix
 #'   recovery." Advances in Neural Information Processing Systems 34 (2021):

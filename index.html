@@ -159,7 +159,12 @@
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Simulate an environmental mixture</span></span>
+<code class="sourceCode R"><span><span class="co"># In the below example, we simulate a simple mixtures model and run PCP,</span></span>
+<span><span class="co"># comparing it's performance to that of PCA. For an in depth example with</span></span>
+<span><span class="co"># simulated data, see vignette("pcp-quickstart"). For more realistic</span></span>
+<span><span class="co"># PCP usage, check out vignette("pcp-applied").</span></span>
+<span></span>
+<span><span class="co"># Simulate an environmental mixture</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sim_data.html">sim_data</a></span><span class="op">(</span></span>
 <span>  n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">10</span>, r <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  sparse_nonzero_idxs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1000</span>, <span class="fl">101</span><span class="op">)</span>,</span>
@@ -172,11 +177,21 @@
 <span></span>
 <span><span class="co"># Simulate a limit of detection for each chemical in mixture</span></span>
 <span><span class="va">lod_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sim_lod.html">sim_lod</a></span><span class="op">(</span><span class="va">D</span>, q <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
+<span><span class="va">D_lod</span> <span class="op">&lt;-</span> <span class="va">lod_info</span><span class="op">$</span><span class="va">D_tilde</span></span>
 <span><span class="va">lod</span> <span class="op">&lt;-</span> <span class="va">lod_info</span><span class="op">$</span><span class="va">lod</span></span>
 <span></span>
 <span><span class="co"># Simulate missing observations</span></span>
-<span><span class="va">corrupted_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sim_na.html">sim_na</a></span><span class="op">(</span><span class="va">D</span>, perc <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="va">corrupted_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sim_na.html">sim_na</a></span><span class="op">(</span><span class="va">D_lod</span>, perc <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="va">D_tilde</span> <span class="op">&lt;-</span> <span class="va">corrupted_data</span><span class="op">$</span><span class="va">D_tilde</span></span>
+<span></span>
+<span><span class="co"># Finish simulating LOD by imputing values &lt; LOD with LOD/sqrt(2)</span></span>
+<span><span class="va">lod_root2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
+<span>  <span class="va">lod</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>  nrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span>,</span>
+<span>  ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">lod_idxs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">lod_info</span><span class="op">$</span><span class="va">tilde_mask</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">D_tilde</span><span class="op">[</span><span class="va">lod_idxs</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">lod_root2</span><span class="op">[</span><span class="va">lod_idxs</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Run grid search to obtain optimal r, eta parameters</span></span>
 <span><span class="co"># (Not shown here to save space, see vignette("pcp-quickstart")</span></span>
@@ -186,6 +201,9 @@
 <span></span>
 <span><span class="co"># Run non-convex PCP to estimate L, S from D_tilde</span></span>
 <span><span class="va">pcp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/rrmc.html">rrmc</a></span><span class="op">(</span><span class="va">D_tilde</span>, r <span class="op">=</span> <span class="va">r_star</span>, eta <span class="op">=</span> <span class="va">eta_star</span>, LOD <span class="op">=</span> <span class="va">lod</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Clean up sparse matrix</span></span>
+<span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hard_threshold.html">hard_threshold</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span>, thresh <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Benchmark with PCA's attempt at recovering L</span></span>
 <span><span class="va">D_imputed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/impute_matrix.html">impute_matrix</a></span><span class="op">(</span><span class="va">D_tilde</span>, <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">D_tilde</span>, <span class="fl">2</span>, <span class="va">mean</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
@@ -201,9 +219,9 @@
 <span>  <span class="st">"PCP_S_sparsity"</span> <span class="op">=</span> <span class="fu"><a href="reference/sparsity.html">sparsity</a></span><span class="op">(</span><span class="va">pcp_model</span><span class="op">$</span><span class="va">S</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Obs_rel_err PCA_L_rel_err PCP_L_rel_err PCP_S_rel_err PCP_L_rank</span></span>
-<span><span class="co">#&gt; 1   0.1496416    0.08674625    0.05215485     0.3600219          3</span></span>
+<span><span class="co">#&gt; 1   0.1440249    0.08096932    0.05847706      0.232115          3</span></span>
 <span><span class="co">#&gt;   PCP_S_sparsity</span></span>
-<span><span class="co">#&gt; 1          0.964</span></span></code></pre></div>
+<span><span class="co">#&gt; 1          0.989</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

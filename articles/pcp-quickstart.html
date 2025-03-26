@@ -197,7 +197,8 @@ scheme for measurements &lt; LOD:</p>
 <span>  nrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span>,</span>
 <span>  ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">D_tilde</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">lod_info</span><span class="op">$</span><span class="va">tilde_mask</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">lod_root2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">lod_info</span><span class="op">$</span><span class="va">tilde_mask</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">lod_idxs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">lod_info</span><span class="op">$</span><span class="va">tilde_mask</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">D_tilde</span><span class="op">[</span><span class="va">lod_idxs</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">lod_root2</span><span class="op">[</span><span class="va">lod_idxs</span><span class="op">]</span></span>
 <span><span class="fu">plot_matrix</span><span class="op">(</span><span class="va">D_tilde</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pcp-quickstart_files/figure-html/corrupt%20mat%20randomly-1.png" width="700"></p>
 <p>The <code>D_tilde</code> matrix represents our observed, messy
@@ -227,9 +228,13 @@ a relatively large degree of noise. Most EH data can be described this
 way. <code><a href="../reference/root_pcp.html">root_pcp()</a></code> is best for data characterized by rapidly
 decaying singular values, indicative of very well-defined latent
 patterns.</p>
-<p>For a simple example like the above, both PCP models are perfectly
-suitable. We will use <code><a href="../reference/rrmc.html">rrmc()</a></code>, as this is the model
-environmental health researchers will likely employ most frequently.</p>
+<p>The singular values plotted above decay quickly from the first to the
+second, but very gradually from the second onward. For this simple
+simulated dataset, both PCP models are perfectly suitable. We will use
+<code><a href="../reference/rrmc.html">rrmc()</a></code>, as this is the model environmental health
+researchers will likely employ most frequently. The
+<code><a href="../articles/pcp-applied.html">vignette("pcp-applied")</a></code> contains an exemplary mixtures
+matrix singular value plot with slowly decaying singular values.</p>
 </div>
 <div class="section level2">
 <h2 id="grid-search-for-parameter-tuning">Grid search for parameter tuning<a class="anchor" aria-label="anchor" href="#grid-search-for-parameter-tuning"></a>
@@ -267,7 +272,7 @@ parameter common to all models in the search. Since
 <code>num_runs</code> argument determines how many (random) tests should
 be performed for each unique model setting. By default,
 <code>num_runs = 100</code>, so our grid search tuned <code>r</code> and
-<code>eta</code> by measuring the performance of 300 different PCP
+<code>eta</code> by measuring the performance of 3000 different PCP
 models. We passed the simulated <code>lod</code> vector as another
 constant to the grid search, equipping each <code><a href="../reference/rrmc.html">rrmc()</a></code> run with
 the same LOD information.</p>
@@ -292,8 +297,20 @@ the same LOD information.</p>
 <p>Inspecting the <code>summary_stats</code> table from the output grid
 search provides the mean-aggregated statistics for each of the 30
 distinct parameter settings we tested. The grid search correctly
-identified the rank 3 solution as the best (lowest relative error rate).
-The corresponding <code>eta</code> = 0.224.</p>
+identified the rank 3 solution as the best (lowest relative error
+<code>rel_err</code> rate). The corresponding <code>eta</code> = 0.224.
+The top three parameter settings also seem to have reasonable
+<code>S_sparsity</code> levels as well (all are above
+<code>0.95</code>). The next three parameter settings seem to
+under-regularize the sparse <code>S</code> matrix by quite a bit, as 80%
+of entries are non-zero. We will take the top parameters identified by
+the grid search in this instance. Had the very top parameters yielded a
+sparsity of e.g. <code>0.7</code>, we likely then would have preferred
+the second set of parameters with sparisities in the <code>0.9</code>s.
+This decision would have been grounded in prior assumptions about the
+amount of outliers to expect in the mixtuere. For more on the
+interpreation of grid search results, consult the documentation for the
+<code><a href="../reference/grid_search_cv.html">grid_search_cv()</a></code> function.</p>
 </div>
 <div class="section level2">
 <h2 id="running-pcp">Running PCP<a class="anchor" aria-label="anchor" href="#running-pcp"></a>
@@ -379,9 +396,12 @@ matrix estimate was only off from the ground truth <code>S_0</code> by
 <p>We can now pair our estimated <code>L</code> matrix with any matrix
 factorization method of our choice (e.g. PCA, factor analysis, or
 non-negative matrix factorization) to extract the latent chemical
-exposure patterns. These patterns, along with the isolated outlying
-exposure events in <code>S</code>, can then be analyzed with any
-outcomes of interest in downstream epidemiological analyses.</p>
+exposure patterns (an example of what this looks like is in
+<code><a href="../articles/pcp-applied.html">vignette("pcp-applied")</a></code>, where non-negative matrix
+factorization is used to extract patterns from PCP’s <code>L</code>
+matrix). These patterns, along with the isolated outlying exposure
+events in <code>S</code>, can then be analyzed with any outcomes of
+interest in downstream epidemiological analyses.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -5,8 +5,8 @@
 
 <!-- badges: start -->
 
-<!-- [![CRAN status](https://www.r-pkg.org/badges/version/pcpr)](https://cran.r-project.org/package=pcpr) -->
-
+[![CRAN
+status](https://www.r-pkg.org/badges/version/pcpr)](https://cran.r-project.org/package=pcpr)
 [![R-CMD-check](https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml)
 [![License: GPL
 v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)

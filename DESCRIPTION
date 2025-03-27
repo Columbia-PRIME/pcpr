@@ -1,7 +1,7 @@
 Type: Package
 Package: pcpr
 Title: Principal Component Pursuit for Environmental Epidemiology
-Version: 1.0.0
+Version: 1.0.0.9000
 Authors@R: c(
     person("Lawrence G.", "Chillrud", , "lawrencechillrud@gmail.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0003-0727-0161")),

@@ -110,7 +110,7 @@ queens %>%
 Some initial points to make note of, looking at the data:
 
 * As we saw in the heatmap, the scale for each chemical's measured concentration differs widely (e.g., NH4 ranges from 0 to
-  9 µg/m$^3$, while Ti ranges from 0 to 0.04 µg/m$^3$). We will have to correct for this in a moment
+  9 µg/m$^3$, while Ti ranges from 0 to 0.04 µg/m$^3$). We will standardize this in a moment
   when we preprocess our data.
 * Some chemical species record negative measurements (e.g., Al, Ba, Cd). As explained in the
   EPA [AQS data documentation](https://aqs.epa.gov/aqsweb/documents/about_aqs_data.html#acceptable-values),
@@ -287,7 +287,8 @@ The results from the search suggest a rank `r gs$summary_stats$r[1]` solution wi
 the held out test sets (`r round(gs$summary_stats$rel_err[1] * 100, 1)`% relative error). This solution yields a
 sparse matrix `S` with a sparsity of `r round(gs$summary_stats$S_sparsity[1] * 100, 1)`%, meaning
 `r 100 - round(gs$summary_stats$S_sparsity[1] * 100, 1)`% of values in the data were flagged as extreme,
-outlying exposure events. As such, we will use these parameters moving forward.
+outlying exposure events. As such, we will use these parameters moving forward. For more on the interpretation
+of grid search results, consult the documentation for the `grid_search_cv()` function.
 
 ### Running PCP
 
@@ -557,3 +558,26 @@ We then applied NMF to PCP's recovered `L` matrix, extracting chemical loadings 
 Four interpretable and reproducible sources of PM$_{2.5}$ exposure were identified.
 These patterns, along with PCP's `S` matrix containing unique outlying exposure events, 
 can be paired with health outcomes of interest in any downstream epidemiological analyses.
+
+The methods in `pcpr` have already been applied in many environmental health studies. Several are listed below:
+
+* Tao et al. (2023) apply PCP to investigate the association between source-specific fine particulate matter
+  and myocardial infarction hospitalizations in NYC.
+* Wu et al. (2024) employ PCP for exposome profiling of environmental pollutants in seminal plasma, uncovering
+  novel associations with semen parameters.
+* Benavides et al. (2024) use PCP to develop a Community Severity Index in NYC, measuring the barrier effect of
+  road infrastructure and traffic in cities.
+
+## References
+
+Hopke, Philip K., Yunle Chen, David C. Chalupa, David Q. Rich. "Long term trends in source apportioned particle number concentrations in Rochester NY." Environmental Pollution 347 (123708), (2024): 0269-7491.
+
+Zhang, Junhui, Jingkai Yan, and John Wright. "Square root principal component pursuit: tuning-free noisy robust matrix recovery." Advances in Neural Information Processing Systems 34 (2021): 29464-29475.
+
+Cherapanamjeri, Yeshwanth, Kartik Gupta, and Prateek Jain. "Nearly optimal robust matrix completion." International Conference on Machine Learning. PMLR, 2017.
+
+Tao, Rachel H., Lawrence G. Chillrud, Yanelli Nunez, Sebastian T. Rowland, Amelia K. Boehme, Jingkai Yan, Jeff Goldsmith, John Wright, and Marianthi-Anna Kioumourtzoglou. "Applying principal component pursuit to investigate the association between source-specific fine particulate matter and myocardial infarction hospitalizations in New York City." Environmental Epidemiology 7 (2), (2023).
+
+Wu, Haotian, Vrinda Kalia, Katherine E. Manz, Lawrence Chillrud, Nathalie Hoffmann Dishon, Gabriela L. Jackson, Christian K. Dye, Raoul Orvieto, Adva Aizer, Hagai Levine, Marianthi-Anna Kioumourtzoglou, Kurt D. Pennell, Andrea A. Baccarelli, and Ronit Machtinger. "Exposome Profiling of Environmental Pollutants in Seminal Plasma and Novel Associations with Semen Parameters." Environmental Science & Technology, 58 (31), (2024): 13594-13604.
+
+Benavides, Jaime, Sabah Usmani, Vijay Kumar, and Marianthi-Anna Kioumourtzoglou. "Development of a community severance index for urban areas in the United States: A case study in New York City." Environment International, 185, (2024): 108526.

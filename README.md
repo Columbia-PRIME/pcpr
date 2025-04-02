@@ -10,9 +10,12 @@ status](https://www.r-pkg.org/badges/version/pcpr)](https://cran.r-project.org/p
 [![R-CMD-check](https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Columbia-PRIME/pcpr/actions/workflows/R-CMD-check.yaml)
 [![License: GPL
 v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Total
-Downloads](https://cranlogs.r-pkg.org/badges/grand-total/pcpr)](https://cranlogs.r-pkg.org/badges/grand-total/pcpr)
+[![Monthly
+Downloads](https://cranlogs.r-pkg.org/badges/pcpr)](https://cranlogs.r-pkg.org/badges/pcpr)
+<!-- [![Total Downloads](https://cranlogs.r-pkg.org/badges/grand-total/pcpr)](https://cranlogs.r-pkg.org/badges/grand-total/pcpr) -->
 <!-- badges: end -->
+
+## Overview
 
 The R package `pcpr` implements Principal Component Pursuit (PCP), a
 robust dimensionality reduction technique, for pattern recognition
